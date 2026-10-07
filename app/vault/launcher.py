@@ -434,6 +434,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({'status': _refresh_status(), 'job': JOB.snapshot(),
                                'restarting': _restart['version'], 'restart_url': _restart['url'],
                                'nexus': _nexus['data'], 'nexus_busy': _nexus['busy']})
+        if self.path == '/api/changelog':
+            try:
+                notes = json.loads((APP_DIR / 'changelog.json').read_text(encoding='utf-8'))
+            except (OSError, ValueError):
+                notes = []
+            return self._json(notes)
         if self.path == '/api/ping':
             return self._json({'ok': True})
         self._send(404, b'{}')

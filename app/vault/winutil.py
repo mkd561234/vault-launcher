@@ -194,7 +194,7 @@ def browse_folder(title: str, start: str | None = None) -> str | None:
     callback = BFFCALLBACK(on_event)
     name = ctypes.create_unicode_buffer(260)
     # No owner window: the dialog gets its own taskbar button, so it can always be found.
-    info = BROWSEINFOW(hwndOwner=None, pszDisplayName=name, lpszTitle=title,
+    info = BROWSEINFOW(hwndOwner=None, pszDisplayName=ctypes.cast(name, wintypes.LPWSTR), lpszTitle=title,
                        ulFlags=BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
                        lpfn=callback)
     ole32.OleInitialize(None)          # the resizable dialog style needs OLE on this thread

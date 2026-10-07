@@ -189,19 +189,16 @@
   dialog h3 { margin: 0 0 10px; font: 700 26px/1.1 var(--display); font-stretch: condensed; }
   dialog p { margin: 0 0 20px; white-space: pre-line; }
   dialog label { display: flex; gap: 10px; align-items: center; margin: -6px 0 20px; color: var(--muted); }
+  dialog#news { max-width: 620px; }
+  .news { max-height: 60vh; overflow-y: auto; margin: 0 0 20px; padding-right: 6px; }
+  .news section + section { margin-top: 18px; }
+  .news h4 { margin: 0 0 6px; font: 700 20px/1.1 var(--display); font-stretch: condensed; }
+  .news h4 small { font: 400 13px var(--body); color: var(--muted); margin-left: 8px; }
+  .news ul { margin: 0; padding-left: 20px; }
+  .news li { margin: 4px 0; }
+  .news .now { color: var(--cyan); font: 600 13px var(--body); margin-left: 8px; }
   dialog .btn.primary { font-size: 20px; padding: 12px 24px; }
 
-  .picking {
-    position: fixed; inset: 0; display: none; place-items: center; z-index: 5;
-    background: rgba(8, 12, 18, 0.72);
-  }
-  .picking.show { display: grid; }
-  .picking > div {
-    border: 4px solid var(--ink); background: var(--slate); box-shadow: 8px 8px 0 var(--ink);
-    padding: 24px 28px; max-width: 460px; margin: 16px;
-  }
-  .picking h3 { margin: 0 0 8px; font: 700 26px/1.1 var(--display); font-stretch: condensed; }
-  .picking p { margin: 0 0 18px; color: var(--muted); }
   .notice {
     position: fixed; right: 20px; bottom: 20px; max-width: 420px; display: none;
     background: var(--bone); color: #000; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);
@@ -236,7 +233,7 @@
     <div class="rail-foot">
       <p id="nexusText">Checking for updates…</p>
       <div class="row" id="nexusActions"></div>
-      <p style="margin-top:12px"><span id="version"></span> <button class="link" data-open="logs">Logs</button></p>
+      <p style="margin-top:12px"><span id="version"></span> <button class="link" id="whatsNew">What's new</button></p>
     </div>
   </nav>
 
@@ -272,6 +269,12 @@
   </main>
 </div>
 
+<dialog id="news" aria-labelledby="newsTitle">
+  <h3 id="newsTitle">What's new</h3>
+  <div class="news" id="newsBody"></div>
+  <div class="row"><button class="btn" id="newsClose"><span>Close</span></button></div>
+</dialog>
+
 <dialog id="ask">
   <h3 id="askTitle">Vault Launcher</h3>
   <p id="askText"></p>
@@ -281,14 +284,6 @@
     <button class="btn" id="askNo"><span>No</span></button>
   </div>
 </dialog>
-
-<div class="picking" id="picking" role="status">
-  <div>
-    <h3>Choose a folder</h3>
-    <p id="pickingText">Pick the folder in the window that just opened.</p>
-    <button class="btn" id="pickingFront"><span>Show that window</span></button>
-  </div>
-</div>
 
 <div class="notice" id="notice" role="status">
   <p id="noticeText"></p>
@@ -347,14 +342,10 @@ function pickDefault(s) {
 }
 
 function pickFolder(g) {
-  // The picker is a separate Windows window; say so while it is open, so it is never "nothing happened".
-  $("pickingText").textContent = "Pick your " + g.name + " folder in the window that just opened.";
-  $("picking").classList.add("show");
   api("/api/game/browse", { game: g.id }).then((r) => {
     if (r.busy) return;                      // already open: the server brought it to the front
-    $("picking").classList.remove("show");
     browseError = r.error; lastKey = null; poll();
-  }).catch(() => $("picking").classList.remove("show"));
+  });
 }
 
 function select(id) {
@@ -511,7 +502,6 @@ function renderNexus(s, busy) {
       : nx.latest ? "Up to date. New versions come from GitHub and install by themselves."
       : "New versions come from GitHub and install by themselves.";
     if (upd) na.append(btn("Update now", "primary", () => api("/api/update", {}).then(poll), busy));
-    else na.append(link("Check for updates", () => api("/api/check", {}).then(poll), busy || state.nexus_busy));
     na.append(link("GitHub page", () => api("/api/openurl", { url: nx.page })));
     $("version").textContent = "Version " + s.launcher.version + ".";
     return;
@@ -527,7 +517,6 @@ function renderNexus(s, busy) {
     nt.textContent = (nx.user ? "Signed in as " + nx.user + "." : "Signed in to Nexus Mods.") +
       (upd ? " Vault Launcher " + nx.latest + " is out." : nx.error ? " Last check failed: " + nx.error : " Up to date.");
     if (upd) na.append(btn("Update to " + nx.latest, "primary", () => api("/api/update", {}).then(poll), busy));
-    else na.append(link("Check for updates", () => api("/api/check", {}).then(poll), busy || state.nexus_busy));
   }
   if (nx && nx.page) na.append(link("Nexus page", () => api("/api/openurl", { url: nx.page })));
   $("version").textContent = "Version " + s.launcher.version + ".";
@@ -639,7 +628,28 @@ $("askNo").addEventListener("click", () => {
   $("ask").close(); askMode = null;
 });
 $("ask").addEventListener("cancel", (e) => { if (askMode === "job") e.preventDefault(); });
-$("pickingFront").addEventListener("click", () => api("/api/picker/front", {}));
+$("whatsNew").addEventListener("click", async () => {
+  const body = $("newsBody");
+  body.textContent = "Loading…";
+  if (!$("news").open) $("news").showModal();
+  try {
+    const items = await api("/api/changelog");
+    body.innerHTML = "";
+    const mine = state && state.status && state.status.launcher ? state.status.launcher.version : "";
+    for (const v of items) {
+      const sec = el("section");
+      const h = el("h4", "", "Version " + v.version);
+      if (v.date) h.append(el("small", "", v.date));
+      if (v.version === mine) h.append(el("span", "now", "You have this one"));
+      const ul = el("ul");
+      for (const c of v.changes || []) ul.append(el("li", "", c));
+      sec.append(h, ul);
+      body.append(sec);
+    }
+    if (!items.length) body.textContent = "No notes yet.";
+  } catch (e) { body.textContent = "Couldn't read the notes."; }
+});
+$("newsClose").addEventListener("click", () => $("news").close());
 $("noticeClose").addEventListener("click", () => api("/api/dismiss", {}).then(poll));
 for (const b of document.querySelectorAll("[data-open]")) b.addEventListener("click", () => api("/api/open", { which: b.dataset.open }));
 

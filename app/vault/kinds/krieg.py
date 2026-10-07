@@ -85,7 +85,9 @@ def install(ctx) -> None:
         raise
     lilac = dlc / 'Lilac'
     if lilac.exists():
-        if ctx.state.get('installed'):
+        # Ours if our state says so, or if our mod is next to it (an install the launcher's state
+        # doesn't know about, e.g. from the Krieg Launcher or a reset state file).
+        if ctx.state.get('installed') or (tps / 'sdk_mods' / MOD_FOLDER).is_dir():
             shutil.rmtree(lilac)
         else:   # a Lilac folder we did not make: keep it
             backup = winutil.data_dir() / 'backup' / f"Lilac_{time.strftime('%Y%m%d_%H%M%S')}"

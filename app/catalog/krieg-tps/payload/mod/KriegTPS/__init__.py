@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -1186,10 +1186,17 @@ except Exception as ex:  # noqa: BLE001
     log(f"update check not started: {type(ex).__name__}: {ex}")
 
 
-build_mod(
+_mod = build_mod(
     name="Krieg for TPS",
     description="Adds Borderlands 2's Krieg the Psycho as a seventh Vault Hunter.",
     mod_type=ModType.Standard,
     supported_games=Game.TPS,
     auto_enable=True,
 )
+
+# Krieg is not optional once his DLC folder is installed: without these hooks his heads, skins,
+# materials, Oz kit, HUD and vehicle seats break. Newer mod managers only switch a mod on at launch
+# if it was on last time, so a fresh mod manager (or lost settings) would leave him switched off.
+if not _mod.is_enabled:
+    _mod.enable()
+    log("mod switched on")
