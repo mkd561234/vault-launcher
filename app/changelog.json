@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.12",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.11: the character select portrait no longer sticks out over the frame's cut corner, and it's cleaner: the picture's compression noise is smoothed out, it's slightly sharper and richer, and it has proper smaller versions so the game shrinks it smoothly instead of looking grainy."
+  ]
+ },
+ {
   "version": "2.1.11",
   "date": "2026-10-07",
   "changes": [
