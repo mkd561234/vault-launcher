@@ -223,6 +223,127 @@
     .mod { grid-template-columns: 56px 1fr; padding-left: 22px; }
     .mod .icon { width: 56px; height: 56px; }
   }
+
+  /* =====================================================================================
+     Game themes: every page wears its own game's box-art colours.
+       Borderlands GOTY ......... dust-red Pandora, gold logo, black
+       GOTY Enhanced ............ the same, remastered: brighter gold, hotter red, a gloss
+       Borderlands 2 ............ the bright yellow cover with orange
+       The Pre-Sequel ........... deep space blue lit from the moon, yellow logo
+       Borderlands 3 ............ the graffiti-neon yellow, pink and purple
+       Wonderlands .............. royal purple and teal with fantasy gold
+       Borderlands 4 ............ black with a red slash and a teal glow
+     ===================================================================================== */
+  body {
+    --page: #12161c; --well: #0c1015; --panel: #1f2731; --accent: #ff7a1a; --accent2: #ffd23a;
+    --link: #4fd4f0; --hero: #1f2731; --title-fill: #efe6d2; --title-glow: 0 0 0 transparent;
+    --hero-text: #efe6d2; --hero-muted: #c9c2b2;
+    --slate: var(--page); --deep: var(--well); --raised: var(--panel); --orange: var(--accent);
+    background: var(--page);
+  }
+  body[data-game="bl1"] {
+    --page: #140a07; --well: #0c0604; --panel: #26150f; --accent: #e9b51f; --accent2: #c3271c; --link: #f0c24a;
+    --hero: radial-gradient(circle at 86% 26%, rgba(233,181,31,.55), transparent 38%),
+            linear-gradient(170deg, #5a140c 0%, #8e2414 42%, #2a0b06 76%, #0d0604 100%);
+    --title-fill: #e9b51f;
+  }
+  body[data-game="bl1e"] {
+    --page: #0c0605; --well: #070303; --panel: #22110b; --accent: #ffcf2e; --accent2: #ff3b24; --link: #ffd65a;
+    --hero: linear-gradient(112deg, transparent 38%, rgba(255,255,255,.16) 45%, transparent 53%),
+            radial-gradient(ellipse at 82% 18%, rgba(255,222,110,.95), rgba(255,170,40,.35) 26%, transparent 52%),
+            linear-gradient(165deg, #b0190f 0%, #e0301c 30%, #650d07 62%, #050303 100%);
+    --title-fill: #ffd23a; --title-glow: 0 0 26px rgba(255,205,70,.7);
+  }
+  body[data-game="bl2"] {
+    --page: #17130a; --well: #0f0c05; --panel: #282112; --accent: #ffd400; --accent2: #ff7b00; --link: #ffcc1f;
+    --hero: linear-gradient(112deg, #ffd400 0 57%, #ff7b00 57% 73%, #ffd400 73%);
+    --title-fill: #fffaf0; --hero-text: #111; --hero-muted: #3b2c00;
+  }
+  body[data-game="tps"] {
+    --page: #08111d; --well: #050b14; --panel: #142740; --accent: #ffd640; --accent2: #39c6f0; --link: #6fd6ff;
+    --hero: radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent), radial-gradient(1px 1px at 33% 12%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 58% 30%, #fff, transparent), radial-gradient(1px 1px at 72% 10%, #fff, transparent),
+            radial-gradient(1px 1px at 44% 40%, #dff, transparent), radial-gradient(1.5px 1.5px at 90% 34%, #fff, transparent),
+            radial-gradient(circle at 76% 135%, #9be9ff 0%, #2aa3dc 22%, rgba(20,90,140,.6) 40%, transparent 58%),
+            linear-gradient(180deg, #030814 0%, #0a2240 62%, #135a87 100%);
+    --title-fill: #ffd640;
+  }
+  body[data-game="bl3"] {
+    --page: #120a1c; --well: #0b0614; --panel: #24143c; --accent: #ffcc1a; --accent2: #ff2f8a; --link: #ff8cc4;
+    --hero: radial-gradient(circle at 18% 120%, rgba(255,204,26,.9), transparent 34%),
+            linear-gradient(118deg, #ffcc1a 0%, #ff2f8a 36%, #8a22d6 70%, #1b0b3a 100%);
+    --title-fill: #ffffff; --hero-muted: #fff;
+  }
+  body[data-game="wl"] {
+    --page: #0f0b1c; --well: #090613; --panel: #1f1638; --accent: #f2c14e; --accent2: #b45cff; --link: #dcb1ff;
+    --hero: radial-gradient(circle at 82% 28%, rgba(242,193,78,.65), transparent 34%),
+            linear-gradient(160deg, #2b0f5e 0%, #5b2aa6 42%, #13817b 88%);
+    --title-fill: #f2c14e;
+  }
+  body[data-game="bl4"] {
+    --page: #0b0e12; --well: #07090c; --panel: #181e27; --accent: #e3262e; --accent2: #1fd1c6; --link: #4fe3d8;
+    --hero: radial-gradient(circle at 88% 30%, rgba(31,209,198,.45), transparent 36%),
+            linear-gradient(128deg, #0c0f14 0 46%, #e3262e 46% 53%, #0c0f14 53%);
+    --title-fill: #f3f3f3;
+  }
+
+  /* The banner: full width, in the game's cover colours, with comic halftone and the game's
+     name as a logo. */
+  .main { padding-top: 0; }
+  .head {
+    position: relative; overflow: hidden; isolation: isolate;
+    margin: 0 -40px 30px; padding: 46px 40px 28px; min-height: 230px;
+    background: var(--hero); border-bottom: 5px solid var(--ink);
+    color: var(--hero-text);
+  }
+  .head::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(rgba(0,0,0,.38) 1.3px, transparent 1.7px) 0 0 / 7px 7px;
+    -webkit-mask-image: linear-gradient(200deg, transparent 35%, #000 100%);
+            mask-image: linear-gradient(200deg, transparent 35%, #000 100%);
+  }
+  .fullname {
+    grid-column: 1; margin: 0 0 6px; justify-self: start;
+    padding: 3px 10px 2px; background: var(--ink); color: var(--accent);
+    font: 700 14px/1.2 var(--display); font-stretch: condensed; letter-spacing: .04em;
+    transform: skewX(-10deg);
+  }
+  .title {
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "Bahnschrift", sans-serif; font-weight: 400;
+    font-size: 86px; line-height: .9; letter-spacing: .01em; text-transform: uppercase;
+    color: var(--title-fill); -webkit-text-stroke: 8px var(--ink); paint-order: stroke fill;
+    text-shadow: 7px 7px 0 var(--ink), var(--title-glow);
+  }
+  .title.long { font-size: 64px; }
+  .head .where { color: var(--hero-muted); font-weight: 600; }
+  .head .where strong { color: var(--hero-text); }
+  .head .where .link { color: var(--hero-text); }
+  body[data-game="bl2"] .head .where { text-shadow: none; }
+  .head .where { background: rgba(0,0,0,.0); }
+  body:not([data-game="bl2"]) .head .where { text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+  .head .play { grid-row: 1 / span 3; }
+  .head .play .btn.primary { --bg: var(--accent); }
+  body[data-game="bl2"] .head .play .btn.primary { --bg: #000; --fg: #ffd400; }
+
+  /* Game list: each game carries a slash of its own two colours; the selected one fills with them. */
+  .game[data-id="bl1"]  { --c1: #e9b51f; --c2: #c3271c; }
+  .game[data-id="bl1e"] { --c1: #ffcf2e; --c2: #ff3b24; }
+  .game[data-id="bl2"]  { --c1: #ffd400; --c2: #ff7b00; }
+  .game[data-id="tps"]  { --c1: #39c6f0; --c2: #ffd640; }
+  .game[data-id="bl3"]  { --c1: #ff2f8a; --c2: #ffcc1a; }
+  .game[data-id="wl"]   { --c1: #8a4dff; --c2: #f2c14e; }
+  .game[data-id="bl4"]  { --c1: #e3262e; --c2: #1fd1c6; }
+  .game { border-left: 0; box-shadow: inset 6px 0 0 var(--c1); }
+  .game:hover { background: rgba(255,255,255,.05); box-shadow: inset 10px 0 0 var(--c1); }
+  .game[aria-current="true"] {
+    background: linear-gradient(105deg, var(--c1) 0 82%, var(--c2) 82% 100%);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .game[aria-current="true"] .count { color: var(--c1); }
+  .rail { background: var(--well); transition: background 200ms ease; }
+  .link { color: var(--link); }
+  .link:focus-visible, .btn:focus-visible, .game:focus-visible { outline-color: var(--accent); }
+  .bar > div { background: var(--accent); }
 </style>
 </head>
 <body>
@@ -239,6 +360,7 @@
 
   <main class="main" id="main">
     <header class="head">
+      <p class="fullname" id="fullname" hidden></p>
       <h1 class="title" id="title">Borderlands</h1>
       <p class="where" id="where"></p>
       <div class="play" id="playSlot"></div>
@@ -386,7 +508,10 @@ function renderRail(s, busy) {
 function renderHead(g, s, busy) {
   const t = $("title");
   t.textContent = g.short;
-  t.classList.toggle("long", g.short.length > 14);
+  t.classList.toggle("long", g.short.length > 13);
+  const fn = $("fullname");
+  fn.hidden = g.name === g.short;
+  fn.textContent = g.name;
   const w = $("where");
   w.innerHTML = "";
   if (g.path) {
@@ -571,6 +696,7 @@ function render() {
   $("app").classList.toggle("busy", busy);
   if (!selected) selected = pickDefault(s);
   const g = s.games.find((x) => x.id === selected) || s.games[0];
+  document.body.dataset.game = g.id;      // the page takes the game's cover colours
   renderWork(job, busy);
   // rebuild the rest only when something changed, so focus and hover survive the polling
   const key = JSON.stringify([selected, browseError, busy, job.target, s, state.nexus, state.nexus_busy]);

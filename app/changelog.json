@@ -1,5 +1,15 @@
 [
  {
+  "version": "2.1.5",
+  "date": "2026-10-07",
+  "changes": [
+   "New look: every game's page wears its own cover colours, with a full-width banner and the game's name as a logo.",
+   "Borderlands GOTY is red, gold and black; GOTY Enhanced is the same, brighter and glossier.",
+   "Borderlands 2 is the bright yellow and orange of its cover; The Pre-Sequel is moonlit space blue with a yellow logo; Borderlands 3 is neon yellow, pink and purple; Wonderlands is purple, teal and gold; Borderlands 4 is black with a red slash.",
+   "The original Borderlands Game of the Year now has its own entry, next to Game of the Year Enhanced."
+  ]
+ },
+ {
   "version": "2.1.4",
   "date": "2026-10-07",
   "changes": [
