@@ -631,7 +631,7 @@ def github_latest() -> dict | None:
     return max(found, key=lambda x: nexus.version_tuple(x['version']))
 
 
-def github_fetch(auto: bool) -> Path | None:
+def github_fetch(auto: bool, raise_errors: bool = False) -> Path | None:
     """Downloads a newer release from GitHub into %LOCALAPPDATA%\\VaultLauncher\\downloads.
     Returns the zip, or None when there is nothing newer (or GitHub can't be reached)."""
     if not github_repo():
@@ -643,6 +643,8 @@ def github_fetch(auto: bool) -> Path | None:
         latest = github_latest()
     except (OSError, ValueError) as ex:
         say(f'GitHub update check failed: {ex}')
+        if raise_errors:
+            raise
         return None
     st = load_state()
     st['gh_last_check'] = int(time.time())
@@ -655,10 +657,19 @@ def github_fetch(auto: bool) -> Path | None:
     dst = folder / latest['name']
     if not (dst.is_file() and _zip_release(dst)):
         say(f"downloading Vault Launcher {latest['version']} from GitHub")
-        _download(latest['url'], dst)
+        try:
+            _download(latest['url'], dst)
+        except (OSError, ValueError) as ex:
+            dst.unlink(missing_ok=True)
+            say(f'GitHub download failed: {ex}')
+            if raise_errors:
+                raise
+            return None
     if _zip_release(dst) is None:
         dst.unlink(missing_ok=True)
         say('the GitHub download was not a Vault Launcher zip')
+        if raise_errors:
+            raise ValueError('the download from GitHub was not a Vault Launcher zip')
         return None
     return dst
 

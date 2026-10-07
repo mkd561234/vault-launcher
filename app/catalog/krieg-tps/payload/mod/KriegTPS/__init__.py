@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -1047,6 +1047,32 @@ import time as _time  # noqa: E402
 _next_upkeep = 0.0
 
 
+# Character select: the Pre-Sequel keeps its own characters loaded, but Krieg's model, animations
+# and textures were thrown away whenever another character was picked and read back from disk
+# when he was picked again (3-4 seconds of empty screen). Once he has been loaded, his pawn
+# template - and through it his mesh, animations and default head and skin - stays in memory.
+_krieg_kept = [False]
+
+
+def keep_krieg_loaded() -> None:
+    if _krieg_kept[0]:
+        return
+    try:
+        pawn = unrealsdk.find_object("WillowPlayerPawn", KRIEG_PAWN)
+    except ValueError:
+        return
+    pawn.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+    for name in ("Mesh", "Mesh3p"):
+        comp = getattr(pawn, name, None)
+        try:
+            if comp is not None and comp.SkeletalMesh is not None:
+                comp.SkeletalMesh.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+        except Exception:  # noqa: BLE001
+            pass
+    _krieg_kept[0] = True
+    log("Krieg's model stays loaded, so he appears straight away when picked again at character select")
+
+
 def upkeep() -> None:
     global _next_upkeep
     now = _time.monotonic()
@@ -1055,7 +1081,7 @@ def upkeep() -> None:
     _next_upkeep = now + 1.0
     # unlock_customizations is not run: the game's unlock check crashed on Krieg's BL2 profile
     # indices. The head/skin menus are filled directly instead (see on_char_select_cache).
-    for step in (lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
+    for step in (keep_krieg_loaded, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
                  disable_screen_overlays,
                  materials.fix_krieg_materials, materials.fix_krieg_gear_materials, materials.disable_broken_fx, diagnose_once,
                  nudge_hud_health):

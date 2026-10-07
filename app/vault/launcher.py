@@ -252,33 +252,54 @@ def _disk_version() -> str:
         return RUN_VERSION
 
 
-def _github_check() -> None:
-    """On open: fetch a newer release from GitHub, then switch to it once nothing is running."""
+_check = {'state': None, 'text': '', 'at': 0.0, 'busy': False}
+CHECK_EVERY_OPEN = 30 * 60          # while the launcher stays open, look again every half hour
+
+
+def check_for_update(quiet: bool = False) -> None:
+    """Looks for a newer Vault Launcher (a zip in Downloads, then GitHub). When there is one, it is
+    downloaded and this window switches to it. quiet: a background check, which only shows
+    something when an update is found."""
+    if _check['busy'] or _restart['zip']:
+        return
+    _check['busy'] = True
+    _check['at'] = time.time()
+    if not quiet:
+        _check.update(state='checking', text='Checking for updates…')
     try:
-        z = main.github_fetch(auto=False)
+        found = main.find_local_update()
+        z = found[0] if found else None
+        if z is None and main.github_repo():
+            z = main.github_fetch(auto=False, raise_errors=not quiet)
+        _refresh_nexus(force=True)
+        if z is None:
+            if not quiet:
+                _check.update(state='current', text=f'Up to date (version {RUN_VERSION}).')
+            return
+        rel = main._zip_release(z) or {}
+        version = rel.get('version', '')
+        _check.update(state='updating', text=f'Updating to version {version}…')
+        main.say(f'Vault Launcher {version} found ({z.name}); switching to it')
+        while JOB.running:            # never swap the launcher out from under an install
+            time.sleep(1)
+        _restart.update({'zip': z, 'version': version, 'at': time.time()})
     except Exception as ex:  # noqa: BLE001
-        main.say(f'GitHub update failed: {ex}')
-        return
-    _refresh_status(force=True)
-    if z is None:
-        return
-    while JOB.running:
-        time.sleep(1)
-    rel = main._zip_release(z) or {}
-    _restart.update({'zip': z, 'version': rel.get('version', ''), 'at': time.time()})
+        main.say(f'update check failed: {ex}')
+        if not quiet:
+            _check.update(state='error', text=f"Couldn't check for updates: {ex}")
+    finally:
+        _check['busy'] = False
+
+
+def _github_check() -> None:
+    """On open, and every half hour while open."""
+    check_for_update(quiet=True)
 
 
 def act_update() -> int:
     if main.github_repo():
-        z = main.github_fetch(auto=False)
-        _refresh_status(force=True)
-        if z is None:
-            main.say(f"Vault Launcher {main.release()['version']} is the newest version.")
-            return 0
-        rel = main._zip_release(z) or {}
-        main.say(f"Vault Launcher {rel.get('version', '')} downloaded; switching to it")
-        _restart.update({'zip': z, 'version': rel.get('version', ''), 'at': time.time() + 1})
-        return 0
+        check_for_update()
+        return 0 if _check['state'] != 'error' else 1
     rc = main.cmd_update(_Args(auto=False, game_pid=None))
     _refresh_nexus(force=True)
     return rc
@@ -442,7 +463,8 @@ class Handler(BaseHTTPRequestHandler):
             _refresh_nexus()
             return self._json({'status': _refresh_status(), 'job': JOB.snapshot(),
                                'restarting': _restart['version'], 'restart_url': _restart['url'],
-                               'nexus': _nexus['data'], 'nexus_busy': _nexus['busy']})
+                               'nexus': _nexus['data'], 'nexus_busy': _nexus['busy'],
+                               'update_check': {k: _check[k] for k in ('state', 'text')} | {'busy': _check['busy']}})
         if self.path == '/api/changelog':
             try:
                 notes = json.loads((APP_DIR / 'changelog.json').read_text(encoding='utf-8'))
@@ -484,6 +506,9 @@ class Handler(BaseHTTPRequestHandler):
                 ok = JOB.start('install', lambda: act_install(mod_id), mod_id)
             else:
                 ok = JOB.start('uninstall', lambda: act_uninstall(mod_id, bool(body.get('restore'))), mod_id)
+        elif path == '/api/update' and main.github_repo():
+            threading.Thread(target=check_for_update, daemon=True).start()
+            ok = True
         elif path == '/api/update':
             ok = JOB.start('update', act_update)
         elif path == '/api/signin':
@@ -770,6 +795,8 @@ def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int
     _last_seen['t'] = time.time() + 20   # give the window time to open
     while True:
         time.sleep(2)
+        if not _check['busy'] and time.time() - _check['at'] > CHECK_EVERY_OPEN:
+            threading.Thread(target=check_for_update, args=(True,), daemon=True).start()
         if not JOB.running and time.time() - _last_seen['t'] > IDLE_EXIT:
             break
         if _restart['zip'] and not JOB.running and time.time() - _restart['at'] > 3:   # the window has shown the notice

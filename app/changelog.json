@@ -1,5 +1,14 @@
 [
  {
+  "version": "2.1.7",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.6: Krieg shows up straight away when you pick him again at character select. His model now stays loaded instead of being thrown out and reloaded each time you switch characters.",
+   "Check for updates is back and actually updates: it looks for a newer Vault Launcher in your Downloads folder and on GitHub, downloads it, and switches the window to the new version by itself. It says \"Up to date\" when there's nothing newer.",
+   "The launcher also checks for updates every half hour while it stays open, not only when it starts."
+  ]
+ },
+ {
   "version": "2.1.6",
   "date": "2026-10-07",
   "changes": [

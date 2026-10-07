@@ -621,12 +621,16 @@ function renderNexus(s, busy) {
   const nx = state.nexus, nt = $("nexusText"), na = $("nexusActions");
   na.innerHTML = "";
   if (nx && nx.source === "github") {
-    const v = s.launcher.version, upd = nx.latest && newer(nx.latest, v);
-    nt.textContent = upd ? "Vault Launcher " + nx.latest + " is out on GitHub. It installs by itself; your downloaded mods update with it."
+    const v = s.launcher.version, upd = nx.latest && newer(nx.latest, v), uc = state.update_check || {};
+    if (uc.busy || uc.state === "updating" || uc.state === "checking") nt.textContent = uc.text || "Checking for updates…";
+    else if (uc.state) nt.textContent = uc.text;
+    else nt.textContent = upd ? "Vault Launcher " + nx.latest + " is out. Check for updates to install it."
       : nx.error ? "Couldn't reach GitHub to check for updates (" + nx.error + ")."
-      : nx.latest ? "Up to date. New versions come from GitHub and install by themselves."
-      : "New versions come from GitHub and install by themselves.";
-    if (upd) na.append(btn("Update now", "primary", () => api("/api/update", {}).then(poll), busy));
+      : "New versions install by themselves.";
+    na.append(link(uc.busy ? "Checking…" : "Check for updates", () => {
+      nt.textContent = "Checking for updates…";
+      api("/api/update", {}).then(poll);
+    }, busy || uc.busy || uc.state === "updating"));
     na.append(link("GitHub page", () => api("/api/openurl", { url: nx.page })));
     $("version").textContent = "Version " + s.launcher.version + ".";
     return;
@@ -699,7 +703,7 @@ function render() {
   document.body.dataset.game = g.id;      // the page takes the game's cover colours
   renderWork(job, busy);
   // rebuild the rest only when something changed, so focus and hover survive the polling
-  const key = JSON.stringify([selected, browseError, busy, job.target, s, state.nexus, state.nexus_busy]);
+  const key = JSON.stringify([selected, browseError, busy, job.target, s, state.nexus, state.nexus_busy, state.update_check]);
   if (key !== lastKey) {
     lastKey = key;
     renderRail(s, busy);
