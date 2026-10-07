@@ -359,6 +359,23 @@ def _page() -> bytes:
     return html.replace('{{EMBLEM}}', svg).replace('{{TOKEN}}', TOKEN).encode('utf-8')
 
 
+_picker_lock = threading.Lock()
+
+
+def _browse(game_id: str) -> str | None:
+    """Lets the player pick a game folder. Returns an error message, or None."""
+    g = games.BY_ID[game_id]
+    current = main.game_paths(main.load_state()).get(game_id)
+    if current is None:
+        current = next((lib / 'steamapps' / 'common' for lib in games.steam_libraries()
+                        if (lib / 'steamapps' / 'common').is_dir()), None)
+    picked = winutil.browse_folder(f"Choose your {g.name} folder: the one with the "
+                                   f"{g.exes[0].split('/')[0]} folder inside it.", str(current) if current else None)
+    error = main.set_game_path(game_id, picked) if picked else None
+    _refresh_status(force=True)
+    return error
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):  # quiet
         pass
@@ -434,18 +451,16 @@ class Handler(BaseHTTPRequestHandler):
                     JOB.result, JOB.log, JOB.name, JOB.target = None, [], None, None
             ok = True
         elif path == '/api/game/browse' and game_id:
-            g = games.BY_ID[game_id]
-            current = main.game_paths(main.load_state()).get(game_id)
-            if current is None:
-                libs = games.steam_libraries()
-                current = next((lib / 'steamapps' / 'common' for lib in libs
-                                if (lib / 'steamapps' / 'common').is_dir()), None)
-            picked = winutil.browse_folder(f"Choose your {g.name} folder: the one with {g.exes[0].split('/')[0]} "
-                                           'inside it.', str(current) if current else None)
-            if picked:
-                error = main.set_game_path(game_id, picked)
-            _refresh_status(force=True)
+            if not _picker_lock.acquire(blocking=False):      # one picker at a time
+                winutil.bring_picker_to_front()
+                return self._json({'ok': False, 'error': None, 'busy': True})
+            try:
+                error = _browse(game_id)
+            finally:
+                _picker_lock.release()
             ok = error is None
+        elif path == '/api/picker/front':
+            ok = winutil.bring_picker_to_front()
         elif path == '/api/game/play' and game_id:
             play(game_id)
             ok = True

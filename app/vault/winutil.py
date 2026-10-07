@@ -117,7 +117,43 @@ def unprotect(stored: str) -> str:
         ctypes.windll.kernel32.LocalFree(out.pbData)
 
 
-# ---- Folder picker: Windows' own "Browse for Folder" dialog, opened in front of the launcher -----
+# ---- Folder picker: Windows' own "Browse for Folder" dialog, forced in front of the launcher ------
+PICKER = {'hwnd': None}      # the open picker, so a second click can bring it back to the front
+
+
+def _force_front(hwnd) -> None:
+    """Puts a window on top and gives it the keyboard. Windows normally refuses this to a program
+    that isn't in front, so the dialog briefly borrows the input of the window that is."""
+    from ctypes import wintypes
+    user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.c_void_p]
+    user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                                    ctypes.c_int, ctypes.c_uint]
+    for f in (user32.SetForegroundWindow, user32.BringWindowToTop, user32.ShowWindow):
+        f.argtypes = [wintypes.HWND] + ([ctypes.c_int] if f is user32.ShowWindow else [])
+    HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SW_RESTORE = -1, 0x2, 0x1, 0x40, 9
+    user32.ShowWindow(hwnd, SW_RESTORE)
+    user32.SetWindowPos(hwnd, wintypes.HWND(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+    fg = user32.GetForegroundWindow()
+    mine = kernel32.GetCurrentThreadId()
+    theirs = user32.GetWindowThreadProcessId(fg, None) if fg else 0
+    attached = bool(theirs and theirs != mine and user32.AttachThreadInput(mine, theirs, True))
+    try:
+        user32.BringWindowToTop(hwnd)
+        user32.SetForegroundWindow(hwnd)
+    finally:
+        if attached:
+            user32.AttachThreadInput(mine, theirs, False)
+
+
+def bring_picker_to_front() -> bool:
+    if IS_WINDOWS and PICKER['hwnd']:
+        _force_front(PICKER['hwnd'])
+        return True
+    return False
+
+
 def browse_folder(title: str, start: str | None = None) -> str | None:
     """The folder the player picked, or None if they cancelled."""
     if not IS_WINDOWS:
@@ -136,8 +172,8 @@ def browse_folder(title: str, start: str | None = None) -> str | None:
     BFFM_INITIALIZED, BFFM_SETSELECTIONW = 1, 0x400 + 103
     user32, shell32, ole32 = ctypes.windll.user32, ctypes.windll.shell32, ctypes.windll.ole32
     user32.SendMessageW.argtypes = [wintypes.HWND, ctypes.c_uint, wintypes.WPARAM, wintypes.LPARAM]
+    user32.SetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPCWSTR]
     shell32.SHBrowseForFolderW.restype = ctypes.c_void_p
-    user32.GetForegroundWindow.restype = wintypes.HWND
     shell32.SHGetPathFromIDListW.argtypes = [ctypes.c_void_p, wintypes.LPWSTR]
     ole32.CoTaskMemFree.argtypes = [ctypes.c_void_p]
 
@@ -145,14 +181,20 @@ def browse_folder(title: str, start: str | None = None) -> str | None:
 
     def on_event(hwnd, msg, lparam, data):
         if msg == BFFM_INITIALIZED:
+            PICKER['hwnd'] = hwnd
+            user32.SetWindowTextW(hwnd, f'{TITLE}: choose a folder')
             if start:
                 user32.SendMessageW(hwnd, BFFM_SETSELECTIONW, 1, ctypes.cast(start_buf, ctypes.c_void_p).value)
-            user32.SetForegroundWindow(hwnd)
+            try:
+                _force_front(hwnd)
+            except Exception:  # noqa: BLE001 - a dialog behind the launcher still works
+                pass
         return 0
 
     callback = BFFCALLBACK(on_event)
     name = ctypes.create_unicode_buffer(260)
-    info = BROWSEINFOW(hwndOwner=user32.GetForegroundWindow(), pszDisplayName=name, lpszTitle=title,
+    # No owner window: the dialog gets its own taskbar button, so it can always be found.
+    info = BROWSEINFOW(hwndOwner=None, pszDisplayName=name, lpszTitle=title,
                        ulFlags=BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
                        lpfn=callback)
     ole32.OleInitialize(None)          # the resizable dialog style needs OLE on this thread
@@ -165,4 +207,5 @@ def browse_folder(title: str, start: str | None = None) -> str | None:
         ole32.CoTaskMemFree(pidl)
         return path.value if ok and path.value else None
     finally:
+        PICKER['hwnd'] = None
         ole32.OleUninitialize()

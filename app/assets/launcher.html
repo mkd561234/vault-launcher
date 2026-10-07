@@ -191,6 +191,17 @@
   dialog label { display: flex; gap: 10px; align-items: center; margin: -6px 0 20px; color: var(--muted); }
   dialog .btn.primary { font-size: 20px; padding: 12px 24px; }
 
+  .picking {
+    position: fixed; inset: 0; display: none; place-items: center; z-index: 5;
+    background: rgba(8, 12, 18, 0.72);
+  }
+  .picking.show { display: grid; }
+  .picking > div {
+    border: 4px solid var(--ink); background: var(--slate); box-shadow: 8px 8px 0 var(--ink);
+    padding: 24px 28px; max-width: 460px; margin: 16px;
+  }
+  .picking h3 { margin: 0 0 8px; font: 700 26px/1.1 var(--display); font-stretch: condensed; }
+  .picking p { margin: 0 0 18px; color: var(--muted); }
   .notice {
     position: fixed; right: 20px; bottom: 20px; max-width: 420px; display: none;
     background: var(--bone); color: #000; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);
@@ -271,6 +282,14 @@
   </div>
 </dialog>
 
+<div class="picking" id="picking" role="status">
+  <div>
+    <h3>Choose a folder</h3>
+    <p id="pickingText">Pick the folder in the window that just opened.</p>
+    <button class="btn" id="pickingFront"><span>Show that window</span></button>
+  </div>
+</div>
+
 <div class="notice" id="notice" role="status">
   <p id="noticeText"></p>
   <button class="link" id="noticeClose">Close</button>
@@ -327,6 +346,17 @@ function pickDefault(s) {
   return anyMods ? anyMods.id : s.games[0].id;
 }
 
+function pickFolder(g) {
+  // The picker is a separate Windows window; say so while it is open, so it is never "nothing happened".
+  $("pickingText").textContent = "Pick your " + g.name + " folder in the window that just opened.";
+  $("picking").classList.add("show");
+  api("/api/game/browse", { game: g.id }).then((r) => {
+    if (r.busy) return;                      // already open: the server brought it to the front
+    $("picking").classList.remove("show");
+    browseError = r.error; lastKey = null; poll();
+  }).catch(() => $("picking").classList.remove("show"));
+}
+
 function select(id) {
   selected = id; browseError = null;
   history.replaceState(null, "", "#" + id);
@@ -373,8 +403,7 @@ function renderHead(g, s, busy) {
   } else {
     w.append("Not found in Steam or Epic Games. If it's installed somewhere else, choose its folder.  ");
   }
-  w.append(link(g.path ? "Change folder" : "Choose folder", () =>
-    api("/api/game/browse", { game: g.id }).then((r) => { browseError = r.error; poll(); }), busy));
+  w.append(link(g.path ? "Change folder" : "Choose folder", () => pickFolder(g), busy));
   if (browseError) { w.append(el("br"), el("span", "error", browseError)); }
 
   const slot = $("playSlot");
@@ -610,6 +639,7 @@ $("askNo").addEventListener("click", () => {
   $("ask").close(); askMode = null;
 });
 $("ask").addEventListener("cancel", (e) => { if (askMode === "job") e.preventDefault(); });
+$("pickingFront").addEventListener("click", () => api("/api/picker/front", {}));
 $("noticeClose").addEventListener("click", () => api("/api/dismiss", {}).then(poll));
 for (const b of document.querySelectorAll("[data-open]")) b.addEventListener("click", () => api("/api/open", { which: b.dataset.open }));
 
