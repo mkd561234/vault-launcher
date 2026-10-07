@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.13",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.12: new character select portrait from the high-resolution Krieg art you sent, with its own dark background and the frame's cut corner, sized and smoothed for the Pre-Sequel's portrait frame."
+  ]
+ },
+ {
   "version": "2.1.12",
   "date": "2026-10-07",
   "changes": [
