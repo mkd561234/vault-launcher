@@ -16,6 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Remove releases newer than latest.json (a rollback)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current=$(jq -r .version latest.json)
+          for tag in $(gh release list --limit 100 --json tagName --jq '.[].tagName'); do
+            v="${tag#v}"
+            newest=$(printf '%s\n%s\n' "$v" "$current" | sort -V | tail -n1)
+            if [ "$v" != "$current" ] && [ "$newest" = "$v" ]; then
+              echo "Rolling back: deleting release $tag"
+              gh release delete "$tag" --cleanup-tag --yes
+            fi
+          done
       - name: Create the release if it does not exist yet
         env:
           GH_TOKEN: ${{ github.token }}

@@ -1,12 +1,5 @@
 [
  {
-  "version": "2.1.5",
-  "date": "2026-10-07",
-  "changes": [
-   "Hide works: the link under a finished download is no longer rebuilt every second, which swallowed clicks."
-  ]
- },
- {
   "version": "2.1.4",
   "date": "2026-10-07",
   "changes": [

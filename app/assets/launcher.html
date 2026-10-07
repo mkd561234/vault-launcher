@@ -248,7 +248,7 @@
       <h2 id="workTitle">Downloading</h2>
       <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar"><div></div></div>
       <div class="log" id="log"></div>
-      <div class="row" id="workActions"><button class="link" id="workHide" hidden>Hide</button></div>
+      <div class="row" id="workActions"></div>
     </section>
 
     <section>
@@ -548,7 +548,9 @@ function renderWork(job, busy) {
     logCount = job.log.length;
     if (atEnd) log.scrollTop = log.scrollHeight;
   }
-  $("workHide").hidden = busy;     // one permanent link: rebuilding it every poll ate clicks
+  const wa = $("workActions");
+  wa.innerHTML = "";
+  if (!busy) wa.append(link("Hide", () => api("/api/dismiss", {}).then(poll)));
 }
 
 function render() {
@@ -649,10 +651,6 @@ $("whatsNew").addEventListener("click", async () => {
   } catch (e) { body.textContent = "Close Vault Launcher and open it again to see what's new."; }
 });
 $("newsClose").addEventListener("click", () => $("news").close());
-$("workHide").addEventListener("click", () => {
-  $("work").className = "work";   // hide straight away; the server clears the finished job
-  api("/api/dismiss", {}).then(poll);
-});
 $("noticeClose").addEventListener("click", () => api("/api/dismiss", {}).then(poll));
 for (const b of document.querySelectorAll("[data-open]")) b.addEventListener("click", () => api("/api/open", { which: b.dataset.open }));
 
