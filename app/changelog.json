@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.14",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.13: character select portrait from your cut-out Krieg art. He stands on the game's own portrait background like the other Vault Hunters, with the frame's cut corner kept clear."
+  ]
+ },
+ {
   "version": "2.1.13",
   "date": "2026-10-07",
   "changes": [
