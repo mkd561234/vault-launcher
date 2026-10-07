@@ -479,19 +479,53 @@ WINDOW_WAIT = 12        # seconds a browser gets to show the page before the nex
 _window = {'served': 0.0}
 
 
+def _program_dirs() -> list:
+    """Every Program Files folder. The launcher's Python is 32-bit, and Windows only tells a 32-bit
+    program about "Program Files (x86)" unless it asks for the 64-bit one by name."""
+    dirs = [os.environ.get(v) for v in ('ProgramW6432', 'ProgramFiles', 'ProgramFiles(x86)', 'LOCALAPPDATA')]
+    drive = os.environ.get('SystemDrive', 'C:')
+    dirs += [drive + '\\Program Files', drive + '\\Program Files (x86)']
+    out, seen = [], set()
+    for d in dirs:
+        if d and d.lower() not in seen:
+            seen.add(d.lower())
+            out.append(Path(d))
+    return out
+
+
 def _registry_app_path(exe: str) -> str | None:
     try:
         import winreg
     except ImportError:
         return None
+    views = (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY)   # both halves of the registry
     for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        for view in views:
+            try:
+                with winreg.OpenKey(hive, rf'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{exe}', 0,
+                                    winreg.KEY_READ | view) as k:
+                    p = winreg.QueryValueEx(k, '')[0].strip('"')
+                    if p and Path(p).is_file():
+                        return p
+            except OSError:
+                continue
+    return None
+
+
+def _webview2_runtime() -> str | None:
+    """The Edge WebView2 Runtime (part of Windows 11 and most Windows 10 PCs, even when the Edge
+    browser itself was removed). Its msedgewebview2.exe can show an app window too."""
+    for base in _program_dirs():
+        root = base / 'Microsoft' / 'EdgeWebView' / 'Application'
         try:
-            with winreg.OpenKey(hive, rf'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{exe}') as k:
-                p = winreg.QueryValueEx(k, '')[0].strip('"')
-                if p and Path(p).is_file():
-                    return p
+            versions = sorted((d for d in root.iterdir() if d.is_dir() and d.name[:1].isdigit()),
+                              key=lambda d: [int(x) for x in d.name.split('.') if x.isdigit()], reverse=True)
         except OSError:
             continue
+        for v in versions:
+            exe = v / 'msedgewebview2.exe'
+            if exe.is_file():
+                return str(exe)
     return None
 
 
@@ -503,17 +537,20 @@ def _app_browsers() -> list:
         if found and name == 'Chrome' and 'google' not in found.lower():
             found = None
         if not found:
-            for env in ('ProgramFiles', 'ProgramFiles(x86)', 'LOCALAPPDATA'):
-                base = os.environ.get(env)
+            for base in _program_dirs():
                 for folder in folders:
-                    if base and (Path(base) / folder / exe).is_file():
-                        found = str(Path(base) / folder / exe)
+                    candidate = base.joinpath(*folder.split('\\'), exe)
+                    if candidate.is_file():
+                        found = str(candidate)
                         break
                 if found:
                     break
         if found and found.lower() not in seen:
             seen.add(found.lower())
             out.append((name, found))
+    wv = _webview2_runtime()
+    if wv:
+        out.append(('WebView2', wv))
     return out
 
 
@@ -523,7 +560,7 @@ def _browser_args(name: str, exe: str, url: str, guest: bool) -> list:
     profile = winutil.data_dir() / ('launcher-window-guest' if guest else f'launcher-window-{name.lower()}')
     args = [exe, f'--app={url}', '--window-size=1180,760', f'--user-data-dir={profile}', '--no-first-run',
             '--no-default-browser-check', '--disable-sync', '--disable-features=Translate']
-    if name == 'Edge':
+    if name in ('Edge', 'WebView2'):
         args.append('--no-service-autorun')
     if guest:
         # Edge never signs Guest windows in to the Microsoft account or shows its sync screens.
