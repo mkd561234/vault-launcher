@@ -1,0 +1,11 @@
+{
+  "id": "krieg-tps",
+  "name": "Krieg the Psycho",
+  "game": "tps",
+  "version": "1.0.0",
+  "kind": "krieg",
+  "summary": "Borderlands 2's Psycho joins the Pre-Sequel as a seventh Vault Hunter.",
+  "details": "His three skill trees, Buzz Axe Rampage, heads and skins, class mods, Oz kit slams and vehicle seats. Built from your own copy of Borderlands 2, so you need its Psycho Pack.",
+  "icon": "icon.svg",
+  "nexus": {"game_domain": "borderlandspresequel", "mod_id": 0}
+}

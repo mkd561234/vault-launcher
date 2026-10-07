@@ -1,0 +1,1505 @@
+{
+ "format": 1,
+ "patches": [
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Default_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Default_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Default_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "052d48be29518eabbc46abca730d087b29ab20a1",
+   "size": 137701
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Lobelia_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Lobelia_SF.kdl",
+   "sources": [
+    "DLC/Lobelia/Compat/Content/CD_Psycho_Head_Lobelia_SF.upk"
+   ],
+   "needs_dlc": "Lobelia",
+   "sha1": "770b95d453cc2585301ea7a7a63f9884200310b6",
+   "size": 233368
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_LootChest2_SF.upk",
+   "patch": "patches/CD_Psycho_Head_LootChest2_SF.kdl",
+   "sources": [
+    "DLC/LootChest2/Compat/Content/CD_Psycho_Head_LootChest2_SF.upk"
+   ],
+   "needs_dlc": "LootChest2",
+   "sha1": "7523ce1d76a476a71909c36e910d99e25a7dc0a2",
+   "size": 212963
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychHaz_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychHaz_SF.kdl",
+   "sources": [
+    "DLC/Anemone/Compat/Content/CD_Psycho_Head_PsychHaz_SF.upk"
+   ],
+   "needs_dlc": "Anemone",
+   "sha1": "a921f3e29fd5c85f90191dae9a5958159ebcb7ff",
+   "size": 123976
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho001_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho001_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho001_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b03666920f3f4e67a790da0a3efc3e155b9d83d6",
+   "size": 241127
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho002_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho002_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho002_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "4d5516d444453093869d73ed1785cffe96ea95fd",
+   "size": 208923
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho003_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho003_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho003_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "fd9bc9f683bea1a379acacad28da2dd116fc4d39",
+   "size": 227086
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho004_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho004_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho004_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "e1c50c39eaf3c15e4786aba6e9a00c77461253c5",
+   "size": 226997
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho005_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho005_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho005_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "e5ddcb10cc73aeca6b02ef0db8826d3d8d888c3a",
+   "size": 265693
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho006_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho006_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho006_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "24bd46284fa2b24de24b1a729be6ffb063640de2",
+   "size": 285834
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho007_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho007_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho007_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "35f4cb9c19c9aab25315ae5650c9ff8392aa6e10",
+   "size": 260678
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho008_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho008_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho008_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "e61fa04a19771148eb42208d533c6635ae11959c",
+   "size": 237083
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho009_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho009_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho009_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "151dbd283502f3866522d77db57724c4c67f3c5e",
+   "size": 263980
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho010_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho010_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho010_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "26cd666a750563ac964f397d2905f3c156d1bdc5",
+   "size": 246315
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho011_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho011_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho011_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "29da4d4e4f321e374daee79acce1231475915925",
+   "size": 228078
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho012_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho012_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho012_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ce718c7e5a447af90e3236ad90bd07b1f7e04fb2",
+   "size": 247376
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoAster_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoAster_SF.kdl",
+   "sources": [
+    "DLC/Aster/Compat/Content/CD_Psycho_Head_PsychoAster_SF.upk"
+   ],
+   "needs_dlc": "Aster",
+   "sha1": "d1f80c0c03230e2f03d9abfd2a7a7dbf1ecf0a2c",
+   "size": 107485
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoCD_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoCD_SF.kdl",
+   "sources": [
+    "DLC/CommDay2013/Compat/Content/CD_Psycho_Head_PsychoCD_SF.upk"
+   ],
+   "needs_dlc": "CommDay2013",
+   "sha1": "6eae9ce8a77ac1766c77634f65a040e657e7612e",
+   "size": 140340
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoEaster_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoEaster_SF.kdl",
+   "sources": [
+    "DLC/Nasturtium/Compat/Content/CD_Psycho_Head_PsychoEaster_SF.upk"
+   ],
+   "needs_dlc": "Nasturtium",
+   "sha1": "804863f39cb82e2b88ab8365c2b4a6d8f88a0262",
+   "size": 286206
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoHP04B_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoHP04B_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Head_PsychoHP04B_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "616fc4191ce117a48090f00cb8830974d82d8fde",
+   "size": 111222
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoHP04C_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoHP04C_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Head_PsychoHP04C_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "a3dafbe530dc03ce754a3d322d483eb8a147ed02",
+   "size": 260950
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoHP04D_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoHP04D_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Head_PsychoHP04D_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "28519df3ba3bcc795dd1d893f6a64559550b5955",
+   "size": 208238
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoHP04_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoHP04_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Head_PsychoHP04_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "8a8424048934dad84acaa085b1afe9cf89f0c9d0",
+   "size": 106941
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoHP05_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoHP05_SF.kdl",
+   "sources": [
+    "DLC/Gardenia05/Compat/Content/CD_Psycho_Head_PsychoHP05_SF.upk"
+   ],
+   "needs_dlc": "Gardenia05",
+   "sha1": "db3a8b8226183298e24321dcc4144025116e1630",
+   "size": 201716
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoJack_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoJack_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoJack_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "695603eff13cf37032c06a878619a269539a5025",
+   "size": 259562
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoMC_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoMC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoMC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "81bbe1eb37b437604acadf83f00ecdcdd57c0916",
+   "size": 168029
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoPeony_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoPeony_SF.kdl",
+   "sources": [
+    "DLC/Peony/Compat/Content/CD_Psycho_Head_PsychoPeony_SF.upk"
+   ],
+   "needs_dlc": "Peony",
+   "sha1": "8c6aea9f45337eb0e5b68bb02e1a1f9a00b4341b",
+   "size": 80102
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_PsychoVday_SF.upk",
+   "patch": "patches/CD_Psycho_Head_PsychoVday_SF.kdl",
+   "sources": [
+    "DLC/Nasturtium/Compat/Content/CD_Psycho_Head_PsychoVday_SF.upk"
+   ],
+   "needs_dlc": "Nasturtium",
+   "sha1": "7730c51372fad42429801e4170e8de1338394cb7",
+   "size": 270291
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho_DLC1_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho_DLC1_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho_DLC1_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ffcfbea3e40986fe41a95ccac25a0012144b67b5",
+   "size": 278610
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho_DLC2_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho_DLC2_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho_DLC2_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "de6512ff447fa14033b4ead4a41b2954087b39c9",
+   "size": 240245
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho_DLC3_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Psycho_DLC3_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Head_Psycho_DLC3_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ddbf9dff6af78fab3b83686afa772dc9e12bb846",
+   "size": 314393
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Pumpkin_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Pumpkin_SF.kdl",
+   "sources": [
+    "DLC/Flax/Compat/Content/CD_Psycho_Head_Pumpkin_SF.upk"
+   ],
+   "needs_dlc": "Flax",
+   "sha1": "6567dfe3ea821de1dd7788a24d6ade1285572f19",
+   "size": 191050
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Snowman_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Snowman_SF.kdl",
+   "sources": [
+    "DLC/Allium/Compat/Content/CD_Psycho_Head_Snowman_SF.upk"
+   ],
+   "needs_dlc": "Allium",
+   "sha1": "53cf81e31c21a3dd9eeb19dca993194f0016d9ef",
+   "size": 224074
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Head_Turkey_SF.upk",
+   "patch": "patches/CD_Psycho_Head_Turkey_SF.kdl",
+   "sources": [
+    "DLC/Allium/Compat/Content/CD_Psycho_Head_Turkey_SF.upk"
+   ],
+   "needs_dlc": "Allium",
+   "sha1": "739f716e3c59821fb64cd6c640e641aed21fe310",
+   "size": 222123
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BanditA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BanditA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BanditA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "249f1428d074c69e4fd33cf461364a42aef41221",
+   "size": 190130
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BanditB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BanditB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BanditB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b9b38b9784deb88eb9c4e6f64de5367f984a3cbf",
+   "size": 250160
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BanditC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BanditC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BanditC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "d94e8e6ed21ed6085560939128e4189ef2efa0bc",
+   "size": 243814
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlackA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlackA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlackA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "bf1935f081c0b6b4c9f55225cea50135ce29e593",
+   "size": 242288
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "990d6960c85c3fd3e0bc104a70cbdce5ff827a0d",
+   "size": 181919
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "f556bbf07c4f50951b66155ae6c8e9e4e82aff9b",
+   "size": 174853
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "94a4c9c7800e517b31957d98db51cd0b002f495f",
+   "size": 242593
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "910e45b28b62076c3dbed7627343a48a9b179fa3",
+   "size": 174851
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueE_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueE_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueE_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "619587f685b097686efc784a9f666b4f9ed62e0f",
+   "size": 174857
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueF_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueF_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueF_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "93378ae186ab0f9142323eaae3595389f88af56c",
+   "size": 174548
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueG_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueG_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueG_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b2f09262054b76a72d07a3ec28677653e1e17d3b",
+   "size": 174544
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueH_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_BlueH_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_BlueH_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ef13f29e33ca3c45c77c134b12835bff5c260a7e",
+   "size": 174406
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "4164597aaf93a09206a32404b3fdd86df712b99a",
+   "size": 182045
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "80b70cdd52082028659476d8802c31e758dd2e9c",
+   "size": 174858
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "842c58d05b3a628a3f46657b1edf5517c82173da",
+   "size": 242596
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ac6da03b9cfc3f02a8a6124cf9bd45224295e8ad",
+   "size": 174855
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanE_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanE_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanE_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "6b3cf575cecfaf5087277e4a173a808d3f000f30",
+   "size": 174859
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanF_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanF_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanF_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "f22d33ca5ddc3046cc26de0fb4fe70f1c9e547f5",
+   "size": 174545
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanG_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanG_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanG_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b5200d2c96397eb3bd26f2e0889694707488e542",
+   "size": 174533
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanH_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_CyanH_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_CyanH_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "2169c4335bc955374884e50dfc58f9a4528c32c5",
+   "size": 174545
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_DahlA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_DahlA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_DahlA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "d9cffcabed4fa98ed44547412a017b3213b66c47",
+   "size": 243845
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_DahlB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_DahlB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_DahlB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "a5ed4229caccb0837ad53fcf6a2f40052ffbe47e",
+   "size": 243775
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_DahlC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_DahlC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_DahlC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "8701c76f2c811682d2896859b6dc4989d25558ee",
+   "size": 176615
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Default_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Default_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Default_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "479d8a90c20501ff12b481abf1d67eb9ff48bba1",
+   "size": 174449
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Frank_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Frank_SF.kdl",
+   "sources": [
+    "DLC/Flax/Compat/Content/CD_Psycho_Skin_Frank_SF.upk"
+   ],
+   "needs_dlc": "Flax",
+   "sha1": "60faed6f83c1aa4ab357ed3df5b48f9b6a98c3cd",
+   "size": 186910
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Gearbox_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Gearbox_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Gearbox_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "0682aa1cd037fd708121161edebda55350089102",
+   "size": 242687
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GrayA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GrayA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GrayA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "72fab0ef81f1ab7d4fb4f5d68e1965a8cd0cbb20",
+   "size": 241652
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "7e26ac6a0388d84e6132664754e0b2140de9a94f",
+   "size": 182066
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "53d4cdceb3a443f9a344e07f19909cbc72ada93a",
+   "size": 174856
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "c2bab1849900ab801c89568864b8b72cd86982c7",
+   "size": 182637
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "6bd91da46491b951610dc1a6d0b6efc7589336cf",
+   "size": 174736
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenE_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenE_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenE_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "a427f7a80ee53634877c7718aa67e0c3c50051ff",
+   "size": 174853
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenF_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenF_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenF_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "d1ea9621656ef9e7762b9483c684e4a3be3ff720",
+   "size": 174555
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenG_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenG_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenG_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "fd90cf60cc5a370adfb52f013c56f1dda0229938",
+   "size": 174547
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenH_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_GreenH_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_GreenH_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "1be9c87e58bdcbcb5fdd54946b5fcfe3809e1acb",
+   "size": 174553
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_HyperionA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_HyperionA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_HyperionA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "6ac2cf3693056435d813b76ec11a7adf6b322463",
+   "size": 194347
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_HyperionB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_HyperionB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_HyperionB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "d7612a365ae82ca167050f63f4c28b5210eb23fb",
+   "size": 189597
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_HyperionC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_HyperionC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_HyperionC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "fb2170c430cb646c10ea19952d3cab5e013018af",
+   "size": 189843
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_JakobsA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_JakobsA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_JakobsA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "6effbd786a03b37ad9e6b75912b93bbb4d568e8e",
+   "size": 243571
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_JakobsB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_JakobsB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_JakobsB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "dbfaa6720770af6a55f3cb04a2530af427ee4e23",
+   "size": 247091
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_JakobsC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_JakobsC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_JakobsC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "d153415922c58175c5cc5b87e3898e36c13fc853",
+   "size": 246839
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Lobelia_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Lobelia_SF.kdl",
+   "sources": [
+    "DLC/Lobelia/Compat/Content/CD_Psycho_Skin_Lobelia_SF.upk"
+   ],
+   "needs_dlc": "Lobelia",
+   "sha1": "f4e03ec709adfe3b2ed7ea6edfbe4bce9822ab56",
+   "size": 185535
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_MaliwanA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_MaliwanA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_MaliwanA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "3d89ff475c5bbd9b2400f1c0f65bc94e795d40f7",
+   "size": 210622
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_MaliwanB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_MaliwanB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_MaliwanB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "7bc8c5174aa7991bc84448346efa6d8b0879381d",
+   "size": 243674
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_MaliwanC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_MaliwanC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_MaliwanC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b3250bfe34c0b1d7a23af7db57b3e89a9377b576",
+   "size": 194295
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Minecraft_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Minecraft_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Minecraft_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "caf2b1b1b40899f469ee5ffa8f596aecc19805b4",
+   "size": 54550
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "69f19d8201865928bb3df4f99f4a7d3468c0fc43",
+   "size": 242064
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "affd1b09c39fa795320f9667a6c836f8f61f3a82",
+   "size": 174867
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "fb3888a83602cbc5bd2564611aa24cf1b828da5d",
+   "size": 182414
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "c22ac880ad98b2dc838d777d041ef186ba886c3d",
+   "size": 174863
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeE_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeE_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeE_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ee7e81577c76d99c00ff3dae26044e71534d54d8",
+   "size": 174867
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeF_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeF_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeF_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b40b3e180ca6b7808fc21f6a8be980442c76e0f2",
+   "size": 174558
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeG_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeG_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeG_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "be1a91ee085dd15ebe796622522c3dda9089de8a",
+   "size": 174558
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeH_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_OrangeH_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_OrangeH_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "5c22027547a9f16dd0466e06b64464423cc333f0",
+   "size": 174559
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PinkA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "6d529f576bfc59a1b1e62314cd8533fa45d1ce31",
+   "size": 242017
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PinkB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "9b918a38fdcf1c578783fb4b4c5ebe67cabcb531",
+   "size": 174602
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PinkC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "7278a47778a20916408977bc1b28f84eefe8f0d6",
+   "size": 242459
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PinkD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PinkD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "a50b33b03ccd94e5b895d2af57ed7ddfbe82f30c",
+   "size": 174600
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychAne_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychAne_SF.kdl",
+   "sources": [
+    "DLC/Anemone/Compat/Content/CD_Psycho_Skin_PsychAne_SF.upk"
+   ],
+   "needs_dlc": "Anemone",
+   "sha1": "cef45578168102373850b98483ae7528570a0baf",
+   "size": 50023
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoAster_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoAster_SF.kdl",
+   "sources": [
+    "DLC/Aster/Compat/Content/CD_Psycho_Skin_PsychoAster_SF.upk"
+   ],
+   "needs_dlc": "Aster",
+   "sha1": "78d33728a28c1d0396000f71602236a465ab7bcb",
+   "size": 437120
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoCD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoCD_SF.kdl",
+   "sources": [
+    "DLC/CommDay2013/Compat/Content/CD_Psycho_Skin_PsychoCD_SF.upk"
+   ],
+   "needs_dlc": "CommDay2013",
+   "sha1": "2430a6ce4888e438937b6c3e970f1763421937a5",
+   "size": 178115
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoEaster_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoEaster_SF.kdl",
+   "sources": [
+    "DLC/Nasturtium/Compat/Content/CD_Psycho_Skin_PsychoEaster_SF.upk"
+   ],
+   "needs_dlc": "Nasturtium",
+   "sha1": "5eb8e88f89ba6ed644daffb5494098ff8d98cc5c",
+   "size": 50667
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoHP04B_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoHP04B_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Skin_PsychoHP04B_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "1dbdd3fc758e4bdce575ae688667b288dc1c4b4f",
+   "size": 448798
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoHP04C_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoHP04C_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Skin_PsychoHP04C_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "cc355e91efa9ffb067f6b21119a5355b915ae8b0",
+   "size": 185874
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoHP04D_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoHP04D_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Skin_PsychoHP04D_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "0a81b388020599965da280f2bb8f1bb63f646487",
+   "size": 58888
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoHP04_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoHP04_SF.kdl",
+   "sources": [
+    "DLC/Gardenia04/Compat/Content/CD_Psycho_Skin_PsychoHP04_SF.upk"
+   ],
+   "needs_dlc": "Gardenia04",
+   "sha1": "c8da3025f7c3d18bd28ab7a73120457b9bdd05c3",
+   "size": 190408
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoHP05_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoHP05_SF.kdl",
+   "sources": [
+    "DLC/Gardenia05/Compat/Content/CD_Psycho_Skin_PsychoHP05_SF.upk"
+   ],
+   "needs_dlc": "Gardenia05",
+   "sha1": "e05f7bacdcda2752daa1ccd0489b58ac9bf1aedb",
+   "size": 181903
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoPeony_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoPeony_SF.kdl",
+   "sources": [
+    "DLC/Peony/Compat/Content/CD_Psycho_Skin_PsychoPeony_SF.upk"
+   ],
+   "needs_dlc": "Peony",
+   "sha1": "f1ea551633abb1cbfa95374caf559b23839ac5be",
+   "size": 167195
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PsychoVday_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PsychoVday_SF.kdl",
+   "sources": [
+    "DLC/Nasturtium/Compat/Content/CD_Psycho_Skin_PsychoVday_SF.upk"
+   ],
+   "needs_dlc": "Nasturtium",
+   "sha1": "0bc04a276cf9bf57a911bbbe5a4b7ba1deb86546",
+   "size": 173824
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PurpleA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "a6af66a74730ba9cb6bee82eaa10d51e8f4b16b1",
+   "size": 177143
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PurpleB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "3253daf8e23e3511093122262322adc98c1ca19c",
+   "size": 174874
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PurpleC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "53973e5c53ee2664854ba59c948f80f9ad778622",
+   "size": 182430
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_PurpleD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_PurpleD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "3380eaba6b1ac7aaccb67ea7dad02b0e1dcd4f34",
+   "size": 174873
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b4960677c77ad9dc4d8354d0e8264a44128c254f",
+   "size": 242038
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "26c8ceccd18e981c2dfe4052d9cda44efc163a08",
+   "size": 174846
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ce13b8378a3b799c999c53c31d8c389e86c91194",
+   "size": 242352
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "751ab7f0ada3d3e5cfe79da88978cb7aea032fee",
+   "size": 174844
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedE_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedE_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedE_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "4e7620bf94d53381eca4ede2dbd416b2799a7f4f",
+   "size": 174837
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedF_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedF_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedF_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "d02d4609c5b081fcc7d02aa21bb68752288eaecd",
+   "size": 174531
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedG_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedG_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedG_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "1dd620ba8bddb1bb3025925a2f7b6b66d151401c",
+   "size": 174524
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedH_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_RedH_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_RedH_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "7803f2bf72d299768726cd1b9feb69930210b738",
+   "size": 174530
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TedioreA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_TedioreA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TedioreA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "89d266364fa3521b6e5228a4c83bd6731577fec7",
+   "size": 309455
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TedioreB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_TedioreB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TedioreB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "dbb87f1b30647e192881a5966c99ed8013c68c66",
+   "size": 247223
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TedioreC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_TedioreC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TedioreC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "e5c6011274f5b13062f853da8fe1418424651b57",
+   "size": 313540
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Thanks_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Thanks_SF.kdl",
+   "sources": [
+    "DLC/Allium/Compat/Content/CD_Psycho_Skin_Thanks_SF.upk"
+   ],
+   "needs_dlc": "Allium",
+   "sha1": "184ae2b10b8a054c25e8ea6c7b0ef41b40ec86cd",
+   "size": 176944
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TorgueA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_TorgueA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TorgueA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "528ce4147c529b3cc2a35159b4919151c9e178df",
+   "size": 260266
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TorgueB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_TorgueB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TorgueB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "1b280bf5967dbdccee887727dd813168f462101a",
+   "size": 243452
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TorgueC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_TorgueC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_TorgueC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "c21b8f5b88dbc127bff85d513ac379ba1d4aa89c",
+   "size": 176446
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Tribal_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Tribal_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Tribal_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "5f494c074a52ef4d514a4a38d9ec97842fb8eba8",
+   "size": 186083
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_VladofA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_VladofA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_VladofA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "1ccdfe3d447ab16c6e27dbaa0d04d6c8d638bd15",
+   "size": 243994
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_VladofB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_VladofB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_VladofB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "34d43bf6470c380bfee41f3c875306507ab43ec6",
+   "size": 243430
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_VladofC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_VladofC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_VladofC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "4d44e431d57cae93a76c9ea5145ecffa6f52daca",
+   "size": 176759
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_WhiteA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_WhiteA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_WhiteA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "ec8185e7e55d950f91ad003a7a20efe476c79ee9",
+   "size": 242289
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_Xmas_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_Xmas_SF.kdl",
+   "sources": [
+    "DLC/Allium/Compat/Content/CD_Psycho_Skin_Xmas_SF.upk"
+   ],
+   "needs_dlc": "Allium",
+   "sha1": "c1d1197181d695c63481ad10d3db3c779ee28f9d",
+   "size": 49487
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowA_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowA_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowA_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "e1ab213b949b1b72722b385bcfa67d59df6fffb6",
+   "size": 242080
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowB_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowB_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowB_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "b7c088168d4a8ed544c4345c9b342f447d3240b1",
+   "size": 174863
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowC_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowC_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowC_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "cd904f3489256f778f9af7b2cf45579c3a1afbce",
+   "size": 242458
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowD_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowD_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowD_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "78e95104a596ce366a08ad7b05c0394b9e7da23e",
+   "size": 174865
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowE_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowE_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowE_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "0ce2d74440c231a633b8cebccb5589ee9f1895d6",
+   "size": 174871
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowF_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowF_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowF_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "c41045a970357e37839fc869ceadcfd466b78039",
+   "size": 174555
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowG_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowG_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowG_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "a5d280ad4022bcf943b526111de7f3ed7ddffab5",
+   "size": 174563
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowH_SF.upk",
+   "patch": "patches/CD_Psycho_Skin_YellowH_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/CD_Psycho_Skin_YellowH_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "37348cc1447fa36dbf4ce38ccdbbe495f9bc104e",
+   "size": 174559
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/GD_Lilac_Psycho_Streaming_SF.upk",
+   "patch": "patches/GD_Lilac_Psycho_Streaming_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/GD_Lilac_Psycho_Streaming_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "9e8f40e5d2649df023a5bd334ced61358d8de620",
+   "size": 6801223
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/GuidCache_lilac.upk",
+   "patch": "patches/GuidCache_lilac.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/GuidCache_lilac.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "eedaf97e709bcbdcc0f55a3496ccf28763066b60",
+   "size": 43622
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/Krieg_ClassMods_Aster_SF.upk",
+   "patch": "patches/Krieg_ClassMods_Aster_SF.kdl",
+   "sources": [
+    "DLC/Aster/Compat/Content/Aster_Startup_SF.upk"
+   ],
+   "needs_dlc": "Aster",
+   "sha1": "e5bbc0137da63a69fe6657611406617b5700adf7",
+   "size": 3131324
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/Krieg_ClassMods_Lobelia_SF.upk",
+   "patch": "patches/Krieg_ClassMods_Lobelia_SF.kdl",
+   "sources": [
+    "DLC/Lobelia/Compat/Content/Lobelia_Startup_SF.upk"
+   ],
+   "needs_dlc": "Lobelia",
+   "sha1": "8ba1e5cc5e0b51b6facbe387b7df3aaff19493e5",
+   "size": 809619
+  },
+  {
+   "out": "DLC/Lilac/Compat/Content/Lilac_Startup_SF.upk",
+   "patch": "patches/Lilac_Startup_SF.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Content/Lilac_Startup_SF.upk"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "09ae41f60bf8a6e432d9aebf7e2b6831001d20d1",
+   "size": 660011
+  }
+ ],
+ "copies": [
+  {
+   "out": "DLC/Lilac/Compat/Audio/Audio_Banks_lilac.pck",
+   "src": "DLC/Lilac/Compat/Audio/Audio_Banks_lilac.pck"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Audio/Audio_Streaming_lilac.pck",
+   "src": "DLC/Lilac/Compat/Audio/Audio_Streaming_lilac.pck"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Audio/English(US)/Audio_Banks_lilac.pck",
+   "src": "DLC/Lilac/Compat/Audio/English(US)/Audio_Banks_lilac.pck"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Audio/English(US)/Audio_Streaming_lilac.pck",
+   "src": "DLC/Lilac/Compat/Audio/English(US)/Audio_Streaming_lilac.pck"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_AllCustoms_Lilac.INT",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_AllCustoms_Lilac.INT"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_DefaultCustoms_Lilac.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_DefaultCustoms_Lilac.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_LilacPackageDef.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_LilacPackageDef.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_ClassMods.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_ClassMods.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_SkillsBase.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_SkillsBase.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_Skills_Bloodlust.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_Skills_Bloodlust.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_Skills_Hellborn.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_Skills_Hellborn.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_Skills_Mania.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/GD_Lilac_Skills_Mania.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/Presence.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/Presence.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/WillowGame.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/WillowGame.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Localization/INT/WillowMenu.int",
+   "src": "DLC/Lilac/Compat/Localization/INT/WillowMenu.int"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Textures/CharTextures_lilac.tfc",
+   "src": "DLC/Lilac/Compat/Textures/CharTextures_lilac.tfc"
+  },
+  {
+   "out": "DLC/Lilac/Compat/Textures/Textures_lilac.tfc",
+   "src": "DLC/Lilac/Compat/Textures/Textures_lilac.tfc"
+  }
+ ],
+ "ini": {
+  "out": "DLC/Lilac/Compat/Config/WillowDlc.ini",
+  "src": "DLC/Lilac/Compat/Config/WillowDlc.ini",
+  "replace": [
+   [
+    "+PackageId=6\r\n",
+    "+PackageId=20\r\n"
+   ],
+   [
+    "+PackageId=6\n",
+    "+PackageId=20\n"
+   ]
+  ]
+ },
+ "contver": [
+  "DLC/Lilac/Compat/contver.bin",
+  "DLC/Lilac/Lic/contver.bin"
+ ],
+ "licence": "DLC/Lilac/Lic/Licenses/steam_0.bin",
+ "tfc_manifest": "tfc_manifest.json"
+}

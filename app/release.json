@@ -1,0 +1,13 @@
+{
+ "name": "Vault Launcher",
+ "version": "2.0.5",
+ "nexus": {
+  "game_domain": "borderlandspresequel",
+  "mod_id": 0,
+  "app_slug": "",
+  "application_name": "VaultLauncher"
+ },
+ "github": {
+  "repo": "mkd561234/vault-launcher"
+ }
+}

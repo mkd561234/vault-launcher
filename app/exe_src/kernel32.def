@@ -1,0 +1,9 @@
+LIBRARY kernel32.dll
+EXPORTS
+GetModuleFileNameW
+GetEnvironmentVariableW
+GetFileAttributesW
+CreateDirectoryW
+CreateProcessW
+CloseHandle
+ExitProcess

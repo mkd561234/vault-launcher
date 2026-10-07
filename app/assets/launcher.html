@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vault Launcher</title>
+<link rel="icon" href="/icon.png">
+<style>
+  :root {
+    --slate: #1d2733;      /* page */
+    --deep: #141b24;       /* the rail, wells */
+    --raised: #2a3747;     /* secondary buttons, cards */
+    --ink: #000000;        /* cel-shading outlines */
+    --orange: #ff7a1a;     /* the one action that matters */
+    --cyan: #4fd4f0;       /* ready / found */
+    --red: #e0453a;        /* removal and missing */
+    --bone: #efe6d2;       /* text */
+    --muted: #9fb0c3;
+    --display: "Bahnschrift", "DIN Alternate", "Arial Narrow", "DejaVu Sans Condensed", sans-serif;
+    --body: "Segoe UI", "Segoe UI Variable Text", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--slate);
+    color: var(--bone);
+    font: 15px/1.5 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; }
+  .app { display: grid; grid-template-columns: 270px 1fr; height: 100vh; }
+
+  /* ---------- rail: the games ---------- */
+  .rail {
+    background: var(--deep);
+    border-right: 4px solid var(--ink);
+    display: flex; flex-direction: column;
+    padding: 22px 0 18px;
+    min-height: 0;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 0 20px 22px; }
+  .door { width: 62px; height: 62px; flex: none; display: block; filter: drop-shadow(3px 3px 0 #000); }
+  .door .wheel { transform-origin: 50% 50%; transition: transform 600ms ease; }
+  .busy .door .wheel { animation: turn 1.6s cubic-bezier(.6,0,.4,1) infinite; }
+  @keyframes turn { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .busy .door .wheel { animation: none; } }
+  .brand-name {
+    margin: 0; font: 700 27px/0.92 var(--display); font-stretch: condensed; color: var(--bone);
+    -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .games { list-style: none; margin: 0; padding: 0 14px 0 0; overflow-y: auto; flex: 1; }
+  .game {
+    position: relative; width: 100%; display: grid; grid-template-columns: 16px 1fr auto; gap: 10px;
+    align-items: center; text-align: left; cursor: pointer;
+    margin: 0 0 8px; padding: 11px 14px 11px 20px;
+    background: transparent; color: var(--muted); border: 3px solid transparent; border-left: 0;
+    font: 700 18px/1.1 var(--display); font-stretch: condensed; white-space: nowrap;
+  }
+  .game .name { overflow: hidden; text-overflow: ellipsis; }
+  .game:hover { color: var(--bone); background: #1a232f; }
+  .game:focus-visible { outline: 3px solid var(--cyan); outline-offset: -3px; }
+  .game[aria-current="true"] {
+    background: var(--orange); color: #000; border-color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    padding-right: 24px;
+  }
+  .pip { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #4a5a6c; }
+  .pip.found { background: var(--cyan); border-color: var(--ink); }
+  .game[aria-current="true"] .pip { border-color: var(--ink); }
+  .game[aria-current="true"] .pip:not(.found) { background: transparent; border-color: #5a2a00; }
+  .count {
+    min-width: 22px; padding: 1px 6px; text-align: center; font-size: 13px;
+    background: var(--raised); color: var(--bone); border: 2px solid var(--ink);
+  }
+  .game[aria-current="true"] .count { background: #000; color: var(--orange); }
+
+  .rail-foot { padding: 16px 20px 0; border-top: 2px solid #0c1118; margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .rail-foot p { margin: 0 0 8px; }
+  .rail-foot .row { gap: 6px 14px; }
+
+  /* ---------- buttons: cel-shaded, skewed like the games' menus ---------- */
+  .btn {
+    --bg: var(--raised); --fg: var(--bone);
+    appearance: none; display: inline-block;
+    border: 3px solid var(--ink); background: var(--bg); color: var(--fg);
+    font: 700 18px/1 var(--display); font-stretch: condensed; letter-spacing: 0.02em;
+    padding: 11px 20px; transform: skewX(-8deg); box-shadow: 4px 4px 0 var(--ink);
+    cursor: pointer; transition: transform 80ms ease, box-shadow 80ms ease;
+  }
+  .btn > span { display: inline-block; transform: skewX(8deg); }
+  .btn:hover:not(:disabled) { transform: skewX(-8deg) translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
+  .btn:active:not(:disabled) { transform: skewX(-8deg) translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
+  .btn:disabled { cursor: default; opacity: 0.5; }
+  .btn.primary { --bg: var(--orange); --fg: #000; font-size: 24px; padding: 13px 28px; box-shadow: 5px 5px 0 var(--ink); }
+  .btn.danger { --fg: #ffb3ab; }
+  .btn.primary.destroy { --bg: var(--red); --fg: #000; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px 16px; align-items: center; }
+  .link {
+    background: none; border: 0; padding: 0; color: var(--cyan); font: inherit; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .link:disabled { color: var(--muted); cursor: default; }
+  .link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  /* ---------- the selected game ---------- */
+  .main { min-width: 0; overflow-y: auto; padding: 30px 40px 36px; }
+  .head {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px 28px; align-items: end;
+    padding-bottom: 22px; margin-bottom: 26px; border-bottom: 3px solid var(--ink);
+  }
+  .title {
+    margin: 0; font: 700 72px/0.9 var(--display); font-stretch: condensed; color: var(--bone);
+    -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; text-shadow: 6px 6px 0 var(--ink);
+    transform: rotate(-2.5deg); transform-origin: left bottom; overflow-wrap: anywhere;
+  }
+  .title.long { font-size: 56px; }
+  .where { grid-column: 1; margin: 6px 0 0; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+  .where strong { color: var(--bone); font-weight: 600; }
+  .head .play { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .error { color: #ffb3ab; }
+
+  h2 { margin: 0 0 14px; font: 700 26px/1.1 var(--display); font-stretch: condensed; color: var(--bone); }
+  section + section { margin-top: 34px; }
+
+  .work { display: none; margin-bottom: 30px; }
+  .work.show { display: block; }
+  .bar { height: 16px; border: 3px solid var(--ink); background: var(--deep); box-shadow: 4px 4px 0 var(--ink); }
+  .bar > div { height: 100%; width: 0; background: var(--orange); transition: width 300ms ease; }
+  .work.failed .bar > div { background: var(--red); }
+  .work.done .bar > div { background: var(--cyan); }
+  .log {
+    margin: 16px 0 0; height: 170px; overflow: auto; padding: 10px 12px;
+    background: var(--deep); border: 3px solid var(--ink);
+    font: 12.5px/1.45 "Cascadia Mono", Consolas, monospace; color: #c9d6e4; white-space: pre-wrap;
+  }
+  .work .row { margin-top: 14px; }
+
+  /* a mod: shaped like an item card, with a coloured edge for its state */
+  .mod {
+    position: relative; display: grid; grid-template-columns: 84px 1fr; gap: 6px 22px;
+    padding: 22px 24px 22px 28px; margin-bottom: 22px;
+    background: var(--raised); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink);
+  }
+  .mod::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: #4a5a6c; border-right: 3px solid var(--ink); }
+  .mod.installed::before { background: var(--cyan); }
+  .mod.update::before { background: var(--orange); }
+  .mod .icon { width: 84px; height: 84px; grid-row: 1 / span 3; }
+  .mod .icon svg { width: 100%; height: 100%; display: block; filter: drop-shadow(3px 3px 0 #000); }
+  .mod h3 { margin: 0; font: 700 32px/1 var(--display); font-stretch: condensed; }
+  .mod .status { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .mod .status strong { color: var(--cyan); font-weight: 600; }
+  .mod.update .status strong { color: var(--orange); }
+  .mod .summary { margin: 10px 0 0; max-width: 64ch; }
+  .mod .details { margin: 4px 0 0; max-width: 64ch; color: var(--muted); font-size: 14px; }
+  .mod .body { grid-column: 2; }
+  .mod .actions { margin-top: 18px; }
+
+  .checks { list-style: none; margin: 16px 0 0; padding: 0; max-width: 70ch; }
+  .checks li { display: grid; grid-template-columns: 26px 1fr; gap: 0 10px; padding: 6px 0; }
+  .mark {
+    width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--ink);
+    display: grid; place-items: center; font: 700 12px/1 var(--display); color: #000;
+  }
+  .mark.ok { background: var(--cyan); }
+  .mark.no { background: var(--red); }
+  .checks .label { font-weight: 600; }
+  .checks .detail { grid-column: 2; color: var(--muted); font-size: 13.5px; }
+  .checks .detail .link { font-size: 13.5px; }
+
+  .empty {
+    border: 3px dashed #3c4b5d; padding: 26px 28px; max-width: 64ch; color: var(--muted);
+  }
+  .empty p { margin: 0 0 8px; }
+  .none { margin: 0; color: var(--muted); max-width: 64ch; }
+  .empty strong { color: var(--bone); font: 700 22px/1.2 var(--display); font-stretch: condensed; display: block; margin-bottom: 6px; }
+
+  .sdk p { margin: 0 0 8px; color: var(--muted); max-width: 66ch; }
+  .sdk p strong { color: var(--bone); font-weight: 600; }
+
+  /* ---------- dialogs ---------- */
+  dialog {
+    border: 4px solid var(--ink); padding: 26px 28px 24px; background: var(--slate); color: var(--bone);
+    box-shadow: 8px 8px 0 var(--ink); max-width: 500px; width: calc(100% - 40px);
+  }
+  dialog::backdrop { background: rgba(8, 12, 18, 0.72); }
+  dialog h3 { margin: 0 0 10px; font: 700 26px/1.1 var(--display); font-stretch: condensed; }
+  dialog p { margin: 0 0 20px; white-space: pre-line; }
+  dialog label { display: flex; gap: 10px; align-items: center; margin: -6px 0 20px; color: var(--muted); }
+  dialog .btn.primary { font-size: 20px; padding: 12px 24px; }
+
+  .notice {
+    position: fixed; right: 20px; bottom: 20px; max-width: 420px; display: none;
+    background: var(--bone); color: #000; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);
+    padding: 14px 16px 12px;
+  }
+  .notice.show { display: block; }
+  .notice.warn { background: #ffd6d1; }
+  .notice p { margin: 0 0 8px; white-space: pre-line; }
+  .notice .link { color: #000; }
+
+  @media (max-width: 760px) {
+    .app { grid-template-columns: minmax(0, 1fr); height: auto; }
+    .rail { border-right: 0; border-bottom: 4px solid var(--ink); }
+    .games { display: flex; overflow-x: auto; padding: 0 12px; gap: 6px; }
+    .game { width: auto; grid-template-columns: 12px auto auto; margin: 0; border-left: 3px solid transparent; padding: 9px 22px 9px 12px; }
+    .game .name { overflow: visible; }
+    .rail-foot { display: none; }
+    .main { padding: 24px 16px; }
+    .head { grid-template-columns: 1fr; }
+    .head .play { grid-column: 1; grid-row: auto; justify-self: start; }
+    .title, .title.long { font-size: 40px; -webkit-text-stroke-width: 5px; text-shadow: 4px 4px 0 var(--ink); }
+    .mod { grid-template-columns: 56px 1fr; padding-left: 22px; }
+    .mod .icon { width: 56px; height: 56px; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <nav class="rail" aria-label="Games">
+    <div class="brand">{{EMBLEM}}<p class="brand-name">Vault<br>Launcher</p></div>
+    <ul class="games" id="games"></ul>
+    <div class="rail-foot">
+      <p id="nexusText">Checking for updates…</p>
+      <div class="row" id="nexusActions"></div>
+      <p style="margin-top:12px"><span id="version"></span> <button class="link" data-open="logs">Logs</button></p>
+    </div>
+  </nav>
+
+  <main class="main" id="main">
+    <header class="head">
+      <h1 class="title" id="title">Borderlands</h1>
+      <p class="where" id="where"></p>
+      <div class="play" id="playSlot"></div>
+    </header>
+
+    <section class="work" id="work" aria-live="polite">
+      <h2 id="workTitle">Downloading</h2>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar"><div></div></div>
+      <div class="log" id="log"></div>
+      <div class="row" id="workActions"></div>
+    </section>
+
+    <section>
+      <h2>Downloaded</h2>
+      <div id="downloaded"></div>
+    </section>
+
+    <section>
+      <h2>Uninstalled</h2>
+      <div id="uninstalled"></div>
+    </section>
+
+    <section class="sdk">
+      <h2>Mod SDK</h2>
+      <p id="sdkText"></p>
+      <div class="row" id="sdkActions"></div>
+    </section>
+  </main>
+</div>
+
+<dialog id="ask">
+  <h3 id="askTitle">Vault Launcher</h3>
+  <p id="askText"></p>
+  <label id="restoreRow" hidden><input type="checkbox" id="restore"> <span id="restoreLabel">Put back the folder I had before</span></label>
+  <div class="row">
+    <button class="btn primary" id="askYes"><span>Yes</span></button>
+    <button class="btn" id="askNo"><span>No</span></button>
+  </div>
+</dialog>
+
+<div class="notice" id="notice" role="status">
+  <p id="noticeText"></p>
+  <button class="link" id="noticeClose">Close</button>
+</div>
+
+<script>
+const TOKEN = "{{TOKEN}}";
+const $ = (id) => document.getElementById(id);
+let lastKey = null, state = null, askId = null, askMode = null, askMod = null, logCount = -1, selected = null, browseError = null;
+
+async function api(path, body) {
+  const opts = { headers: { "X-Vault-Token": TOKEN } };
+  if (body !== undefined) {
+    opts.method = "POST";
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  }
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function btn(label, cls, onClick, disabled) {
+  const b = el("button", "btn " + (cls || ""));
+  b.append(el("span", "", label));
+  b.addEventListener("click", onClick);
+  b.disabled = !!disabled;
+  return b;
+}
+function link(label, onClick, disabled) {
+  const b = el("button", "link", label);
+  b.addEventListener("click", onClick);
+  b.disabled = !!disabled;
+  return b;
+}
+
+const JOB_TITLE = { modupdate: "Updating", install: "Downloading", uninstall: "Removing", update: "Updating Vault Launcher", signin: "Signing in to Nexus Mods" };
+
+function modName(id) { const m = (state.status.mods || []).find((x) => x.id === id); return m ? m.name : ""; }
+
+function pickDefault(s) {
+  const fromHash = decodeURIComponent(location.hash.slice(1));
+  if (s.games.some((g) => g.id === fromHash)) return fromHash;
+  const withInstalled = s.mods.find((m) => m.installed);
+  if (withInstalled) return withInstalled.game;
+  const withMods = s.games.find((g) => g.mods.length && g.path);
+  if (withMods) return withMods.id;
+  const anyMods = s.games.find((g) => g.mods.length);
+  return anyMods ? anyMods.id : s.games[0].id;
+}
+
+function select(id) {
+  selected = id; browseError = null;
+  history.replaceState(null, "", "#" + id);
+  render();
+  $("main").scrollTop = 0;
+}
+
+function renderRail(s, busy) {
+  const ul = $("games");
+  if (ul.childElementCount !== s.games.length) {
+    ul.innerHTML = "";
+    for (const g of s.games) {
+      const li = el("li");
+      const b = el("button", "game");
+      b.dataset.id = g.id;
+      b.append(el("span", "pip"), el("span", "name", g.short));
+      b.addEventListener("click", () => select(g.id));
+      li.append(b);
+      ul.append(li);
+    }
+  }
+  for (const b of ul.querySelectorAll(".game")) {
+    const g = s.games.find((x) => x.id === b.dataset.id);
+    b.setAttribute("aria-current", g.id === selected ? "true" : "false");
+    b.querySelector(".pip").className = "pip" + (g.path ? " found" : "");
+    b.title = g.path ? g.name + " is installed" : g.name + " was not found";
+    let c = b.querySelector(".count");
+    if (g.mods.length) {
+      if (!c) { c = el("span", "count"); b.append(c); }
+      c.textContent = g.mods.length;
+      c.setAttribute("aria-label", g.mods.length + (g.mods.length === 1 ? " mod" : " mods"));
+    } else if (c) c.remove();
+  }
+}
+
+function renderHead(g, s, busy) {
+  const t = $("title");
+  t.textContent = g.short;
+  t.classList.toggle("long", g.short.length > 14);
+  const w = $("where");
+  w.innerHTML = "";
+  if (g.path) {
+    w.append(el("strong", "", { steam: "Steam: ", epic: "Epic Games: " }[g.store] || "Folder: "), g.path + "  ");
+  } else {
+    w.append("Not found in Steam or Epic Games. If it's installed somewhere else, choose its folder.  ");
+  }
+  w.append(link(g.path ? "Change folder" : "Choose folder", () =>
+    api("/api/game/browse", { game: g.id }).then((r) => { browseError = r.error; poll(); }), busy));
+  if (browseError) { w.append(el("br"), el("span", "error", browseError)); }
+
+  const slot = $("playSlot");
+  slot.innerHTML = "";
+  const mods = s.mods.filter((m) => m.game === g.id);
+  const needsAction = mods.some((m) => !m.installed && m.checks.every((c) => c.ok)) || mods.some((m) => m.update);
+  if (g.path) {
+    slot.append(btn(g.running ? "Running" : "Play", needsAction ? "" : "primary",
+      () => api("/api/game/play", { game: g.id }), g.running || busy));
+  }
+}
+
+function renderMod(m, s, busy, job) {
+  const card = el("article", "mod" + (m.installed ? " installed" : "") + (m.update ? " update" : ""));
+  const icon = el("div", "icon");
+  // from the launcher's own catalog; mods without one wear the launcher's emblem
+  icon.innerHTML = m.icon || document.querySelector(".brand svg").outerHTML;
+  card.append(icon);
+  const body = el("div", "body");
+  body.append(el("h3", "", m.name));
+  const st = el("p", "status");
+  if (m.update) { st.append(el("strong", "", "Update ready: " + m.version), " (you have " + m.version_installed + ")"); }
+  else if (m.installed) { st.append(el("strong", "", "Downloaded"), " version " + (m.version_installed || m.version)); }
+  else st.append("Version " + m.version + (m.was_installed ? ", uninstalled" : ", not downloaded yet"));
+  body.append(st, el("p", "summary", m.summary));
+  if (m.details) body.append(el("p", "details", m.details));
+
+  const ready = m.checks.every((c) => c.ok);
+  if (!m.installed || !ready) {
+    const ul = el("ul", "checks");
+    for (const c of m.checks) {
+      const li = el("li");
+      const mark = el("span", "mark " + (c.ok ? "ok" : "no"), c.ok ? "✓" : "!");
+      mark.setAttribute("aria-label", c.ok ? "ready" : "missing");
+      li.append(mark, el("span", "label", c.label));
+      if (c.detail && (!c.ok || c.detail !== "Found.")) {
+        const d = el("span", "detail", c.detail + " ");
+        const needGame = s.games.find((g) => c.label.startsWith(g.short) || c.label.startsWith(g.name));
+        if (!c.ok && needGame && !needGame.path) d.append(link("Go to " + needGame.short, () => select(needGame.id)));
+        li.append(d);
+      } else if (!c.ok) {
+        const needGame = s.games.find((g) => c.label.startsWith(g.short) || c.label.startsWith(g.name));
+        if (needGame) { const d = el("span", "detail"); d.append(link("Choose the " + needGame.short + " folder", () => select(needGame.id))); li.append(d); }
+      }
+      ul.append(li);
+    }
+    body.append(ul);
+  }
+
+  const acts = el("div", "row actions");
+  const mine = busy && job.target === m.id;
+  if (!m.installed) {
+    acts.append(btn(mine ? "Downloading…" : (m.was_installed ? "Redownload" : "Download"), "primary", () => api("/api/mod/install", { mod: m.id }).then(poll), !ready || busy));
+  } else {
+    if (m.update) acts.append(btn(mine ? "Updating…" : "Update to " + m.version, "primary", () => api("/api/mod/install", { mod: m.id }).then(poll), busy));
+    acts.append(btn("Repair", "", () => api("/api/mod/install", { mod: m.id }).then(poll), busy || !ready));
+    acts.append(btn("Uninstall", "danger", () => openAsk("uninstall", null, m), busy));
+    acts.append(link("Open the mods folder", () => api("/api/open", { which: "mods", game: m.game })));
+  }
+  if (m.page) acts.append(link("Nexus page", () => window.open(m.page, "_blank")));
+  body.append(acts);
+  card.append(body);
+  return card;
+}
+
+function renderMods(g, s, busy, job) {
+  const down = $("downloaded"), un = $("uninstalled");
+  down.innerHTML = ""; un.innerHTML = "";
+  const mods = s.mods.filter((m) => m.game === g.id);
+  if (!mods.length) {
+    down.append(el("p", "none", "Nothing downloaded for " + g.short + "."));
+    const e = el("div", "empty");
+    e.append(el("strong", "", "No mods for " + g.short + " yet"),
+             el("p", "", "When a mod for this game is added to Vault Launcher it shows up here, ready to download with its mod SDK."));
+    un.append(e);
+    return;
+  }
+  for (const m of mods) (m.installed ? down : un).append(renderMod(m, s, busy, job));
+  if (!down.childElementCount) down.append(el("p", "none", "Nothing downloaded for " + g.short + " yet. Download a mod below and it moves here."));
+  if (!un.childElementCount) un.append(el("p", "none", "Every mod for " + g.short + " is downloaded. Mods you uninstall show up here so you can redownload them."));
+}
+
+function renderSdk(g, busy) {
+  const t = $("sdkText"), a = $("sdkActions");
+  t.innerHTML = ""; a.innerHTML = "";
+  if (!g.sdk.repo) { t.textContent = "There is no Python mod SDK for this game yet."; return; }
+  if (!g.path) {
+    t.textContent = "Mods for this game run on the Python SDK (" + g.sdk.repo + "). It installs together with the first mod, once the game is found.";
+  } else if (g.sdk.installed) {
+    t.append(el("strong", "", "Installed. "), "Mods for " + g.short + " run on the Python SDK (" + g.sdk.repo + "). Removing a mod leaves it in place for your other mods.");
+  } else {
+    t.textContent = "Not installed yet. It installs automatically with the first mod for " + g.short + ", from the bl-sdk releases on GitHub.";
+  }
+  a.append(link("SDK releases", () => window.open(g.sdk.page, "_blank")));
+  if (g.path) a.append(link("Open the game folder", () => api("/api/open", { which: "game", game: g.id })));
+}
+
+function renderNexus(s, busy) {
+  const nx = state.nexus, nt = $("nexusText"), na = $("nexusActions");
+  na.innerHTML = "";
+  if (nx && nx.source === "github") {
+    const v = s.launcher.version, upd = nx.latest && newer(nx.latest, v);
+    nt.textContent = upd ? "Vault Launcher " + nx.latest + " is out on GitHub. It installs by itself; your downloaded mods update with it."
+      : nx.error ? "Couldn't reach GitHub to check for updates (" + nx.error + ")."
+      : nx.latest ? "Up to date. New versions come from GitHub and install by themselves."
+      : "New versions come from GitHub and install by themselves.";
+    if (upd) na.append(btn("Update now", "primary", () => api("/api/update", {}).then(poll), busy));
+    else na.append(link("Check for updates", () => api("/api/check", {}).then(poll), busy || state.nexus_busy));
+    na.append(link("GitHub page", () => window.open(nx.page, "_blank")));
+    $("version").textContent = "Version " + s.launcher.version + ".";
+    return;
+  }
+  if (!nx) nt.textContent = "Checking for updates…";
+  else if (!nx.configured) nt.textContent = "A newer Vault Launcher zip in your Downloads folder installs by itself.";
+  else if (!nx.signed_in) {
+    nt.textContent = "Sign in to Nexus Mods to get launcher and mod updates automatically.";
+    na.append(link("Sign in to Nexus Mods", () => api("/api/signin", {}).then(poll), busy));
+  } else {
+    const v = s.launcher.version;
+    const upd = nx.latest && newer(nx.latest, v);
+    nt.textContent = (nx.user ? "Signed in as " + nx.user + "." : "Signed in to Nexus Mods.") +
+      (upd ? " Vault Launcher " + nx.latest + " is out." : nx.error ? " Last check failed: " + nx.error : " Up to date.");
+    if (upd) na.append(btn("Update to " + nx.latest, "primary", () => api("/api/update", {}).then(poll), busy));
+    else na.append(link("Check for updates", () => api("/api/check", {}).then(poll), busy || state.nexus_busy));
+  }
+  if (nx && nx.page) na.append(link("Nexus page", () => window.open(nx.page, "_blank")));
+  $("version").textContent = "Version " + s.launcher.version + ".";
+}
+
+function vt(v) { return String(v || "0").replace(/^v/i, "").split(".").map((n) => parseInt(n, 10) || 0); }
+function newer(a, b) {
+  const x = vt(a), y = vt(b);
+  for (let i = 0; i < 4; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
+  return false;
+}
+
+function renderWork(job, busy) {
+  const work = $("work");
+  const show = busy || !!job.result;
+  if (busy && !work.classList.contains("show")) $("main").scrollTop = 0;
+  work.className = "work" + (show ? " show" : "") + (job.result === "failed" ? " failed" : "") + (job.result === "ok" ? " done" : "");
+  if (!show) { logCount = -1; return; }
+  const what = job.target ? " " + modName(job.target) : "";
+  $("workTitle").textContent = busy ? (JOB_TITLE[job.name] || "Working") + what
+    : (job.result === "ok" ? "Finished" : "Stopped with a problem");
+  const pct = Math.round((job.progress || 0) * 100);
+  $("bar").firstChild.style.width = pct + "%";
+  $("bar").setAttribute("aria-valuenow", pct);
+  if ((job.log || []).length !== logCount) {
+    const log = $("log");
+    const atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 8;
+    log.textContent = (job.log || []).join("\n");
+    logCount = job.log.length;
+    if (atEnd) log.scrollTop = log.scrollHeight;
+  }
+  const wa = $("workActions");
+  wa.innerHTML = "";
+  if (!busy) wa.append(link("Hide", () => api("/api/dismiss", {}).then(poll)));
+}
+
+function render() {
+  const s = state.status || {}, job = state.job || {};
+  if (state.restarting) {
+    $("title").textContent = "Updating";
+    $("app").classList.add("busy");
+    $("where").textContent = "Switching to Vault Launcher " + state.restarting + "…";
+    if (state.restart_url && !window.__moving) { window.__moving = true; location.replace(state.restart_url); }
+    return;
+  }
+  if (!s.games || !s.games.length) {
+    $("title").textContent = "Vault Launcher";
+    $("where").textContent = s.error ? "Something went wrong reading your games: " + s.error : "Looking for your games…";
+    return;
+  }
+  const busy = !!job.running;
+  $("app").classList.toggle("busy", busy);
+  if (!selected) selected = pickDefault(s);
+  const g = s.games.find((x) => x.id === selected) || s.games[0];
+  renderWork(job, busy);
+  // rebuild the rest only when something changed, so focus and hover survive the polling
+  const key = JSON.stringify([selected, browseError, busy, job.target, s, state.nexus, state.nexus_busy]);
+  if (key !== lastKey) {
+    lastKey = key;
+    renderRail(s, busy);
+    renderHead(g, s, busy);
+    renderMods(g, s, busy, job);
+    renderSdk(g, busy);
+    renderNexus(s, busy);
+  }
+
+  if (job.question && job.question.id !== askId) openAsk("job", job.question);
+  if (!job.question && askMode === "job") { $("ask").close(); askMode = null; askId = null; }
+  const n = $("notice");
+  if (job.notice) {
+    $("noticeText").textContent = job.notice.text;
+    n.className = "notice show" + (job.notice.warning ? " warn" : "");
+  } else n.className = "notice";
+}
+
+function openAsk(mode, q, mod) {
+  askMode = mode;
+  const d = $("ask");
+  $("restoreRow").hidden = true;
+  if (mode === "uninstall") {
+    askMod = mod;
+    $("askTitle").textContent = "Remove " + mod.name + "?";
+    $("askText").textContent = "This removes " + mod.name + " from " + (state.status.games.find((g) => g.id === mod.game) || {}).short +
+      ". Saves that use it may not load until it's installed again, so keep a copy of them. The mod SDK stays for your other mods.";
+    $("askYes").firstChild.textContent = "Remove";
+    $("askYes").classList.add("destroy");
+    $("askNo").firstChild.textContent = "Keep it";
+    $("restore").checked = false;
+    $("restoreLabel").textContent = "Put back the files this mod replaced when it was installed";
+    $("restoreRow").hidden = !mod.has_backup;
+  } else {
+    $("askYes").classList.remove("destroy");
+    askId = q.id;
+    $("askTitle").textContent = "Vault Launcher";
+    $("askText").textContent = q.text;
+    $("askYes").firstChild.textContent = q.yes || "Yes";
+    $("askNo").firstChild.textContent = q.no || "No";
+  }
+  if (!d.open) d.showModal();
+}
+
+$("askYes").addEventListener("click", () => {
+  if (askMode === "uninstall") api("/api/mod/uninstall", { mod: askMod.id, restore: $("restore").checked }).then(poll);
+  else api("/api/answer", { id: askId, yes: true });
+  $("ask").close(); askMode = null;
+});
+$("askNo").addEventListener("click", () => {
+  if (askMode === "job") api("/api/answer", { id: askId, yes: false });
+  $("ask").close(); askMode = null;
+});
+$("ask").addEventListener("cancel", (e) => { if (askMode === "job") e.preventDefault(); });
+$("noticeClose").addEventListener("click", () => api("/api/dismiss", {}).then(poll));
+for (const b of document.querySelectorAll("[data-open]")) b.addEventListener("click", () => api("/api/open", { which: b.dataset.open }));
+
+async function poll() {
+  try { state = await api("/api/state"); render(); }
+  catch (e) { $("where").textContent = "Vault Launcher stopped. Open it again from its shortcut."; }
+}
+poll();
+setInterval(poll, 1000);
+</script>
+</body>
+</html>
