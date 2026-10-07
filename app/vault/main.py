@@ -287,10 +287,39 @@ def migrate() -> bool:
 # --------------------------------------------------------------------------------------------
 # Keeping a copy of the launcher, and Nexus updates
 # --------------------------------------------------------------------------------------------
+EXE_NAME = 'Vault Launcher.exe'
+LAUNCH_ARGS = []      # --no-window / --url-file, passed on whenever the launcher hands over to another copy
+
+
+def install_exe(src: Path) -> None:
+    """Keeps Vault Launcher.exe (the launcher's window) next to the installed app, for the shortcuts.
+    A running exe can't be overwritten but can be renamed, so the old one is moved aside."""
+    if not src.is_file():
+        return
+    dst = winutil.data_dir() / EXE_NAME
+    try:
+        if dst.resolve() == src.resolve():
+            return
+    except OSError:
+        pass
+    old = dst.with_name(EXE_NAME + '.old')
+    try:
+        old.unlink(missing_ok=True)
+    except OSError:
+        pass
+    try:
+        if dst.exists():
+            dst.replace(old)
+        shutil.copyfile(src, dst)
+    except OSError as ex:
+        say(f'could not copy {EXE_NAME}: {ex}')
+
+
 def install_self() -> None:
     """Keeps this launcher in %LOCALAPPDATA%\\VaultLauncher\\app so shortcuts and the updater work
     after the downloaded zip is gone."""
     target = winutil.data_dir() / 'app'
+    install_exe(APP_DIR.parent / EXE_NAME)
     if target.resolve() == APP_DIR:
         return
     if target.exists():
@@ -490,6 +519,7 @@ def apply_launcher_zip(archive: Path) -> Path:
         if target.exists():
             shutil.rmtree(target)
         shutil.copytree(src, target, ignore=shutil.ignore_patterns('__pycache__'))
+        install_exe(src.parent / EXE_NAME)
     say(f'Vault Launcher updated from {archive.name}')
     own = winutil.data_dir() / 'downloads'
     for old in own.glob('VaultLauncher*.zip') if own.is_dir() else []:
@@ -795,7 +825,11 @@ def main(argv) -> int:
     sub.add_parser('list')
     p = sub.add_parser('launcher')
     p.add_argument('--no-window', action='store_true')
+    p.add_argument('--url-file')
     args = ap.parse_args(argv or ['launcher'])
+    if args.cmd == 'launcher':
+        LAUNCH_ARGS[:] = (['--no-window'] if args.no_window else []) + \
+            (['--url-file', args.url_file] if args.url_file else [])
     try:
         migrate()
     except Exception:  # noqa: BLE001
@@ -807,11 +841,12 @@ def main(argv) -> int:
                 # a newer launcher is in Downloads: switch to it before the window opens
                 import subprocess
                 run = apply_launcher_zip(found[0])
-                subprocess.Popen([sys.executable, str(run), 'launcher'], cwd=str(winutil.data_dir()),
+                subprocess.Popen([sys.executable, str(run), 'launcher', *LAUNCH_ARGS], cwd=str(winutil.data_dir()),
                                  creationflags=0x00000008)
                 return 0
             from . import launcher
-            return launcher.run(open_ui=not getattr(args, 'no_window', False))
+            return launcher.run(open_ui=not getattr(args, 'no_window', False),
+                                url_file=getattr(args, 'url_file', None))
         return {'install': cmd_install, 'uninstall': cmd_uninstall, 'update': cmd_update,
                 'selfinstall': cmd_selfinstall, 'signin': cmd_signin, 'list': cmd_list}[args.cmd](args)
     except KeyboardInterrupt:

@@ -26,6 +26,8 @@ if errorlevel 1 powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-A
 del "%KDIR%\%PYZIP%" >nul 2>&1
 if not exist "%PYDIR%\python.exe" goto dlfail
 :run
+rem "setup": only make sure Python is there (Vault Launcher.exe starts the launcher itself)
+if /i "%~1"=="setup" exit /b 0
 if /i "%~1"=="launcher" (
   start "" "%PYDIR%\pythonw.exe" "%~dp0run.py" launcher
   exit /b 0

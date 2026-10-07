@@ -463,7 +463,7 @@ function renderMod(m, s, busy, job) {
     acts.append(btn("Uninstall", "danger", () => openAsk("uninstall", null, m), busy));
     acts.append(link("Open the mods folder", () => api("/api/open", { which: "mods", game: m.game })));
   }
-  if (m.page) acts.append(link("Nexus page", () => window.open(m.page, "_blank")));
+  if (m.page) acts.append(link("Nexus page", () => api("/api/openurl", { url: m.page })));
   body.append(acts);
   card.append(body);
   return card;
@@ -497,7 +497,7 @@ function renderSdk(g, busy) {
   } else {
     t.textContent = "Not installed yet. It installs automatically with the first mod for " + g.short + ", from the bl-sdk releases on GitHub.";
   }
-  a.append(link("SDK releases", () => window.open(g.sdk.page, "_blank")));
+  a.append(link("SDK releases", () => api("/api/openurl", { url: g.sdk.page })));
   if (g.path) a.append(link("Open the game folder", () => api("/api/open", { which: "game", game: g.id })));
 }
 
@@ -512,7 +512,7 @@ function renderNexus(s, busy) {
       : "New versions come from GitHub and install by themselves.";
     if (upd) na.append(btn("Update now", "primary", () => api("/api/update", {}).then(poll), busy));
     else na.append(link("Check for updates", () => api("/api/check", {}).then(poll), busy || state.nexus_busy));
-    na.append(link("GitHub page", () => window.open(nx.page, "_blank")));
+    na.append(link("GitHub page", () => api("/api/openurl", { url: nx.page })));
     $("version").textContent = "Version " + s.launcher.version + ".";
     return;
   }
@@ -529,7 +529,7 @@ function renderNexus(s, busy) {
     if (upd) na.append(btn("Update to " + nx.latest, "primary", () => api("/api/update", {}).then(poll), busy));
     else na.append(link("Check for updates", () => api("/api/check", {}).then(poll), busy || state.nexus_busy));
   }
-  if (nx && nx.page) na.append(link("Nexus page", () => window.open(nx.page, "_blank")));
+  if (nx && nx.page) na.append(link("Nexus page", () => api("/api/openurl", { url: nx.page })));
   $("version").textContent = "Version " + s.launcher.version + ".";
 }
 

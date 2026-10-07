@@ -327,6 +327,11 @@ def ensure_shortcuts() -> None:
     icon = base / 'app' / 'assets' / 'vault.ico'
     if not (pyw.is_file() and run.is_file()):
         return
+    exe = base / main.EXE_NAME
+    if exe.is_file():          # the launcher's own window
+        target, arguments, icon = exe, '', exe
+    else:
+        target, arguments = pyw, chr(34) + str(run) + chr(34) + ' launcher'
     lines = []
     for folder in ("[Environment]::GetFolderPath('Desktop')", "[Environment]::GetFolderPath('Programs')"):
         for old in OLD_SHORTCUTS:
@@ -334,8 +339,8 @@ def ensure_shortcuts() -> None:
                          "-ErrorAction SilentlyContinue;")
         lines.append(f"$p = Join-Path ({folder}) {_ps_quote(SHORTCUT + '.lnk')};"
                      "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($p);"
-                     f"$s.TargetPath = {_ps_quote(pyw)};"
-                     f"$s.Arguments = {_ps_quote(chr(34) + str(run) + chr(34) + ' launcher')};"
+                     f"$s.TargetPath = {_ps_quote(target)};"
+                     f"$s.Arguments = {_ps_quote(arguments)};"
                      f"$s.WorkingDirectory = {_ps_quote(base)};"
                      f"$s.IconLocation = {_ps_quote(str(icon) + ',0')};"
                      "$s.Description = 'Install, update or remove Borderlands mods';"
@@ -362,6 +367,19 @@ def _page() -> bytes:
 _picker_lock = threading.Lock()
 
 
+def _browse_powershell(title: str, start: str | None) -> str | None:
+    script = ("Add-Type -AssemblyName System.Windows.Forms;"
+              "$d = New-Object System.Windows.Forms.FolderBrowserDialog;"
+              f"$d.Description = {_ps_quote(title)};"
+              "$d.ShowNewFolderButton = $false;"
+              + (f"$d.SelectedPath = {_ps_quote(start)};" if start else "") +
+              "$w = New-Object System.Windows.Forms.Form -Property @{TopMost=$true; ShowInTaskbar=$false; "
+              "Opacity=0; StartPosition='CenterScreen'};"
+              "$w.Show(); $w.Activate();"
+              "if ($d.ShowDialog($w) -eq 'OK') { Write-Output $d.SelectedPath }; $w.Close()")
+    return _powershell(script) or None
+
+
 def _browse(game_id: str) -> str | None:
     """Lets the player pick a game folder. Returns an error message, or None."""
     g = games.BY_ID[game_id]
@@ -369,8 +387,14 @@ def _browse(game_id: str) -> str | None:
     if current is None:
         current = next((lib / 'steamapps' / 'common' for lib in games.steam_libraries()
                         if (lib / 'steamapps' / 'common').is_dir()), None)
-    picked = winutil.browse_folder(f"Choose your {g.name} folder: the one with the "
-                                   f"{g.exes[0].split('/')[0]} folder inside it.", str(current) if current else None)
+    title = f"Choose your {g.name} folder: the one with the {g.exes[0].split('/')[0]} folder inside it."
+    try:
+        picked = winutil.browse_folder(title, str(current) if current else None)
+    except Exception:  # noqa: BLE001
+        import traceback
+        main.say('folder picker failed, trying the other one:\n' + traceback.format_exc())
+        picked = _browse_powershell(title, str(current) if current else None)
+    main.say(f'folder picker: {picked or "cancelled"}')
     error = main.set_game_path(game_id, picked) if picked else None
     _refresh_status(force=True)
     return error
@@ -415,6 +439,17 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, b'{}')
 
     def do_POST(self):  # noqa: N802
+        try:
+            self._post()
+        except Exception:  # noqa: BLE001 - write it down instead of failing silently
+            import traceback
+            main.say(f'request {self.path} failed:\n' + traceback.format_exc())
+            try:
+                self._json({'ok': False, 'error': 'Something went wrong. The details are in the launcher log.'})
+            except OSError:
+                pass
+
+    def _post(self):
         if not self._authed():
             return self._send(403, b'{}')
         _last_seen['t'] = time.time()
@@ -459,6 +494,11 @@ class Handler(BaseHTTPRequestHandler):
             finally:
                 _picker_lock.release()
             ok = error is None
+        elif path == '/api/openurl':
+            u = str(body.get('url', ''))
+            ok = u.startswith(('https://', 'http://'))
+            if ok:
+                winutil.open_url(u)          # outside links go to the player's own browser
         elif path == '/api/picker/front':
             ok = winutil.bring_picker_to_front()
         elif path == '/api/game/play' and game_id:
@@ -611,14 +651,43 @@ def open_window(url: str, confirm: bool = True) -> None:
     winutil.open_url(url)
 
 
-def _already_running() -> bool:
+def _watch_exe_window(url: str) -> None:
+    """Vault Launcher.exe should show the page within seconds. If it never does (for example the
+    WebView2 engine failed without saying so), open the page the other way so there is a window."""
+    started = time.time()
+    while time.time() - started < 30:
+        time.sleep(1)
+        _last_seen['t'] = max(_last_seen['t'], time.time() + 20)
+        if _window['served']:
+            main.say('window: Vault Launcher.exe')
+            return
+    main.say('window: Vault Launcher.exe did not show the page, opening it another way')
+    open_window(url)
+
+
+def _tell_window(url_file: str | None, url: str) -> None:
+    """Vault Launcher.exe waits for this file to know which page to show in its window."""
+    if url_file:
+        try:
+            tmp = Path(url_file + '.tmp')
+            tmp.write_text(url, encoding='ascii')
+            tmp.replace(url_file)
+        except OSError as ex:
+            main.say(f'could not tell the window where the page is: {ex}')
+
+
+def _already_running(url_file: str | None = None) -> bool:
     info = winutil.data_dir() / 'launcher.json'
     try:
         d = json.loads(info.read_text(encoding='utf-8'))
         req = urllib.request.Request(f"http://127.0.0.1:{d['port']}/api/ping", headers={'X-Vault-Token': d['token']})
         with urllib.request.urlopen(req, timeout=2) as r:
             if r.status == 200:
-                open_window(f"http://127.0.0.1:{d['port']}/?t={d['token']}", confirm=False)
+                url = f"http://127.0.0.1:{d['port']}/?t={d['token']}"
+                if url_file:
+                    _tell_window(url_file, url)      # Vault Launcher.exe shows it in its own window
+                else:
+                    open_window(url, confirm=False)
                 return True
     except (OSError, ValueError, KeyError):
         pass
@@ -638,15 +707,15 @@ def _relaunch_from_data_dir() -> bool:
         from .nexus import version_tuple
         if version_tuple(mine) >= version_tuple(theirs):
             main.install_self()
-        subprocess.Popen([sys.executable, str(target / 'run.py'), 'launcher'], cwd=str(winutil.data_dir()),
-                         creationflags=0x00000008)
+        subprocess.Popen([sys.executable, str(target / 'run.py'), 'launcher', *main.LAUNCH_ARGS],
+                         cwd=str(winutil.data_dir()), creationflags=0x00000008)
         return True
     except (OSError, ValueError, KeyError):
         return False
 
 
-def run(open_ui: bool = True, port: int = 0) -> int:
-    if _relaunch_from_data_dir() or _already_running():
+def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int:
+    if _relaunch_from_data_dir() or _already_running(url_file):
         return 0
     ensure_shortcuts()
     srv = ThreadingHTTPServer(('127.0.0.1', port), Handler)
@@ -654,6 +723,10 @@ def run(open_ui: bool = True, port: int = 0) -> int:
     (winutil.data_dir() / 'launcher.json').write_text(json.dumps({'port': port, 'token': TOKEN}), encoding='utf-8')
     url = f'http://127.0.0.1:{port}/?t={TOKEN}'
     threading.Thread(target=srv.serve_forever, daemon=True).start()
+    _tell_window(url_file, url)
+    _last_seen['t'] = time.time() + 20
+    if url_file and not open_ui:
+        threading.Thread(target=_watch_exe_window, args=(url,), daemon=True).start()
     _refresh_status(force=True)
     _refresh_nexus()
     try:

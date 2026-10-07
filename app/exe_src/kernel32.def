@@ -1,9 +1,22 @@
 LIBRARY kernel32.dll
 EXPORTS
 GetModuleFileNameW
+GetModuleHandleW
 GetEnvironmentVariableW
 GetFileAttributesW
 CreateDirectoryW
+DeleteFileW
 CreateProcessW
+WaitForSingleObject
+GetExitCodeProcess
 CloseHandle
 ExitProcess
+Sleep
+CreateFileW
+ReadFile
+LoadLibraryW
+GetProcAddress
+FindFirstFileW
+FindNextFileW
+FindClose
+GetTickCount
