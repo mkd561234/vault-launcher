@@ -36,14 +36,26 @@ def ask(text: str) -> bool:
     return False
 
 
-def open_url(url: str) -> None:
+def open_url(url: str) -> bool:
+    """Opens a link in the player's default browser (or a folder in File Explorer)."""
+    if IS_WINDOWS:
+        try:
+            shell32 = ctypes.windll.shell32
+            shell32.ShellExecuteW.restype = ctypes.c_void_p
+            r = shell32.ShellExecuteW(None, 'open', str(url), None, None, 1)   # SW_SHOWNORMAL
+            if r and r > 32:
+                return True
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            os.startfile(url)  # noqa: S606
+            return True
+        except OSError:
+            pass
     try:
-        if IS_WINDOWS:
-            os.startfile(url)  # noqa: S606 - opens the player's browser
-        else:
-            webbrowser.open(url)
-    except OSError:
-        webbrowser.open(url)
+        return bool(webbrowser.open(url))
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def data_dir() -> Path:

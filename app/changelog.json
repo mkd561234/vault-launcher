@@ -1,5 +1,14 @@
 [
  {
+  "version": "2.1.3",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.3: no more blue smudge on the Buzz Axe. It borrows its shader from a Pre-Sequel gun, and it had picked the Excalibastard (a glowing legendary laser); it now picks a plain gun.",
+   "What's new and GitHub page didn't work because an older launcher was still running in the background behind the window. A running launcher now switches its window to a newer version as soon as one is installed, and opening the launcher replaces an older one that is still running.",
+   "Links like GitHub page open with Windows' own link handler."
+  ]
+ },
+ {
   "version": "2.1.2",
   "date": "2026-10-07",
   "changes": [

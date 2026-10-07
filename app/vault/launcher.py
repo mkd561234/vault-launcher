@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from . import catalog, games, main, sdk, winutil
+from .nexus import version_tuple
 
 APP_DIR = main.APP_DIR
 ASSETS = APP_DIR / 'assets'
@@ -240,7 +241,15 @@ def _auto_update_mods() -> None:
         JOB.start('modupdate', lambda: act_update_mods(ready), ready[0])
 
 
-_restart = {'zip': None, 'version': None, 'at': 0.0, 'url': None}
+_restart = {'zip': None, 'version': None, 'at': 0.0, 'url': None, 'handover': False, 'quit': False}
+RUN_VERSION = main.release()['version']        # the version of the code running in this process
+
+
+def _disk_version() -> str:
+    try:
+        return json.loads((APP_DIR / 'release.json').read_text(encoding='utf-8'))['version']
+    except (OSError, ValueError, KeyError):
+        return RUN_VERSION
 
 
 def _github_check() -> None:
@@ -500,11 +509,14 @@ class Handler(BaseHTTPRequestHandler):
             finally:
                 _picker_lock.release()
             ok = error is None
+        elif path == '/api/quit':
+            _restart['quit'] = True          # a newer launcher has taken over
+            ok = True
         elif path == '/api/openurl':
             u = str(body.get('url', ''))
-            ok = u.startswith(('https://', 'http://'))
-            if ok:
-                winutil.open_url(u)          # outside links go to the player's own browser
+            ok = u.startswith(('https://', 'http://')) and winutil.open_url(u)   # the player's own browser
+            if not ok:
+                main.say(f'could not open {u!r} in the browser')
         elif path == '/api/picker/front':
             ok = winutil.bring_picker_to_front()
         elif path == '/api/game/play' and game_id:
@@ -686,6 +698,16 @@ def _already_running(url_file: str | None = None) -> bool:
     info = winutil.data_dir() / 'launcher.json'
     try:
         d = json.loads(info.read_text(encoding='utf-8'))
+        if version_tuple(str(d.get('version', '0'))) < version_tuple(RUN_VERSION):
+            # An older launcher is still running: ask it to stop (2.1.3 and later) and start fresh,
+            # so this window gets the new code.
+            try:
+                req = urllib.request.Request(f"http://127.0.0.1:{d['port']}/api/quit", data=b'{}', method='POST',
+                                             headers={'X-Vault-Token': d['token'], 'Content-Type': 'application/json'})
+                urllib.request.urlopen(req, timeout=2).close()
+            except (OSError, ValueError):
+                pass
+            return False
         req = urllib.request.Request(f"http://127.0.0.1:{d['port']}/api/ping", headers={'X-Vault-Token': d['token']})
         with urllib.request.urlopen(req, timeout=2) as r:
             if r.status == 200:
@@ -726,7 +748,8 @@ def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int
     ensure_shortcuts()
     srv = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     port = srv.server_address[1]
-    (winutil.data_dir() / 'launcher.json').write_text(json.dumps({'port': port, 'token': TOKEN}), encoding='utf-8')
+    (winutil.data_dir() / 'launcher.json').write_text(
+        json.dumps({'port': port, 'token': TOKEN, 'version': RUN_VERSION, 'pid': os.getpid()}), encoding='utf-8')
     url = f'http://127.0.0.1:{port}/?t={TOKEN}'
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     _tell_window(url_file, url)
@@ -751,22 +774,32 @@ def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int
             break
         if _restart['zip'] and not JOB.running and time.time() - _restart['at'] > 3:   # the window has shown the notice
             break
+        if _restart['quit']:
+            break
+        # A newer version was installed while this one kept running (for example from a zip in
+        # Downloads): hand the window over, so the page never talks to older code.
+        if not JOB.running and not _restart['zip'] and \
+                version_tuple(_disk_version()) > version_tuple(RUN_VERSION):
+            main.say(f'Vault Launcher {_disk_version()} is installed; switching this window to it')
+            _restart.update({'handover': True, 'version': _disk_version(), 'at': time.time()})
+            break
     info = winutil.data_dir() / 'launcher.json'
     try:
         info.unlink()
     except OSError:
         pass
-    if _restart['zip']:
+    if _restart['zip'] or _restart['handover']:
         _switch_to_new_version(info)
     srv.shutdown()
     return 0
 
 
 def _switch_to_new_version(info: Path) -> None:
-    """Installs the downloaded release, starts it without a window of its own, and points this
-    window at it (Edge does not let a page close its own app window)."""
+    """Starts the newer launcher without a window of its own and points this window at it (a
+    window can't close itself). Either a downloaded release is installed first, or a newer
+    version was already put in place (an update from a zip while this one kept running)."""
     try:
-        run = main.apply_launcher_zip(_restart['zip'])
+        run = main.apply_launcher_zip(_restart['zip']) if _restart['zip'] else APP_DIR / 'run.py'
     except Exception as ex:  # noqa: BLE001
         main.say(f'could not switch to the new version: {ex}')
         return

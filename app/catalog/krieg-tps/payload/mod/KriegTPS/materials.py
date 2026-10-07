@@ -142,6 +142,9 @@ def _param_names(mic) -> set[str]:
 
 
 _gear_retry_at: dict[str, float] = {}
+FANCY_GEAR_WORDS = ("legendary", "unique", "pearl", "glitch", "etech", "e-tech", "laser", "cryo", "fire",
+                    "incendiary", "shock", "corrosive", "slag", "explosive", "glow", "effervescent",
+                    "seraph", "rainbow", "excalibastard", "boss", "custom", "gold")
 
 
 def _find_gear_template(master_path: str, want: set[str]):
@@ -169,9 +172,15 @@ def _find_gear_template(master_path: str, want: set[str]):
             bonus = 1000 if ppath == master_path else (0 if ppath.startswith(families) else None)
             if bonus is None:
                 continue
-            if cand._path_name().split(".", 1)[0].startswith("Lilac"):
+            cpath = cand._path_name()
+            if cpath.split(".", 1)[0].startswith("Lilac"):
                 continue
-            score = bonus + len(want & _param_names(cand))
+            have = _param_names(cand)
+            # A plain gun shader: every parameter the template sets that Krieg's material doesn't
+            # keeps the template's own value, so a legendary or elemental gun would paint its glow,
+            # sheen or animated effect onto the Buzz Axe (the Excalibastard made it blue).
+            fancy = any(k in cpath.lower() for k in FANCY_GEAR_WORDS)
+            score = bonus + 10 * len(want & have) - len(have - want) - (500 if fancy else 0)
         except Exception:  # noqa: BLE001
             continue
         if score > best_score:

@@ -634,6 +634,7 @@ $("whatsNew").addEventListener("click", async () => {
   if (!$("news").open) $("news").showModal();
   try {
     const items = await api("/api/changelog");
+    if (!Array.isArray(items)) { body.textContent = "Close Vault Launcher and open it again to see what's new."; return; }
     body.innerHTML = "";
     const mine = state && state.status && state.status.launcher ? state.status.launcher.version : "";
     for (const v of items) {
@@ -647,7 +648,7 @@ $("whatsNew").addEventListener("click", async () => {
       body.append(sec);
     }
     if (!items.length) body.textContent = "No notes yet.";
-  } catch (e) { body.textContent = "Couldn't read the notes."; }
+  } catch (e) { body.textContent = "Close Vault Launcher and open it again to see what's new."; }
 });
 $("newsClose").addEventListener("click", () => $("news").close());
 $("noticeClose").addEventListener("click", () => api("/api/dismiss", {}).then(poll));
