@@ -80,6 +80,12 @@ _PARAM_KINDS = (
 )
 _filled_log = [0]
 
+# Borderlands 2's Master_Player defaults (read from the material embedded in Krieg's packages).
+# Used when the running game can't report a default, so a blank setting never shows Aurelia's.
+BL2_VECTOR_DEFAULTS = {'p_DigiStructColor': (0.2, 1.0, 3.0, 1.0), 'p_AColorShadow': (1.0, 1.0, 1.0, 1.0), 'p_EmissiveColor': (0.0232, 9.0473, 1.3093, 1.0), 'p_DecalChannelScale': (1.0, 1.0, 1.0, 0.0), 'p_BColorHilight': (1.0, 1.0, 1.0, 1.0), 'p_BColorMidtone': (1.0, 1.0, 1.0, 1.0), 'p_BColorShadow': (1.0, 1.0, 1.0, 1.0), 'p_PatternColor': (1.0, 1.0, 1.0, 1.0), 'p_CColorHilight': (1.0, 1.0, 1.0, 1.0), 'p_CColorMidtone': (1.0, 1.0, 1.0, 1.0), 'p_DecalScalePosition': (1.0, 1.0, 0.0, 0.0), 'p_CColorShadow': (1.0, 1.0, 1.0, 1.0), 'p_PatternScalePosition': (1.0, 1.0, 0.0, 0.0), 'p_AColorMidtone': (1.0, 1.0, 1.0, 1.0), 'p_DecalColor': (1.0, 1.0, 1.0, 1.0), 'p_AColorHilight': (1.0, 1.0, 1.0, 1.0), 'p_PowerEmissiveColor': (0.0, 14.5545, 20.0, 0.0), 'p_PatternChannelScale': (1.0, 1.0, 1.0, 0.0), 'p_ReflectColor': (1.0, 1.0, 1.0, 1.0)}
+BL2_SCALAR_DEFAULTS = {'p_EnablePowerEmissive': 0.0, 'p_HighlightsIntensity': 2.0, 'p_DigiStructEnable': 0.0, 'p_Hologram_Enable': 0.0, 'p_DecalIntensity': 0.0, 'p_PatternRotation': 0.0, 'p_DigistructToggle': 0.0, 'p_ShadowsIntensity': 2.0, 'p_PatternIntensity': 0.0, 'p_ColorStructEnable': 0.0}
+BL2_TEXTURE_DEFAULTS = {'p_Masks': 'Common_Textures.Stub.StubBlack_Gray', 'p_Diffuse': 'Common_Textures.Stub.StubGray_Gray', 'P_SimpleReflect': 'Common_Textures.Stub.StubBlack_Gray', 'p_Decal': 'Common_Textures.Stub.StubGray_Gray', 'p_Pattern': 'Common_Textures.Stub.StubGray_Gray', 'p_Normal': 'Common_Textures.Stub.StubFlat_Nrm'}
+
 
 def _names(mic, arr: str) -> set:
     try:
@@ -95,12 +101,24 @@ def _out_value(ret):
     return (False, None)
 
 
+def _bl2_default(arr: str, name: str):
+    try:
+        if arr == "VectorParameterValues" and name in BL2_VECTOR_DEFAULTS:
+            r, g, b, a = BL2_VECTOR_DEFAULTS[name]
+            return unrealsdk.make_struct("LinearColor", R=r, G=g, B=b, A=a)
+        if arr == "ScalarParameterValues":
+            return BL2_SCALAR_DEFAULTS.get(name)
+        if arr == "TextureParameterValues" and name in BL2_TEXTURE_DEFAULTS:
+            return unrealsdk.find_object("Texture2D", BL2_TEXTURE_DEFAULTS[name])
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
 def _fill_from_master(mic, master, template) -> int:
     """Settings the template chain sets but Krieg's instance doesn't would show the template's
     (Aurelia's) value once it becomes the parent. Write the original master material's default
     into Krieg's instance for each, so nothing of Aurelia's shows on him."""
-    if master is None:
-        return 0
     filled = 0
     for arr, getter, setter in _PARAM_KINDS:
         theirs, node = set(), template
@@ -108,11 +126,18 @@ def _fill_from_master(mic, master, template) -> int:
             theirs |= _names(node, arr)
             node = node.Parent
         for name in theirs - _names(mic, arr):
+            value = _bl2_default(arr, name)        # Borderlands 2's own default first
+            if value is None and master is not None:
+                try:
+                    ok, value = _out_value(getattr(master, getter)(name))
+                    value = value if ok else None
+                except Exception:  # noqa: BLE001
+                    value = None
+            if value is None:
+                continue
             try:
-                ok, value = _out_value(getattr(master, getter)(name))
-                if ok and value is not None:
-                    getattr(mic, setter)(name, value)
-                    filled += 1
+                getattr(mic, setter)(name, value)
+                filled += 1
             except Exception:  # noqa: BLE001
                 continue
     return filled

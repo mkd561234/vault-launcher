@@ -324,6 +324,12 @@
   .head .play { grid-row: 1 / span 3; }
   .head .play .btn.primary { --bg: var(--accent); }
   body[data-game="bl2"] .head .play .btn.primary { --bg: #000; --fg: #ffd400; }
+  /* the footer buttons wear the Play button's look, a size smaller */
+  .rail-foot .btn.primary { --bg: var(--accent); font-size: 16px; padding: 9px 16px; box-shadow: 4px 4px 0 var(--ink); }
+  .rail-foot .btn.primary:hover:not(:disabled) { box-shadow: 5px 5px 0 var(--ink); }
+  body[data-game="bl2"] .rail-foot .btn.primary { --bg: #ffd400; --fg: #000; }
+  .rail-foot .row { gap: 12px 12px; margin-top: 4px; }
+  .rail-foot .foot-btns { margin-top: 0; }
 
   /* Game list: each game carries a slash of its own two colours; the selected one fills with them. */
   .game[data-id="bl1"]  { --c1: #e9b51f; --c2: #c3271c; }
@@ -354,7 +360,8 @@
     <div class="rail-foot">
       <p id="nexusText">Checking for updates…</p>
       <div class="row" id="nexusActions"></div>
-      <p style="margin-top:12px"><span id="version"></span> <button class="link" id="whatsNew">What's new</button></p>
+      <p style="margin-top:12px"><span id="version"></span></p>
+      <div class="row foot-btns"><button class="btn primary" id="whatsNew"><span>What's new</span></button></div>
     </div>
   </nav>
 
@@ -627,11 +634,11 @@ function renderNexus(s, busy) {
     else nt.textContent = upd ? "Vault Launcher " + nx.latest + " is out. Check for updates to install it."
       : nx.error ? "Couldn't reach GitHub to check for updates (" + nx.error + ")."
       : "New versions install by themselves.";
-    na.append(link(uc.busy ? "Checking…" : "Check for updates", () => {
+    na.append(btn(uc.busy ? "Checking…" : "Check for updates", "primary", () => {
       nt.textContent = "Checking for updates…";
       api("/api/update", {}).then(poll);
     }, busy || uc.busy || uc.state === "updating"));
-    na.append(link("GitHub page", () => api("/api/openurl", { url: nx.page })));
+    na.append(btn("GitHub page", "primary", () => api("/api/openurl", { url: nx.page })));
     $("version").textContent = "Version " + s.launcher.version + ".";
     return;
   }

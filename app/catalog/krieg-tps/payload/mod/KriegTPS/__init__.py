@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -1141,21 +1141,31 @@ for _i, _h in enumerate(_hot_hooks):
     globals()[f"_hot_hook_{_i}"] = _h
 
 
+_frame_errors: set = set()
+
+
+def _frame() -> None:
+    """Per-frame work. A failing step is written to the log once, never every frame (an error
+    every frame floods the SDK log and makes the game hitch)."""
+    for step in (fast_material_pass, upkeep, vehicles.tick, buzzaxe.tick):
+        try:
+            step()
+        except Exception as ex:  # noqa: BLE001
+            key = f"{getattr(step, '__module__', '')}.{getattr(step, '__name__', step)}"
+            if key not in _frame_errors:
+                _frame_errors.add(key)
+                log(f"{key} failed: {type(ex).__name__}: {ex}")
+
+
 @hook("Engine.GameViewportClient:Tick", Type.PRE, hook_identifier="KriegTPSFastMaterials")
 def on_viewport_tick(*_) -> None:
     # Runs after async loading and before the frame is drawn.
-    fast_material_pass()
-    upkeep()
-    vehicles.tick()
-    buzzaxe.tick()
+    _frame()
 
 
 @hook("Engine.PlayerController:PlayerTick", Type.PRE)
 def on_player_tick(*_) -> None:
-    fast_material_pass()
-    upkeep()
-    vehicles.tick()
-    buzzaxe.tick()
+    _frame()
 
 
 @hook("Engine.HUD:PostRender", Type.PRE)

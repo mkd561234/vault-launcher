@@ -209,6 +209,33 @@ def _watch_thrown(now: float) -> None:
             _thrown.pop(key, None)
 
 
+def _animate(now: float) -> None:
+    """Drives each disintegrating axe: the digistruct shader parameter climbs to DIGI_END while
+    the axe shrinks, over FADE_SECONDS."""
+    for key in list(_active):
+        e = _active[key]
+        t = (now - e["start"]) / FADE_SECONDS
+        try:
+            proj = e["proj"]
+            if t >= 1.0 or proj is None or getattr(proj, "bDeleteMe", False):
+                del _active[key]
+                continue
+            for mic in e["mics"]:
+                mic.SetScalarParameterValue(DIGI_PARAM, DIGI_END * t)
+            proj.SetDrawScale(max(MIN_SCALE, e["scale"] * (1.0 - t)))
+        except Exception:  # noqa: BLE001 - the axe is gone
+            _active.pop(key, None)
+
+
+def tick() -> None:
+    """Called every frame (the mod's PlayerTick and viewport hooks)."""
+    if not _thrown and not _active:
+        return
+    now = time.monotonic()
+    _watch_thrown(now)
+    _animate(now)
+
+
 axe_hooks = [
     on_switch,
     _hook_spawn("WillowGame.WillowProjectile:DoOnSpawn", "KriegTPSAxeSpawn1"),

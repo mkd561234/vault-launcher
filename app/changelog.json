@@ -1,5 +1,15 @@
 [
  {
+  "version": "2.1.8",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.7: the Pick the Scav skin (and any other head or skin that leaves its mask, decal or pattern blank) uses Borderlands 2's own blank defaults instead of Aurelia's markings.",
+   "Krieg 1.0.7: fixed an error the mod hit on every frame, which flooded the SDK log (12 MB in a minute) and could make the game stutter, including when switching characters.",
+   "Krieg 1.0.7: the thrown Buzz Axe now really disintegrates and shrinks away when it disappears.",
+   "What's new, GitHub page and Check for updates are now buttons in the same style as Play."
+  ]
+ },
+ {
   "version": "2.1.7",
   "date": "2026-10-07",
   "changes": [
