@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.10",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.9: his character select portrait shows both shoulders. Borderlands 2's picture leaves his right shoulder out (its frame covered that corner); the Pre-Sequel's frame doesn't, so it looked cut off. The missing shoulder is now filled in to match the other one."
+  ]
+ },
+ {
   "version": "2.1.9",
   "date": "2026-10-07",
   "changes": [
