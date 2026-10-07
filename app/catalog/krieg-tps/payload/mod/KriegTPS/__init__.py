@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -665,36 +665,69 @@ def _fill_list(arr, kind: str, also=None, remove_from=(), equipped=None) -> int:
     return added
 
 
-@hook("WillowGame.CharacterSelectionReduxGFxMovie:CacheCustomizations", Type.POST)
-def on_char_select_cache(obj, *_):
-    try:
-        n = 0
-        def first(v):
-            return v[0] if isinstance(v, tuple) else v
+def _lists_are_krieg(heads, skins) -> bool:
+    """Every Pre-Sequel character always has at least its default head and skin listed, so lists
+    with none of another character's items are Krieg's (empty: all of his were filtered out)."""
+    items = [x for x in list(heads) + list(skins) if x is not None]
+    return not any(not _is_krieg_def(x) for x in items)
 
-        eh, es = first(obj.EquippedHeadCustomization), first(obj.EquippedSkinCustomization)
-        lists = ((obj.PrimaryPlayerHeadCustomizations, obj.PrimaryPlayerSkinCustomizations),
-                 (obj.SplitPlayerHeadCustomizations, obj.SplitPlayerSkinCustomizations))
-        log(f"character select cache: equipped {eh} / {es}, lists "
-            f"{len(lists[0][0])}/{len(lists[0][1])}")
-        for heads, skins in lists:
-            # Every Pre-Sequel character always has at least its default head and skin listed, so
-            # a completely empty pair of lists means Krieg (all of his were filtered out).
-            # Krieg if what he is wearing is Krieg's (both, or neither known yet and the lists are
-            # empty). A mixed pair means the screen is switching characters: leave it alone.
-            worn = [x for x in (eh, es) if x is not None]
-            if worn:
-                krieg = all(_is_krieg_def(x) for x in worn)
-            else:
-                krieg = (len(heads) == 0 and len(skins) == 0) or any(_is_krieg_def(x) for x in heads)
-            if not krieg:
-                continue
-            marker = _krieg_customization_defs("Head")[0]
-            n += _fill_list(heads, "Head", equipped=marker) + _fill_list(skins, "Skin", equipped=marker)
-        if n:
-            log(f"character select: added {n} of Krieg's heads/skins to the lists")
+
+_cs_logs = {"n": 0, "fields": False}
+
+
+def _char_select_fill(obj, why: str) -> int:
+    """Make sure the character select lists hold all of Krieg's heads and skins while Krieg is the
+    character on screen. Runs after the game rebuilds the lists and again right before it uses
+    them (a click or a preview), because moving the mouse over the other characters rebuilds the
+    lists for them and a click on Krieg could otherwise land on an empty list."""
+    n = 0
+    lists = ((obj.PrimaryPlayerHeadCustomizations, obj.PrimaryPlayerSkinCustomizations),
+             (obj.SplitPlayerHeadCustomizations, obj.SplitPlayerSkinCustomizations))
+    for idx, (heads, skins) in enumerate(lists):
+        if idx == 1 and len(heads) == 0 and len(skins) == 0 and not _lists_are_krieg(*lists[0]):
+            continue      # no split-screen player, and the main player isn't on Krieg
+        if not _lists_are_krieg(heads, skins):
+            continue
+        marker = _krieg_customization_defs("Head")[0]
+        n += _fill_list(heads, "Head", equipped=marker) + _fill_list(skins, "Skin", equipped=marker)
+    if n and _cs_logs["n"] < 20:
+        _cs_logs["n"] += 1
+        log(f"character select ({why}): added {n} of Krieg's heads/skins to the lists")
+    return n
+
+
+@hook("WillowGame.CharacterSelectionReduxGFxMovie:CacheCustomizations", Type.POST)
+def on_char_select_cache(obj, args, *_):
+    try:
+        if not _cs_logs["fields"]:
+            _cs_logs["fields"] = True
+            try:
+                log(f"character select cache args: {args}")
+            except Exception:  # noqa: BLE001
+                pass
+        _char_select_fill(obj, "lists rebuilt")
     except Exception as ex:  # noqa: BLE001
         log(f"character select list fill failed: {type(ex).__name__}: {ex}")
+
+
+def _cs_refill_hook(func: str):
+    def _cb(obj, *_):
+        try:
+            _char_select_fill(obj, func.split(":")[-1])
+        except Exception as ex:  # noqa: BLE001
+            if _cs_logs["n"] < 20:
+                _cs_logs["n"] += 1
+                log(f"character select refill ({func}) failed: {type(ex).__name__}: {ex}")
+    return hook(func, Type.PRE, hook_identifier=f"KriegTPSRefill_{func}")(_cb)
+
+
+_cs_refill_hooks = [
+    _cs_refill_hook(f"WillowGame.CharacterSelectionReduxGFxMovie:{f}")
+    for f in ("HandleCustomizationSelected", "PreviewSkinCustomization", "PreviewHeadCustomization",
+              "UpdateSkinPreview", "UpdateHeadPreview")
+]
+for _i, _h in enumerate(_cs_refill_hooks):
+    globals()[f"_cs_refill_hook_{_i}"] = _h
 
 
 def _krieg_class_selected(movie) -> bool:

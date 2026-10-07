@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.9",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.8: his heads and skins can always be picked at character select. Moving the mouse over the other characters made the game rebuild the lists for them, and the mod sometimes left Krieg's lists empty when you came back, so clicks did nothing. The lists are now refilled whenever Krieg is on screen and again right before a click or preview uses them."
+  ]
+ },
+ {
   "version": "2.1.8",
   "date": "2026-10-07",
   "changes": [
