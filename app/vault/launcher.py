@@ -304,26 +304,16 @@ def open_folder(which: str, game_id: str | None) -> None:
 
 def _powershell(script: str, timeout=600) -> str:
     enc = base64.b64encode(script.encode('utf-16-le')).decode()
-    res = subprocess.run(['powershell', '-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', enc],
-                         capture_output=True, text=True, timeout=timeout, creationflags=NO_WINDOW)
+    # stdin must be closed: the launcher runs without a console, and PowerShell otherwise waits
+    # forever for input on the missing one.
+    res = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-STA', '-ExecutionPolicy', 'Bypass',
+                          '-EncodedCommand', enc], stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                         encoding='utf-8', errors='replace', timeout=timeout, creationflags=NO_WINDOW)
     return res.stdout.strip()
 
 
 def _ps_quote(s: str) -> str:
     return "'" + str(s).replace("'", "''") + "'"
-
-
-def browse_folder(title: str) -> str | None:
-    if not winutil.IS_WINDOWS:
-        return None
-    script = ("Add-Type -AssemblyName System.Windows.Forms;"
-              "$d = New-Object System.Windows.Forms.FolderBrowserDialog;"
-              f"$d.Description = {_ps_quote(title)};"
-              "$d.ShowNewFolderButton = $false;"
-              "$w = New-Object System.Windows.Forms.Form -Property @{TopMost=$true};"
-              "if ($d.ShowDialog($w) -eq 'OK') { Write-Output $d.SelectedPath }")
-    out = _powershell(script)
-    return out or None
 
 
 def ensure_shortcuts() -> None:
@@ -445,7 +435,13 @@ class Handler(BaseHTTPRequestHandler):
             ok = True
         elif path == '/api/game/browse' and game_id:
             g = games.BY_ID[game_id]
-            picked = browse_folder(f'Choose your {g.name} folder')
+            current = main.game_paths(main.load_state()).get(game_id)
+            if current is None:
+                libs = games.steam_libraries()
+                current = next((lib / 'steamapps' / 'common' for lib in libs
+                                if (lib / 'steamapps' / 'common').is_dir()), None)
+            picked = winutil.browse_folder(f"Choose your {g.name} folder: the one with {g.exes[0].split('/')[0]} "
+                                           'inside it.', str(current) if current else None)
             if picked:
                 error = main.set_game_path(game_id, picked)
             _refresh_status(force=True)

@@ -115,3 +115,54 @@ def unprotect(stored: str) -> str:
         return ctypes.string_at(out.pbData, out.cbData).decode('utf-8')
     finally:
         ctypes.windll.kernel32.LocalFree(out.pbData)
+
+
+# ---- Folder picker: Windows' own "Browse for Folder" dialog, opened in front of the launcher -----
+def browse_folder(title: str, start: str | None = None) -> str | None:
+    """The folder the player picked, or None if they cancelled."""
+    if not IS_WINDOWS:
+        return None
+    from ctypes import wintypes
+
+    BFFCALLBACK = ctypes.WINFUNCTYPE(ctypes.c_int, wintypes.HWND, ctypes.c_uint, wintypes.LPARAM, wintypes.LPARAM)
+
+    class BROWSEINFOW(ctypes.Structure):
+        _fields_ = [('hwndOwner', wintypes.HWND), ('pidlRoot', ctypes.c_void_p),
+                    ('pszDisplayName', wintypes.LPWSTR), ('lpszTitle', wintypes.LPCWSTR),
+                    ('ulFlags', ctypes.c_uint), ('lpfn', BFFCALLBACK), ('lParam', wintypes.LPARAM),
+                    ('iImage', ctypes.c_int)]
+
+    BIF_RETURNONLYFSDIRS, BIF_EDITBOX, BIF_NEWDIALOGSTYLE, BIF_NONEWFOLDERBUTTON = 0x1, 0x10, 0x40, 0x200
+    BFFM_INITIALIZED, BFFM_SETSELECTIONW = 1, 0x400 + 103
+    user32, shell32, ole32 = ctypes.windll.user32, ctypes.windll.shell32, ctypes.windll.ole32
+    user32.SendMessageW.argtypes = [wintypes.HWND, ctypes.c_uint, wintypes.WPARAM, wintypes.LPARAM]
+    shell32.SHBrowseForFolderW.restype = ctypes.c_void_p
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    shell32.SHGetPathFromIDListW.argtypes = [ctypes.c_void_p, wintypes.LPWSTR]
+    ole32.CoTaskMemFree.argtypes = [ctypes.c_void_p]
+
+    start_buf = ctypes.create_unicode_buffer(start or '')
+
+    def on_event(hwnd, msg, lparam, data):
+        if msg == BFFM_INITIALIZED:
+            if start:
+                user32.SendMessageW(hwnd, BFFM_SETSELECTIONW, 1, ctypes.cast(start_buf, ctypes.c_void_p).value)
+            user32.SetForegroundWindow(hwnd)
+        return 0
+
+    callback = BFFCALLBACK(on_event)
+    name = ctypes.create_unicode_buffer(260)
+    info = BROWSEINFOW(hwndOwner=user32.GetForegroundWindow(), pszDisplayName=name, lpszTitle=title,
+                       ulFlags=BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON,
+                       lpfn=callback)
+    ole32.OleInitialize(None)          # the resizable dialog style needs OLE on this thread
+    try:
+        pidl = shell32.SHBrowseForFolderW(ctypes.byref(info))
+        if not pidl:
+            return None
+        path = ctypes.create_unicode_buffer(32768)
+        ok = shell32.SHGetPathFromIDListW(pidl, path)
+        ole32.CoTaskMemFree(pidl)
+        return path.value if ok and path.value else None
+    finally:
+        ole32.OleUninitialize()
