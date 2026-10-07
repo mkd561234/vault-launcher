@@ -1,24 +1,52 @@
 [
- {"version": "2.1.1", "date": "2026-10-07", "changes": [
-  "Krieg 1.0.1: Krieg now always switches himself on. With a freshly installed mod manager he loaded switched off, which broke his heads and skins, materials, Oz kit, HUD and vehicle seats.",
-  "Krieg 1.0.1: the character select screen shows Krieg's original Borderlands 2 portrait again.",
-  "Change folder works: Windows' folder picker opens straight away, in front of the launcher.",
-  "Downloading Krieg no longer moves an existing Krieg folder into a backup.",
-  "Removed Check for updates (updates install by themselves). Logs is now this What's new window."
- ]},
- {"version": "2.1.0", "date": "2026-10-06", "changes": [
-  "Vault Launcher opens in its own window instead of a browser.",
-  "Desktop and Start menu shortcuts start Vault Launcher.exe.",
-  "Links to GitHub and the mod SDK open in your normal browser."
- ]},
- {"version": "2.0.9", "date": "2026-10-06", "changes": [
-  "Only one folder picker can be open at a time, and it opens in front."
- ]},
- {"version": "2.0.7", "date": "2026-10-06", "changes": [
-  "Finds Microsoft Edge in either Program Files folder."
- ]},
- {"version": "2.0.5", "date": "2026-10-06", "changes": [
-  "Updates come from GitHub and install by themselves.",
-  "Mods are sorted into Downloaded and Uninstalled."
- ]}
+ {
+  "version": "2.1.2",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.2: when Krieg hits an object (like the wrecked loader you have to smash in Lost Legion Invasion), his log records what the hit carried, so a melee problem can be pinned down.",
+   "Krieg 1.0.2: when joining a co-op game fails, both players' Krieg logs record the reason the game gave."
+  ]
+ },
+ {
+  "version": "2.1.1",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.1: Krieg now always switches himself on. With a freshly installed mod manager he loaded switched off, which broke his heads and skins, materials, Oz kit, HUD and vehicle seats.",
+   "Krieg 1.0.1: the character select screen shows Krieg's original Borderlands 2 portrait again.",
+   "Change folder works: Windows' folder picker opens straight away, in front of the launcher.",
+   "Downloading Krieg no longer moves an existing Krieg folder into a backup.",
+   "Removed Check for updates (updates install by themselves). Logs is now this What's new window."
+  ]
+ },
+ {
+  "version": "2.1.0",
+  "date": "2026-10-06",
+  "changes": [
+   "Vault Launcher opens in its own window instead of a browser.",
+   "Desktop and Start menu shortcuts start Vault Launcher.exe.",
+   "Links to GitHub and the mod SDK open in your normal browser."
+  ]
+ },
+ {
+  "version": "2.0.9",
+  "date": "2026-10-06",
+  "changes": [
+   "Only one folder picker can be open at a time, and it opens in front."
+  ]
+ },
+ {
+  "version": "2.0.7",
+  "date": "2026-10-06",
+  "changes": [
+   "Finds Microsoft Edge in either Program Files folder."
+  ]
+ },
+ {
+  "version": "2.0.5",
+  "date": "2026-10-06",
+  "changes": [
+   "Updates come from GitHub and install by themselves.",
+   "Mods are sorted into Downloaded and Uninstalled."
+  ]
+ }
 ]

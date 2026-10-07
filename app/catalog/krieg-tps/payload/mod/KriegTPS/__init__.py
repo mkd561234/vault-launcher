@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -1184,6 +1184,76 @@ try:
     _start_update_check()
 except Exception as ex:  # noqa: BLE001
     log(f"update check not started: {type(ex).__name__}: {ex}")
+
+
+# Melee check: Pre-Sequel "smash" obstructions (like the wrecked loader in Lost Legion Invasion)
+# only break on damage tagged as melee. Logs what Krieg's hits on interactive objects carry, so a
+# failure can be traced (first 25 hits per session).
+_io_hits = [0]
+
+
+def _is_local_krieg(pawn) -> bool:
+    try:
+        pc = get_pc()
+        return pawn is not None and pc is not None and pawn == pc.Pawn and \
+            pawn.PlayerClass is not None and "Lilac" in pawn.PlayerClass._path_name()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+@hook("WillowGame.WillowInteractiveObject:TakeDamage", Type.PRE, hook_identifier="KriegTPSIOHit")
+def on_io_take_damage(obj, args, *_):
+    if _io_hits[0] >= 25:
+        return
+    try:
+        inst = getattr(args, "EventInstigator", None) or getattr(args, "InstigatedBy", None)
+        pawn = inst.Pawn if inst is not None else None
+        if not _is_local_krieg(pawn):
+            return
+        _io_hits[0] += 1
+        fields = []
+        fields.append(f"RawDamage={args.RawDamage:.1f}")
+        fields.append(f"DamageType={args.DamageType._path_name() if args.DamageType else None}")
+        pipe = args.Pipeline
+        for name in ("DamageSource", "DamageTypeDefinition", "bIsMelee"):
+            if pipe is not None and hasattr(pipe, name):
+                v = getattr(pipe, name)
+                fields.append(f"{name}={v._path_name() if hasattr(v, '_path_name') else v}")
+        io_def = getattr(obj, "InteractiveObjectDefinition", None)
+        log(f"melee check: Krieg hit {io_def._path_name() if io_def else obj._path_name()}: {', '.join(fields)}")
+    except Exception as ex:  # noqa: BLE001
+        log(f"melee check failed: {type(ex).__name__}: {ex}")
+
+
+# Co-op check: when joining fails, both games say why somewhere - the host refuses in PreLogin or
+# Login, the joining side gets a connection error or a kick message. Logged so it can be fixed.
+def _arg(args, name):
+    try:
+        v = getattr(args, name)
+        return v._path_name() if hasattr(v, "_path_name") else v
+    except Exception:  # noqa: BLE001
+        return "?"
+
+
+@hook("Engine.GameInfo:PreLogin", Type.POST, hook_identifier="KriegTPSCoopPreLogin")
+def on_pre_login(obj, args, *_):
+    log(f"co-op: player joining from {_arg(args, 'Address')} - options {_arg(args, 'Options')!r}, "
+        f"refusal {_arg(args, 'ErrorMessage')!r}")
+
+
+@hook("WillowGame.WillowGameInfo:Login", Type.POST, hook_identifier="KriegTPSCoopLogin")
+def on_login(obj, args, ret, *_):
+    log(f"co-op: login {'accepted' if ret is not None else 'REFUSED'} - refusal {_arg(args, 'ErrorMessage')!r}")
+
+
+@hook("WillowGame.WillowGameViewportClient:NotifyConnectionError", Type.PRE, hook_identifier="KriegTPSCoopError")
+def on_connection_error(obj, args, *_):
+    log(f"co-op: connection error {_arg(args, 'Title')!r}: {_arg(args, 'Message')!r}")
+
+
+@hook("WillowGame.WillowPlayerController:ClientWasKicked", Type.PRE, hook_identifier="KriegTPSCoopKicked")
+def on_kicked(obj, *_):
+    log("co-op: the host disconnected this player (ClientWasKicked)")
 
 
 _mod = build_mod(
