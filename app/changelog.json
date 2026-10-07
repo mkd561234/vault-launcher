@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.6",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.5: heads and skins no longer pick up Aurelia's colours. Krieg borrows Aurelia's material so the Pre-Sequel can draw him, and 15 of his heads and skins left some colour settings blank, which then showed her colours. Those blanks now get Borderlands 2's own defaults."
+  ]
+ },
+ {
   "version": "2.1.5",
   "date": "2026-10-07",
   "changes": [

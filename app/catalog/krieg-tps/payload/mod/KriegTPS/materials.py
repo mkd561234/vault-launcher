@@ -39,6 +39,13 @@ def _find_mic(path: str):
         return None
 
 
+def _find_material(path: str):
+    try:
+        return unrealsdk.find_object("Material", path)
+    except ValueError:
+        return None
+
+
 _load_attempted = False
 
 
@@ -66,6 +73,51 @@ def _get_template(path: str):
     return obj
 
 
+_PARAM_KINDS = (
+    ("VectorParameterValues", "GetVectorParameterValue", "SetVectorParameterValue"),
+    ("ScalarParameterValues", "GetScalarParameterValue", "SetScalarParameterValue"),
+    ("TextureParameterValues", "GetTextureParameterValue", "SetTextureParameterValue"),
+)
+_filled_log = [0]
+
+
+def _names(mic, arr: str) -> set:
+    try:
+        return {str(p.ParameterName) for p in getattr(mic, arr)}
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+def _out_value(ret):
+    """pyunrealsdk returns (return value, out params...) for functions with out parameters."""
+    if isinstance(ret, tuple):
+        return (bool(ret[0]), ret[1]) if len(ret) > 1 else (bool(ret[0]), None)
+    return (False, None)
+
+
+def _fill_from_master(mic, master, template) -> int:
+    """Settings the template chain sets but Krieg's instance doesn't would show the template's
+    (Aurelia's) value once it becomes the parent. Write the original master material's default
+    into Krieg's instance for each, so nothing of Aurelia's shows on him."""
+    if master is None:
+        return 0
+    filled = 0
+    for arr, getter, setter in _PARAM_KINDS:
+        theirs, node = set(), template
+        while node is not None and node.Class.Name == "MaterialInstanceConstant":
+            theirs |= _names(node, arr)
+            node = node.Parent
+        for name in theirs - _names(mic, arr):
+            try:
+                ok, value = _out_value(getattr(master, getter)(name))
+                if ok and value is not None:
+                    getattr(mic, setter)(name, value)
+                    filled += 1
+            except Exception:  # noqa: BLE001
+                continue
+    return filled
+
+
 def _fix_one(mic) -> bool:
     """Point one of Krieg's instances at a Pre-Sequel shader. Safe to call every frame.
 
@@ -90,6 +142,11 @@ def _fix_one(mic) -> bool:
         # Old (unpatched) package: fall back to switching the permutation off at runtime.
         mic.bHasStaticPermutationResource = False
     if ppath == MASTER_PLAYER:
+        master = parent if parent is not None else _find_material(MASTER_PLAYER)
+        n = _fill_from_master(mic, master, new_parent)
+        if n and _filled_log[0] < 40:
+            _filled_log[0] += 1
+            log(f"{mic._path_name()}: kept {n} of Borderlands 2's default settings instead of Aurelia's")
         try:
             mic.SetParent(new_parent)
         except Exception:  # noqa: BLE001
