@@ -391,6 +391,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.split('?')[0] == '/':
             if self.path != f'/?t={TOKEN}':
                 return self._send(403, b'forbidden', 'text/plain')
+            _window['served'] = time.time()
             return self._send(200, _page(), 'text/html; charset=utf-8')
         if self.path == '/icon.png':
             return self._send(200, (ASSETS / 'vault.png').read_bytes(), 'image/png')
@@ -465,28 +466,101 @@ class Handler(BaseHTTPRequestHandler):
 
 
 # --------------------------------------------------------------------------------------------
-def _edge() -> str | None:
-    for env in ('ProgramFiles(x86)', 'ProgramFiles', 'LOCALAPPDATA'):
-        base = os.environ.get(env)
-        if base:
-            exe = Path(base) / 'Microsoft' / 'Edge' / 'Application' / 'msedge.exe'
-            if exe.is_file():
-                return str(exe)
+# Browsers that can show the launcher as its own app window (no tabs or address bar), best first.
+# (name, exe, folders under Program Files / Program Files (x86) / LocalAppData)
+APP_BROWSERS = (
+    ('Edge', 'msedge.exe', (r'Microsoft\Edge\Application',)),
+    ('Chrome', 'chrome.exe', (r'Google\Chrome\Application',)),
+    ('Brave', 'brave.exe', (r'BraveSoftware\Brave-Browser\Application',)),
+    ('Vivaldi', 'vivaldi.exe', (r'Vivaldi\Application',)),
+    ('Chromium', 'chrome.exe', (r'Chromium\Application',)),
+)
+WINDOW_WAIT = 12        # seconds a browser gets to show the page before the next one is tried
+_window = {'served': 0.0}
+
+
+def _registry_app_path(exe: str) -> str | None:
+    try:
+        import winreg
+    except ImportError:
+        return None
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        try:
+            with winreg.OpenKey(hive, rf'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{exe}') as k:
+                p = winreg.QueryValueEx(k, '')[0].strip('"')
+                if p and Path(p).is_file():
+                    return p
+        except OSError:
+            continue
     return None
 
 
-def open_window(url: str) -> None:
-    edge = _edge()
-    if edge:
-        # A Guest window in its own private folder: Edge never signs Guest windows in to the
-        # Microsoft account or shows its sync / first-run screens, and keeps nothing afterwards.
-        profile = winutil.data_dir() / 'launcher-window-guest'
-        subprocess.Popen([edge, f'--app={url}', '--window-size=1180,760', f'--user-data-dir={profile}',
-                          '--guest', '--disable-sync', '--no-first-run', '--no-default-browser-check',
-                          '--no-service-autorun', '--disable-features=Translate'],
-                         creationflags=NO_WINDOW)
-    else:
-        winutil.open_url(url)
+def _app_browsers() -> list:
+    """[(name, exe path)] of installed browsers that support app windows."""
+    out, seen = [], set()
+    for name, exe, folders in APP_BROWSERS:
+        found = _registry_app_path(exe) if name != 'Chromium' else None
+        if found and name == 'Chrome' and 'google' not in found.lower():
+            found = None
+        if not found:
+            for env in ('ProgramFiles', 'ProgramFiles(x86)', 'LOCALAPPDATA'):
+                base = os.environ.get(env)
+                for folder in folders:
+                    if base and (Path(base) / folder / exe).is_file():
+                        found = str(Path(base) / folder / exe)
+                        break
+                if found:
+                    break
+        if found and found.lower() not in seen:
+            seen.add(found.lower())
+            out.append((name, found))
+    return out
+
+
+def _browser_args(name: str, exe: str, url: str, guest: bool) -> list:
+    # Each browser gets a private profile folder, so the window never touches the player's own
+    # browser profile (bookmarks, sign-in, extensions) and keeps nothing worth keeping.
+    profile = winutil.data_dir() / ('launcher-window-guest' if guest else f'launcher-window-{name.lower()}')
+    args = [exe, f'--app={url}', '--window-size=1180,760', f'--user-data-dir={profile}', '--no-first-run',
+            '--no-default-browser-check', '--disable-sync', '--disable-features=Translate']
+    if name == 'Edge':
+        args.append('--no-service-autorun')
+    if guest:
+        # Edge never signs Guest windows in to the Microsoft account or shows its sync screens.
+        args.append('--guest')
+    return args
+
+
+def _attempts() -> list:
+    out = []
+    for name, exe in _app_browsers():
+        if name == 'Edge':
+            out.append((name, exe, True))
+        out.append((name, exe, False))
+    return out
+
+
+def open_window(url: str, confirm: bool = True) -> None:
+    """Opens the launcher in an app window. confirm: watch that the page actually loads, and try
+    the next browser if it doesn't (the plain default browser is the last resort)."""
+    for name, exe, guest in _attempts():
+        started = time.time()
+        try:
+            subprocess.Popen(_browser_args(name, exe, url, guest), creationflags=NO_WINDOW)
+        except OSError as ex:
+            main.say(f'window: {name} would not start ({ex})')
+            continue
+        if not confirm:
+            return
+        while time.time() - started < WINDOW_WAIT:
+            time.sleep(0.25)
+            _last_seen['t'] = max(_last_seen['t'], time.time() + 20)
+            if _window['served'] >= started:
+                main.say(f"window: {name}{' (guest)' if guest else ''}")
+                return
+        main.say(f"window: {name}{' (guest)' if guest else ''} did not show the page, trying the next way")
+    main.say('window: no app-window browser found, using the default browser')
+    winutil.open_url(url)
 
 
 def _already_running() -> bool:
@@ -496,7 +570,7 @@ def _already_running() -> bool:
         req = urllib.request.Request(f"http://127.0.0.1:{d['port']}/api/ping", headers={'X-Vault-Token': d['token']})
         with urllib.request.urlopen(req, timeout=2) as r:
             if r.status == 200:
-                open_window(f"http://127.0.0.1:{d['port']}/?t={d['token']}")
+                open_window(f"http://127.0.0.1:{d['port']}/?t={d['token']}", confirm=False)
                 return True
     except (OSError, ValueError, KeyError):
         pass
@@ -540,7 +614,7 @@ def run(open_ui: bool = True, port: int = 0) -> int:
         main.say(f'automatic mod update not started: {ex}')
     threading.Thread(target=_github_check, daemon=True).start()
     if open_ui:
-        open_window(url)
+        threading.Thread(target=open_window, args=(url,), daemon=True).start()
     else:
         print(url, flush=True)
     _last_seen['t'] = time.time() + 20   # give the window time to open
