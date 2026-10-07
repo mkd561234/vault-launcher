@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.15",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.14: co-op joining fixed. Joining failed with \"Downloading package 'GD_Lobelia_ClassMods' failed\": the host's game named a package of Krieg's DLC class mods that the joining player's game hadn't kept loaded, and it can't be found by file name. Every player now loads Krieg's DLC class mods at startup, whatever character they play, and keeps them loaded."
+  ]
+ },
+ {
   "version": "2.1.14",
   "date": "2026-10-07",
   "changes": [

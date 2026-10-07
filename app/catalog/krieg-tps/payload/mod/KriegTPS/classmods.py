@@ -31,6 +31,66 @@ DLC_CLASSMODS = (
 )
 
 _loaded: set[str] = set()
+
+# Co-op: the host tells joining players which packages its objects come from, by package name. These
+# live inside Krieg's two class-mod files (whose file names differ), so a player who doesn't already
+# have them in memory can't find them and the join fails with "Downloading package
+# 'GD_Lobelia_ClassMods' failed". So every player loads both files at startup, whatever character
+# they play, and keeps everything in them loaded for the whole session.
+NETWORK_PACKAGES = {
+    "Krieg_ClassMods_Lobelia_SF": ("GD_Lobelia_ClassMods", "GD_Lobelia_ItemGrades", "Lobelia_Char_Psycho"),
+    "Krieg_ClassMods_Aster_SF": ("GD_Aster_ClassMods", "GD_Aster_ItemGrades", "Aster_Char_Psycho"),
+}
+_kept: set[str] = set()
+_net_retry: dict[str, float] = {}
+_net_tries: dict[str, int] = {}
+
+
+def _keep_package_loaded(names: tuple) -> int:
+    prefixes = tuple(n + "." for n in names)
+    kept = 0
+    for obj in unrealsdk.find_all("Object", exact=False):
+        try:
+            path = obj._path_name()
+        except Exception:  # noqa: BLE001
+            continue
+        if path in names or path.startswith(prefixes):
+            obj.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+            kept += 1
+    return kept
+
+
+def ensure_network_packages() -> None:
+    """Load Krieg's class-mod files for every player (see NETWORK_PACKAGES), once."""
+    import time as _time
+
+    now = _time.monotonic()
+    for package, inner in NETWORK_PACKAGES.items():
+        if package in _kept or now < _net_retry.get(package, 0.0):
+            continue
+        if _find(inner[0]) is None:
+            # The DLC folder may not be mounted yet this early in startup: try again shortly.
+            _net_tries[package] = _net_tries.get(package, 0) + 1
+            if _net_tries[package] > 24:      # not there (that Borderlands 2 DLC isn't owned)
+                _kept.add(package)
+                continue
+            _net_retry[package] = now + 5.0
+            try:
+                unrealsdk.load_package(package)
+                _loaded.add(package)
+            except Exception as ex:  # noqa: BLE001
+                if package not in _logged:
+                    _logged.add(package)
+                    log(f"co-op: could not load {package} yet: {type(ex).__name__}: {ex}")
+                continue
+            if _find(inner[0]) is None:
+                continue
+        _kept.add(package)
+        try:
+            n = _keep_package_loaded(inner)
+            log(f"co-op: {package} loaded and kept ({n} objects in {', '.join(inner)})")
+        except Exception as ex:  # noqa: BLE001
+            log(f"co-op: could not keep {package} loaded: {type(ex).__name__}: {ex}")
 _logged: set[str] = set()
 
 
@@ -122,6 +182,10 @@ def _add_to_pool(pool, balance, weight: float) -> bool:
 
 
 def upkeep() -> None:
+    try:
+        ensure_network_packages()
+    except Exception as ex:  # noqa: BLE001
+        log(f"co-op package load failed: {type(ex).__name__}: {ex}")
     try:
         _cleanup_if_not_krieg()
     except Exception as ex:  # noqa: BLE001
