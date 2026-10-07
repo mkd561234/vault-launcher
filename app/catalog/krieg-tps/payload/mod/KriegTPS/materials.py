@@ -160,6 +160,7 @@ def _find_gear_template(master_path: str, want: set[str]):
     # The Pre-Sequel keeps its gun materials under Common_Co_GunMaterials instead.
     families = (family, "Common_Co_GunMaterials") if "Weapons" in family else (family,)
     seen_parents: dict[str, int] = {}
+    ranked: list = []
     for cand in unrealsdk.find_all("MaterialInstanceConstant", exact=True):
         try:
             par = cand.Parent
@@ -181,8 +182,16 @@ def _find_gear_template(master_path: str, want: set[str]):
             # sheen or animated effect onto the Buzz Axe (the Excalibastard made it blue).
             fancy = any(k in cpath.lower() for k in FANCY_GEAR_WORDS)
             score = bonus + 10 * len(want & have) - len(have - want) - (500 if fancy else 0)
+            # Plain manufacturer paint from the base game beats DLC or named (unique) guns, whose
+            # own patterns show through (the Fast Talker put stripes on the axe).
+            pkg = cpath.split(".", 1)[0]
+            if not pkg.startswith("Common_"):
+                score -= 200
+            if cpath.rsplit(".", 1)[-1].count("_") >= 2:
+                score -= 40
         except Exception:  # noqa: BLE001
             continue
+        ranked.append((score, cpath))
         if score > best_score:
             best, best_score = cand, score
     if best is None:
@@ -192,6 +201,8 @@ def _find_gear_template(master_path: str, want: set[str]):
         best.ObjectFlags |= ObjectFlags.KEEP_ALIVE
         _gear_templates[master_path] = best
         log(f"using {best._path_name()} as the shader template for {master_path} (score {best_score})")
+        top = ", ".join(f"{p} ({sc})" for sc, p in sorted(ranked, reverse=True)[:6])
+        log(f"  other candidates: {top}")
     return best
 
 

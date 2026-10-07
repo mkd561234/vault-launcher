@@ -1,5 +1,13 @@
 [
  {
+  "version": "2.1.4",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.4: the Buzz Axe prefers plain paint from a base-game gun. It had picked the Fast Talker, a DLC unique SMG, whose stripes showed on the axe head.",
+   "Krieg 1.0.4: his log lists the other paints the axe could have used, so it can be pinned to one if it still looks off."
+  ]
+ },
+ {
   "version": "2.1.3",
   "date": "2026-10-07",
   "changes": [
