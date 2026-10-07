@@ -1,0 +1,34 @@
+# Publishes a GitHub release for the version named in latest.json, with its zip attached.
+# Runs whenever latest.json changes on main (and can be started by hand from the Actions tab).
+name: Publish release
+
+on:
+  push:
+    branches: [main]
+    paths: [latest.json, .github/workflows/release.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create the release if it does not exist yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version latest.json)
+          zip=$(jq -r .zip latest.json)
+          tag="v${version}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists."
+            exit 0
+          fi
+          test -f "$zip"
+          gh release create "$tag" "$zip" \
+            --title "Vault Launcher ${version}" \
+            --notes "Download **$(basename "$zip")**, right-click it and choose **Extract All**, then open **Vault Launcher.exe**. Installed launchers update to this version by themselves." \
+            --latest
