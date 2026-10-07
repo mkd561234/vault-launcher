@@ -5,7 +5,7 @@ Borderlands GOTY Enhanced, Borderlands 2, The Pre-Sequel, Borderlands 3, Tiny Ti
 
 ## Download
 
-Get the newest **VaultLauncher-x.x.x.zip** from the [`dist`](https://github.com/mkd561234/vault-launcher/tree/main/dist) folder (click the file, then the download button),
+Get the newest **VaultLauncher-x.x.x.zip** from [Releases](https://github.com/mkd561234/vault-launcher/releases/latest),
 right-click it and choose **Extract All**, then open **Vault Launcher.exe**.
 
 If Windows says "Windows protected your PC", click **More info** and then **Run anyway**. The program isn't code-signed.
@@ -29,4 +29,4 @@ No game files are included. Krieg is rebuilt from your own copy of Borderlands 2
 - `app/vault`: the launcher, written in Python. On first run it downloads its own copy of Python from python.org.
 - `app/catalog`: one folder per mod. See `app/catalog/README.txt`.
 - `README.txt`: the guide that ships inside the zip.
-- `latest.json` and `dist/`: the newest release. Every installed launcher checks `latest.json` and downloads the zip it names.
+- `latest.json` and `dist/`: the newest version. Every installed launcher checks `latest.json` and downloads the zip it names, and a release is published automatically each time it changes.
