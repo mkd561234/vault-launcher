@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.11",
+  "date": "2026-10-07",
+  "changes": [
+   "Krieg 1.0.10: new character select portrait, made from the Krieg picture you sent, cut out from its background. It's also four times sharper (256 pixels instead of Borderlands 2's 64), so it no longer looks blurry at the Pre-Sequel's larger size."
+  ]
+ },
+ {
   "version": "2.1.10",
   "date": "2026-10-07",
   "changes": [
