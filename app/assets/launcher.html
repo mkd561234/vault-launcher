@@ -328,16 +328,12 @@
   .rail-foot .btn.primary { --bg: var(--accent); font-size: 16px; padding: 9px 16px; box-shadow: 4px 4px 0 var(--ink); }
   .rail-foot .btn.primary:hover:not(:disabled) { box-shadow: 5px 5px 0 var(--ink); }
   body[data-game="bl2"] .rail-foot .btn.primary { --bg: #ffd400; --fg: #000; }
-  /* Wonderlands, Borderlands 3 and the Pre-Sequel: footer buttons get a coloured cel-shaded border */
-  body[data-game="wl"] .rail-foot .btn.primary { --edge: #a64dff; }
-  body[data-game="bl3"] .rail-foot .btn.primary { --edge: #ff3d9a; }
-  body[data-game="tps"] .rail-foot .btn.primary { --edge: #5fd3ff; }
-  body[data-game="wl"] .rail-foot .btn.primary, body[data-game="bl3"] .rail-foot .btn.primary,
-  body[data-game="tps"] .rail-foot .btn.primary { border-color: var(--edge); box-shadow: 4px 4px 0 var(--edge); }
-  body[data-game="wl"] .rail-foot .btn.primary:hover:not(:disabled), body[data-game="bl3"] .rail-foot .btn.primary:hover:not(:disabled),
-  body[data-game="tps"] .rail-foot .btn.primary:hover:not(:disabled) { box-shadow: 5px 5px 0 var(--edge); }
-  body[data-game="wl"] .rail-foot .btn.primary:active:not(:disabled), body[data-game="bl3"] .rail-foot .btn.primary:active:not(:disabled),
-  body[data-game="tps"] .rail-foot .btn.primary:active:not(:disabled) { box-shadow: 1px 1px 0 var(--edge); }
+  /* footer buttons are filled with each game's own cover colour */
+  body[data-game="bl1"] .rail-foot .btn.primary { --bg: #c3271c; --fg: #f5c22a; }
+  body[data-game="bl1e"] .rail-foot .btn.primary { --bg: #ff3b24; --fg: #000; }
+  body[data-game="tps"] .rail-foot .btn.primary { --bg: #5fd3ff; --fg: #000; }
+  body[data-game="bl3"] .rail-foot .btn.primary { --bg: #ff3d9a; --fg: #000; }
+  body[data-game="wl"] .rail-foot .btn.primary { --bg: #b36bff; --fg: #000; }
   .head .play { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
   .play .btn.close { --bg: #c8281e; --fg: #fff; font-size: 16px; padding: 9px 16px; }
   .rail-foot .row { gap: 12px 12px; margin-top: 4px; }

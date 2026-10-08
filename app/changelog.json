@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.18",
+  "date": "2026-10-08",
+  "changes": [
+   "Check for updates, GitHub page and What's new are filled with each game's own colour: light blue on the Pre-Sequel, pink on Borderlands 3, purple on Wonderlands, red with gold lettering on Borderlands GOTY and orange-red on GOTY Enhanced. Borderlands 2 stays yellow and Borderlands 4 red."
+  ]
+ },
+ {
   "version": "2.1.17",
   "date": "2026-10-08",
   "changes": [
