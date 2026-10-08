@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.5",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.3: his character select line now goes through the menu voice channel. His Borderlands 2 lines were routed to the in-game voice channel, which the Pre-Sequel keeps silent on menus. The Pre-Sequel's own select lines use a separate menu channel, so menu copies of his lines are added to his voice bank for that channel. His in-game voice is unchanged."
+  ]
+ },
+ {
   "version": "3.0.4",
   "date": "2026-10-08",
   "changes": [

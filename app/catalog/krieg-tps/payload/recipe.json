@@ -1410,6 +1410,16 @@
    "needs_dlc": "Lilac",
    "sha1": "a43ab9e461919239d0cb0bd449035b7eaf120905",
    "size": 743435
+  },
+  {
+   "out": "DLC/Lilac/Compat/Audio/English(US)/Audio_Banks_lilac.pck",
+   "patch": "patches/Audio_Banks_lilac_English.kdl",
+   "sources": [
+    "DLC/Lilac/Compat/Audio/English(US)/Audio_Banks_lilac.pck"
+   ],
+   "needs_dlc": "Lilac",
+   "sha1": "166e77c5a00668456e1a40e086bdea5c8716e2ef",
+   "size": 367804
   }
  ],
  "copies": [
@@ -1420,10 +1430,6 @@
   {
    "out": "DLC/Lilac/Compat/Audio/Audio_Streaming_lilac.pck",
    "src": "DLC/Lilac/Compat/Audio/Audio_Streaming_lilac.pck"
-  },
-  {
-   "out": "DLC/Lilac/Compat/Audio/English(US)/Audio_Banks_lilac.pck",
-   "src": "DLC/Lilac/Compat/Audio/English(US)/Audio_Banks_lilac.pck"
   },
   {
    "out": "DLC/Lilac/Compat/Audio/English(US)/Audio_Streaming_lilac.pck",

@@ -6,6 +6,11 @@ Right before the screen plays it, one of his own recorded Borderlands 2 voice ev
 random (never the same one twice in a row). Each of those events is itself a set of recorded takes
 that Wwise picks from at random: rampage cries, idle rants, kill taunts, inner-voice moments and
 laughter.
+
+Borderlands 2 routes his voice through the Pre-Sequel's gameplay voice buses, which are silent at
+the menus (the Pre-Sequel's own select lines use a separate menu voice bus). The launcher adds a
+"_Menu" copy of each of these events to his voice bank, routed to that menu bus; the matching
+AkEvent objects are created here at runtime.
 """
 
 import random
@@ -47,6 +52,29 @@ def _find(path: str):
         return None
 
 
+def _fnv(name: str) -> int:
+    h = 2166136261
+    for c in name.lower().encode():
+        h = (h * 16777619) & 0xFFFFFFFF
+        h ^= c
+    return h - (1 << 32) if h >= 1 << 31 else h
+
+
+def _menu_event(ev):
+    """The menu-bus copy of one of his events (same lines, heard at the menus)."""
+    name = f"{ev.Name}_Menu"
+    try:
+        menu = unrealsdk.find_object("AkEvent", f"{ev.Outer._path_name()}.{name}")
+    except ValueError:
+        menu = unrealsdk.construct_object("AkEvent", ev.Outer, name, template_obj=ev)
+    wwise = f"{ev.WwiseName}_Menu"
+    if str(menu.WwiseName) != wwise:
+        menu.WwiseName = wwise
+        menu.ShortId = _fnv(wwise)
+    menu.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+    return menu
+
+
 def _pick():
     found = [e for e in (_find(p) for p in EVENTS) if e is not None]
     if not found:
@@ -74,7 +102,7 @@ METHODS = {
     "pawn": lambda pc, ev: pc.Pawn.PlayAkEvent(ev),
     "pc": lambda pc, ev: pc.PlayAkEvent(ev),
 }
-ORDER = ("ui", "world", "pawn", "pc")
+ORDER = ("world", "ui", "pawn", "pc")
 
 
 def _play(ev, only: str | None = None) -> str:
@@ -106,6 +134,10 @@ def on_select_dialog(obj, args, *_):
                 log("character select voice: none of Krieg's voice events are loaded")
             return
         ev.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+        try:
+            ev = _menu_event(ev)
+        except Exception as ex:  # noqa: BLE001
+            log(f"character select voice: menu copy failed ({type(ex).__name__}: {ex}), using the original")
         # The screen's own path stayed silent for Krieg (set as his MenuSelectDialog, nothing was
         # heard), so the line is played directly as a flat (2D) UI sound.
         body.MenuSelectDialog = None
@@ -141,15 +173,19 @@ TPS_TEST_EVENT = "Ake_Cork_VOBD.Cork_VOBD_PL_Gladiator.Ak_Play_VOBD_Cork_Gladiat
 
 
 @command("krieg_voice", description="Sound test for Krieg's character select line. "
-         "Optional: a method (ui, world, pawn, pc) and/or 'tps' to play Athena's menu line instead.")
+         "Optional: a method (world, ui, pawn, pc), 'orig' for the gameplay version, "
+         "or 'tps' to play a Pre-Sequel menu line instead.")
 def krieg_voice(args) -> None:
     words = [w.lower() for w in (getattr(args, "words", None) or [])]
     only = next((w for w in words if w in METHODS), None)
     if "tps" in words:
-        ev = _find(TPS_TEST_EVENT)
-        name = "Athena's menu line" if ev else "Athena's menu line (not loaded)"
+        ev = _find(TPS_TEST_EVENT) or next(
+            (e for e in unrealsdk.find_all("AkEvent", exact=False) if "Menu_Select" in e.Name), None)
+        name = f"Pre-Sequel menu line {ev.Name}" if ev else "no Pre-Sequel menu line loaded"
     else:
         ev = _pick()
+        if ev is not None and "orig" not in words:
+            ev = _menu_event(ev)
         name = ev.Name if ev else "no voice events loaded"
     log(f"krieg_voice: {name}" + (f" ({_play(ev, only)})" if ev else ""))
 
