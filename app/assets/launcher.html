@@ -638,7 +638,9 @@ function renderSdk(g, busy) {
   if (!g.path) {
     t.textContent = "Mods for this game run on the Python SDK (" + g.sdk.repo + "). It installs together with the first mod, once the game is found.";
   } else if (g.sdk.installed) {
-    t.append(el("strong", "", "Installed. "), "Mods for " + g.short + " run on the Python SDK (" + g.sdk.repo + "). Removing a mod leaves it in place for your other mods.");
+    t.append(el("strong", "", "Installed" + (g.sdk.version ? " (" + g.sdk.version + ")" : "") + ". "),
+      "Mods for " + g.short + " run on the Python SDK (" + g.sdk.repo + "). It updates itself to the newest release whenever the launcher opens. Removing a mod leaves it in place for your other mods.");
+    if (g.sdk.note) t.append(el("br"), el("span", "", g.sdk.note));
   } else {
     t.textContent = "Not installed yet. It installs automatically with the first mod for " + g.short + ", from the bl-sdk releases on GitHub.";
   }

@@ -1,4 +1,4 @@
-VAULT LAUNCHER - THE BORDERLANDS LAUNCHER  -  version 2.1.21
+VAULT LAUNCHER - THE BORDERLANDS LAUNCHER  -  version 2.1.22
 =========================================================
 
 One launcher for my Borderlands mods: download, update, repair and remove them for every game.

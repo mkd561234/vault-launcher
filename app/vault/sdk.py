@@ -54,11 +54,32 @@ def _pick_asset(assets: list, game: Game):
     return zips[0] if len(zips) == 1 else None
 
 
-def _from_github(game: Game, game_dir: Path, ua: str, say) -> bool:
+MARKER = Path('sdk_mods') / '.vault_sdk.json'     # which release the launcher put in this game folder
+_latest_cache: dict = {}                          # repo -> (time, release)
+CACHE_SECONDS = 20 * 60
+
+
+def installed_version(game_dir: Path) -> str | None:
+    try:
+        return json.loads((game_dir / MARKER).read_text(encoding='utf-8')).get('tag')
+    except (OSError, ValueError):
+        return None
+
+
+def latest_release(game: Game, ua: str) -> dict:
+    import time
+    hit = _latest_cache.get(game.sdk)
+    if hit and time.time() - hit[0] < CACHE_SECONDS:
+        return hit[1]
     req = urllib.request.Request(API.format(repo=game.sdk), headers={'User-Agent': ua,
                                                                      'Accept': 'application/vnd.github+json'})
     with urllib.request.urlopen(req, timeout=30) as r:
         release = json.load(r)
+    _latest_cache[game.sdk] = (time.time(), release)
+    return release
+
+
+def _install_release(game: Game, game_dir: Path, release: dict, ua: str, say) -> bool:
     asset = _pick_asset(release.get('assets', []), game)
     if asset is None:
         return False
@@ -75,8 +96,31 @@ def _from_github(game: Game, game_dir: Path, ua: str, say) -> bool:
         for root in roots:
             if (root / 'sdk_mods').is_dir():
                 _copy_tree(root, game_dir)
-                return installed(game_dir)
+                if not installed(game_dir):
+                    return False
+                (game_dir / MARKER).write_text(json.dumps({'repo': game.sdk, 'tag': release.get('tag_name'),
+                                                           'asset': asset['name']}), encoding='utf-8')
+                return True
     return False
+
+
+def _from_github(game: Game, game_dir: Path, ua: str, say) -> bool:
+    return _install_release(game, game_dir, latest_release(game, ua), ua, say)
+
+
+def update(game: Game, game_dir: Path, ua: str, say) -> str | None:
+    """Brings an installed SDK up to bl-sdk's latest release. Returns the new version, or None
+    when it was already current. Mods and the SDK's settings are left alone."""
+    if not game.sdk or not installed(game_dir):
+        return None
+    release = latest_release(game, ua)
+    tag = release.get('tag_name')
+    if not tag or tag == installed_version(game_dir):
+        return None
+    say(f'Updating the mod SDK for {game.short} to {tag}')
+    if not _install_release(game, game_dir, release, ua, say):
+        raise RuntimeError(f'the {tag} release has no download for {game.short}')
+    return tag
 
 
 def _from_sibling(game: Game, game_dir: Path, others: dict, say) -> bool:
@@ -106,7 +150,11 @@ def _from_sibling(game: Game, game_dir: Path, others: dict, say) -> bool:
 
 def ensure(game: Game, game_dir: Path, others: dict, ua: str, say) -> None:
     if installed(game_dir):
-        say('  the mod SDK is already installed')
+        try:
+            tag = update(game, game_dir, ua, say)
+            say(f'  the mod SDK was updated to {tag}' if tag else '  the mod SDK is installed and up to date')
+        except Exception as ex:  # noqa: BLE001 - an installed SDK still works
+            say(f'  the mod SDK is installed (could not check for a newer one: {ex})')
         return
     if not game.sdk:
         raise RuntimeError(f'There is no Python SDK for {game.name} yet.')

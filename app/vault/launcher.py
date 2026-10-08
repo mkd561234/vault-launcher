@@ -151,7 +151,8 @@ def _compute_status() -> dict:
             'running': bool(p) and games.running(g),
             'closing': g.id in _closing,
             'store': _store(p),
-            'sdk': {'repo': g.sdk, 'installed': bool(p) and sdk.installed(p), 'page': sdk.PAGE.format(repo=g.sdk)},
+            'sdk': {'repo': g.sdk, 'installed': bool(p) and sdk.installed(p), 'page': sdk.PAGE.format(repo=g.sdk),
+                    'version': sdk.installed_version(p) if p else None, 'note': _sdk_notes.get(g.id)},
             'mods': [m.id for m in mods if m.game == g.id],
         })
     out_mods = []
@@ -292,9 +293,47 @@ def check_for_update(quiet: bool = False) -> None:
         _check['busy'] = False
 
 
+_sdk_notes: dict = {}          # game id -> what the last SDK update check did, for the page
+_sdk_busy = {'on': False}
+
+
+def update_sdks() -> None:
+    """Brings every installed mod SDK up to bl-sdk's latest release (skipping games that are
+    running, since their files are in use, and waiting while a mod installs)."""
+    if _sdk_busy['on']:
+        return
+    _sdk_busy['on'] = True
+    try:
+        paths = main.game_paths(main.load_state())
+        for g in games.GAMES:
+            p = paths.get(g.id)
+            if not g.sdk or p is None or not sdk.installed(p):
+                continue
+            while JOB.running:
+                time.sleep(2)
+            if games.running(g):
+                _sdk_notes[g.id] = 'An update check waits until the game is closed.'
+                continue
+            try:
+                tag = sdk.update(g, p, main.user_agent(), main.say)
+                if tag:
+                    main.say(f'{g.short}: mod SDK updated to {tag}')
+                    _sdk_notes[g.id] = f'Updated to {tag} automatically.'
+                else:
+                    _sdk_notes[g.id] = 'Up to date.'
+            except Exception as ex:  # noqa: BLE001
+                main.say(f'{g.short}: mod SDK update failed: {ex}')
+                _sdk_notes[g.id] = f"Couldn't check for a newer version: {ex}"
+        _refresh_status(force=True)
+    finally:
+        _sdk_busy['on'] = False
+
+
 def _github_check() -> None:
     """On open, and every half hour while open."""
     check_for_update(quiet=True)
+    if not _restart['zip']:
+        update_sdks()
 
 
 def act_update() -> int:
@@ -823,7 +862,8 @@ def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int
     while True:
         time.sleep(2)
         if not _check['busy'] and time.time() - _check['at'] > CHECK_EVERY_OPEN:
-            threading.Thread(target=check_for_update, args=(True,), daemon=True).start()
+            _check['at'] = time.time()
+            threading.Thread(target=_github_check, daemon=True).start()
         if not JOB.running and time.time() - _last_seen['t'] > IDLE_EXIT:
             break
         if _restart['zip'] and not JOB.running and time.time() - _restart['at'] > 3:   # the window has shown the notice

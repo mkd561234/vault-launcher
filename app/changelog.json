@@ -1,5 +1,13 @@
 [
  {
+  "version": "2.1.22",
+  "date": "2026-10-08",
+  "changes": [
+   "Every game's mod SDK now updates itself to bl-sdk's newest release: whenever the launcher opens, every half hour while it stays open, and whenever a mod is installed. Your mods and SDK settings are kept. A game that's running is skipped until it's closed.",
+   "The Mod SDK section shows the installed SDK version and what the last update check did."
+  ]
+ },
+ {
   "version": "2.1.21",
   "date": "2026-10-08",
   "changes": [
