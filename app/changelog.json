@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.7",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.5: his character select line now plays his own player's version of each line. Every Krieg line exists in two versions: a flat one you hear as the player, and a 3D one co-op partners hear from where he stands. On menus nothing chooses between them, so the game played the 3D version from far away, where it faded to silence. The menu copies now always use the flat version."
+  ]
+ },
+ {
   "version": "3.0.6",
   "date": "2026-10-08",
   "changes": [
