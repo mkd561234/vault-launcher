@@ -262,7 +262,11 @@ def check_for_update(quiet: bool = False) -> None:
     """Looks for a newer Vault Launcher (a zip in Downloads, then GitHub). When there is one, it is
     downloaded and this window switches to it. quiet: a background check, which only shows
     something when an update is found."""
-    if _check['busy'] or _restart['zip']:
+    if _restart['zip']:
+        if not quiet:
+            _check.update(state='updating', text=f"Updating to version {_restart['version']}…")
+        return
+    if _check['busy']:
         return
     _check['busy'] = True
     _check['at'] = time.time()
@@ -864,7 +868,7 @@ def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int
         if not _check['busy'] and time.time() - _check['at'] > CHECK_EVERY_OPEN:
             _check['at'] = time.time()
             threading.Thread(target=_github_check, daemon=True).start()
-        if not JOB.running and time.time() - _last_seen['t'] > IDLE_EXIT:
+        if not JOB.running and time.time() - _last_seen['t'] > IDLE_EXIT and not winutil.launcher_window_open():
             break
         if _restart['zip'] and not JOB.running and time.time() - _restart['at'] > 3:   # the window has shown the notice
             break

@@ -221,3 +221,18 @@ def browse_folder(title: str, start: str | None = None) -> str | None:
     finally:
         PICKER['hwnd'] = None
         ole32.OleUninitialize()
+
+
+def launcher_window_open() -> bool:
+    """True while the launcher's own window (the exe, window class VaultLauncherWindow) exists.
+    A window that's behind a full-screen game stops asking for updates (Windows and WebView2 slow
+    down hidden pages), so its silence doesn't mean it was closed."""
+    if not IS_WINDOWS:
+        return False
+    try:
+        find = ctypes.windll.user32.FindWindowW
+        find.restype = ctypes.c_void_p
+        find.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p)
+        return bool(find('VaultLauncherWindow', None))
+    except (AttributeError, OSError):
+        return False

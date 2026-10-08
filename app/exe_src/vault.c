@@ -55,6 +55,7 @@ IMPORT BOOL DeleteFileW(const WCHAR *);
 IMPORT BOOL CreateProcessW(const WCHAR *, WCHAR *, void *, void *, BOOL, DWORD, void *, const WCHAR *,
                            STARTUPINFOW *, PROCESS_INFORMATION *);
 IMPORT DWORD WaitForSingleObject(HANDLE, DWORD);
+IMPORT HANDLE OpenProcess(DWORD, BOOL, DWORD);
 IMPORT BOOL GetExitCodeProcess(HANDLE, DWORD *);
 IMPORT BOOL CloseHandle(HANDLE);
 IMPORT void ExitProcess(UINT);
@@ -125,6 +126,9 @@ static WCHAR self_old[N], dir[N], data[N], pyw[N], run[N], cmdline[4 * N], cmdex
 static HWND g_hwnd;
 static void *g_controller;       /* ICoreWebView2Controller* */
 static int g_shown;              /* the page is up in our window */
+static void *g_webview;          /* ICoreWebView2* */
+static int g_dead, g_waiting;    /* launcher watchdog */
+static DWORD g_restart_at;
 static HINSTANCE g_inst;
 
 static unsigned len(const WCHAR *s) { unsigned n = 0; while (s[n]) n++; return n; }
@@ -271,6 +275,7 @@ static HRESULT controller_done(Handler *self, HRESULT hr, void *controller) {
         PostMessageW(g_hwnd, WM_APP_FALLBACK, 0, 0);
         return 0;
     }
+    g_webview = webview;
     g_shown = 1;
     return 0;
 }
@@ -304,6 +309,61 @@ static int start_webview(void) {
 /* ---------------------------------------------------------------------------------------------
  * Window
  * ------------------------------------------------------------------------------------------- */
+/* Is the launcher (the Python part serving this window's page) still running? It writes its process
+ * id to %LOCALAPPDATA%\\VaultLauncher\\launcher.json. */
+static int launcher_alive(void) {
+    static WCHAR path[N];
+    char buf[512]; DWORD got = 0, pid = 0; unsigned i;
+    HANDLE f, p;
+    int alive;
+    cpy(path, data); cat(path, L"\\launcher.json");
+    f = CreateFileW(path, 0x80000000u, 7, 0, 3, 0, 0);
+    if (f == (HANDLE)-1) return 0;
+    ReadFile(f, buf, sizeof buf - 1, &got, 0);
+    CloseHandle(f);
+    buf[got] = 0;
+    for (i = 0; i + 6 < got; i++) {
+        if (buf[i] == '"' && buf[i+1] == 'p' && buf[i+2] == 'i' && buf[i+3] == 'd' && buf[i+4] == '"') {
+            i += 5;
+            while (i < got && (buf[i] < '0' || buf[i] > '9')) i++;
+            while (i < got && buf[i] >= '0' && buf[i] <= '9') pid = pid * 10 + (DWORD)(buf[i++] - '0');
+            break;
+        }
+    }
+    if (!pid) return 0;
+    p = OpenProcess(0x00100000 /*SYNCHRONIZE*/, 0, pid);
+    if (!p) return 0;
+    alive = WaitForSingleObject(p, 0) == 0x102 /*WAIT_TIMEOUT*/;
+    CloseHandle(p);
+    return alive;
+}
+
+/* Every 5 s: if the launcher has stopped (without a newer version taking over), start it again and
+ * show its new page here, so nobody has to close and reopen the window. */
+static void watchdog(void) {
+    if (!g_shown || !g_webview) return;
+    if (g_waiting) {
+        if (read_url()) {
+            ((Navigate)(*(void ***)g_webview)[5])(g_webview, url);
+            g_waiting = 0; g_dead = 0;
+        } else if (GetTickCount() - g_restart_at > 90000) {
+            g_waiting = 0;
+        }
+        return;
+    }
+    if (launcher_alive()) { g_dead = 0; return; }
+    if (++g_dead < 3) return;            /* a version switch leaves a short gap; wait it out */
+    g_dead = 0;
+    DeleteFileW(urlfile);
+    {
+        static WCHAR args[2 * N];
+        HANDLE p;
+        cpy(args, L"--no-window --url-file \""); cat(args, urlfile); cat(args, L"\"");
+        p = start_launcher(args);
+        if (p) { CloseHandle(p); g_waiting = 1; g_restart_at = GetTickCount(); }
+    }
+}
+
 static LRESULT wndproc(HWND h, UINT m, WPARAM w, LPARAM l) {
     switch (m) {
     case WM_SIZE: fit(); return 0;
@@ -311,6 +371,8 @@ static LRESULT wndproc(HWND h, UINT m, WPARAM w, LPARAM l) {
         if (w == 1) {
             /* let the launcher's folder picker come to the front while this window is active */
             if (GetForegroundWindow() == h) AllowSetForegroundWindow((DWORD)-1);
+        } else if (w == 3) {
+            watchdog();
         } else if (w == 2) {
             KillTimer(h, 2);
             if (!g_shown) { fallback_to_browser(); DestroyWindow(h); }   /* WebView2 never answered */
@@ -416,6 +478,7 @@ void start_main(void) {
         DestroyWindow(g_hwnd);
     } else {
         SetTimer(g_hwnd, 2, 20000, 0);      /* give WebView2 20 s to show up */
+        SetTimer(g_hwnd, 3, 5000, 0);       /* keep the launcher behind the window running */
     }
 
     while (GetMessageW(&msg, 0, 0, 0) > 0) {

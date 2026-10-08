@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.0.1",
+  "date": "2026-10-08",
+  "changes": [
+   "No more closing and reopening the launcher: it used to shut its background part down when its window went quiet for 25 seconds, which happens whenever a game is in front of it (Windows slows hidden windows down). Then \"Check for updates\" sat on \"Checking for updates…\" and the page said the launcher stopped. It now stays running for as long as its window is open.",
+   "If the background part ever stops anyway, the window starts it again by itself within about 15 seconds and reconnects, instead of asking you to reopen it.",
+   "Check for updates says what's happening when an update is already being installed, and says so if it couldn't reach the launcher instead of staying on \"Checking…\"."
+  ]
+ },
+ {
   "version": "3.0.0",
   "date": "2026-10-08",
   "changes": [

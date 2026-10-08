@@ -660,7 +660,9 @@ function renderNexus(s, busy) {
       : "New versions install by themselves.";
     na.append(btn(uc.busy ? "Checking…" : "Check for updates", "primary", () => {
       nt.textContent = "Checking for updates…";
-      api("/api/update", {}).then(poll);
+      api("/api/update", {}).then(poll).catch(() => {
+        nt.textContent = "Couldn't reach the launcher. It will reconnect by itself in a moment; try again then.";
+      });
     }, busy || uc.busy || uc.state === "updating"));
     na.append(btn("GitHub page", "primary", () => api("/api/openurl", { url: nx.page })));
     $("version").textContent = "Version " + s.launcher.version + ".";
@@ -821,9 +823,15 @@ $("newsClose").addEventListener("click", () => $("news").close());
 $("noticeClose").addEventListener("click", () => api("/api/dismiss", {}).then(poll));
 for (const b of document.querySelectorAll("[data-open]")) b.addEventListener("click", () => api("/api/open", { which: b.dataset.open }));
 
+let failures = 0;
 async function poll() {
-  try { state = await api("/api/state"); render(); }
-  catch (e) { $("where").textContent = "Vault Launcher stopped. Open it again from its shortcut."; }
+  try { state = await api("/api/state"); failures = 0; render(); }
+  catch (e) {
+    // a slow moment (the PC busy with a game, the launcher switching versions) is not the end:
+    // keep trying, and only say so once it has been unreachable for a while
+    failures++;
+    if (failures >= 8) $("where").textContent = "Can't reach the launcher right now. Retrying…";
+  }
 }
 poll();
 setInterval(poll, 1000);

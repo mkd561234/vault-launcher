@@ -20,3 +20,4 @@ FindFirstFileW
 FindNextFileW
 FindClose
 GetTickCount
+OpenProcess
