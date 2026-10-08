@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.2",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg uses the same numbering as the launcher now: this is Krieg 2.0.0, and his updates go 2.0.1 up to 2.0.9, then 2.1.0, and so on. Nothing else changed in him."
+  ]
+ },
+ {
   "version": "3.0.1",
   "date": "2026-10-08",
   "changes": [
