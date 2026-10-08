@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.4",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.2: his character select line is now played as a flat menu sound. Before, it was played as a 3D sound from a spot far away from the menu camera, so it faded out to nothing. krieg_voice also takes a method (ui, world, pawn, pc) and 'tps' to play Athena's menu line through the same path, for testing."
+  ]
+ },
+ {
   "version": "3.0.3",
   "date": "2026-10-08",
   "changes": [

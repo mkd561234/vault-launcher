@@ -57,15 +57,36 @@ def _pick():
     return ev
 
 
-def _play(ev) -> str:
+def _ui_sound_manager():
+    try:
+        return unrealsdk.find_class("WorldSoundManager").ClassDefaultObject
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# Ways to post the event, most suitable first. A plain PlayAkEvent on the player controller ran
+# without error but stayed silent: his voice lines are 3D sounds, and at the menu the controller
+# sits nowhere near the camera, so the line faded out by distance. The UI paths play it flat (2D),
+# the way the menus play their own sounds.
+METHODS = {
+    "ui": lambda pc, ev: pc.PlayUIAkEvent(ev),
+    "world": lambda pc, ev: _ui_sound_manager().StaticPlayUIAkEvent(ev),
+    "pawn": lambda pc, ev: pc.Pawn.PlayAkEvent(ev),
+    "pc": lambda pc, ev: pc.PlayAkEvent(ev),
+}
+ORDER = ("ui", "world", "pawn", "pc")
+
+
+def _play(ev, only: str | None = None) -> str:
     from mods_base import get_pc
     pc = get_pc()
     if pc is None:
         return "no player controller"
-    for name in ("PlayAkEvent", "ClientPlayAkEvent"):
+    last = "nothing tried"
+    for name in ((only,) if only else ORDER):
         try:
-            getattr(pc, name)(ev)
-            return f"played with {name}"
+            result = METHODS[name](pc, ev)
+            return f"played with {name}" + (f" -> {result}" if result is not None else "")
         except Exception as ex:  # noqa: BLE001
             last = f"{name}: {type(ex).__name__}: {ex}"
     return last
@@ -86,7 +107,7 @@ def on_select_dialog(obj, args, *_):
             return
         ev.ObjectFlags |= ObjectFlags.KEEP_ALIVE
         # The screen's own path stayed silent for Krieg (set as his MenuSelectDialog, nothing was
-        # heard), so the line is played directly, as a 2D sound from the local player.
+        # heard), so the line is played directly as a flat (2D) UI sound.
         body.MenuSelectDialog = None
         result = _play(ev)
         if _state["logs"] < 10:
@@ -116,10 +137,24 @@ def upkeep() -> None:
 from mods_base import command  # noqa: E402
 
 
-@command("krieg_voice", description="Play one of Krieg's character select lines (sound test).")
-def krieg_voice(_args) -> None:
-    ev = _pick()
-    log(f"krieg_voice: {ev.Name if ev else 'no voice events loaded'}" + (f" ({_play(ev)})" if ev else ""))
+TPS_TEST_EVENT = "Ake_Cork_VOBD.Cork_VOBD_PL_Gladiator.Ak_Play_VOBD_Cork_Gladiator_PL_Menu_Select"
+
+
+@command("krieg_voice", description="Sound test for Krieg's character select line. "
+         "Optional: a method (ui, world, pawn, pc) and/or 'tps' to play Athena's menu line instead.")
+def krieg_voice(args) -> None:
+    words = [w.lower() for w in (getattr(args, "words", None) or [])]
+    only = next((w for w in words if w in METHODS), None)
+    if "tps" in words:
+        ev = _find(TPS_TEST_EVENT)
+        name = "Athena's menu line" if ev else "Athena's menu line (not loaded)"
+    else:
+        ev = _pick()
+        name = ev.Name if ev else "no voice events loaded"
+    log(f"krieg_voice: {name}" + (f" ({_play(ev, only)})" if ev else ""))
+
+
+krieg_voice.add_argument("words", nargs="*")
 
 
 voice_hooks = [on_select_dialog, krieg_voice]
