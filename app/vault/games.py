@@ -31,9 +31,9 @@ class Game:
 
 GAMES = (
     Game('bl1', 'Borderlands Game of the Year', 'Borderlands GOTY', 8980, 'Borderlands',
-         ('Binaries/Borderlands.exe',), None),
+         ('Binaries/Borderlands.exe',), 'willow1-mod-manager', ('bl1-sdk.zip',)),
     Game('bl1e', 'Borderlands Game of the Year Enhanced', 'GOTY Enhanced', 729040, 'BorderlandsGOTYEnhanced',
-         ('Binaries/Win64/BorderlandsGOTY.exe',), 'willow1-mod-manager', ('bl1',)),
+         ('Binaries/Win64/BorderlandsGOTY.exe',), 'willow1-mod-manager', ('bl1-enhanced-sdk.zip', 'enhanced')),
     Game('bl2', 'Borderlands 2', 'Borderlands 2', 49520, 'Borderlands 2',
          ('Binaries/Win32/Borderlands2.exe',), 'willow2-mod-manager', ('bl2', 'willow2')),
     Game('tps', 'Borderlands: The Pre-Sequel', 'The Pre-Sequel', 261640, 'BorderlandsPreSequel',

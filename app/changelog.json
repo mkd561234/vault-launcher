@@ -1,5 +1,13 @@
 [
  {
+  "version": "2.1.21",
+  "date": "2026-10-08",
+  "changes": [
+   "Borderlands GOTY (the original 2009 version) now has its mod SDK: the same bl-sdk Willow1 mod manager GOTY Enhanced uses, from its \"bl1-sdk.zip\" release (Enhanced gets \"bl1-enhanced-sdk.zip\"). It installs together with the first mod for the game.",
+   "Fixed: GOTY Enhanced could have picked the original game's SDK download, since both file names start with \"bl1\"."
+  ]
+ },
+ {
   "version": "2.1.20",
   "date": "2026-10-08",
   "changes": [

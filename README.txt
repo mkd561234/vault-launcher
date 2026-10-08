@@ -1,8 +1,8 @@
-VAULT LAUNCHER - THE BORDERLANDS LAUNCHER  -  version 2.1.20
+VAULT LAUNCHER - THE BORDERLANDS LAUNCHER  -  version 2.1.21
 =========================================================
 
 One launcher for my Borderlands mods: download, update, repair and remove them for every game.
-  Borderlands GOTY Enhanced, Borderlands 2, The Pre-Sequel, Borderlands 3, Tiny Tina's
+  Borderlands GOTY, Borderlands GOTY Enhanced, Borderlands 2, The Pre-Sequel, Borderlands 3, Tiny Tina's
   Wonderlands and Borderlands 4.
 Games are found through Steam and the Epic Games launcher; any other folder can be chosen.
 For each game it also installs the Python SDK mod manager the mods run on (from bl-sdk on GitHub).

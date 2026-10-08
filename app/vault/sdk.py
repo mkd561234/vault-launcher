@@ -1,5 +1,5 @@
 """Installs the Python SDK mod manager a game needs (all from github.com/bl-sdk):
-willow1 (Borderlands GOTY Enhanced), willow2 (BL2, Pre-Sequel), oak (BL3, Wonderlands), oak2 (BL4).
+willow1 (Borderlands GOTY: bl1-sdk.zip, and GOTY Enhanced: bl1-enhanced-sdk.zip), willow2 (BL2, Pre-Sequel), oak (BL3, Wonderlands), oak2 (BL4).
 
 Each release is laid out like the game folder: an sdk_mods folder plus the game's Binaries (or
 OakGame\\Binaries) files. If a download is not possible, a willow2 copy from another game the
@@ -22,7 +22,8 @@ PAGE = 'https://github.com/bl-sdk/{repo}/releases'
 def installed(game_dir: Path) -> bool:
     if not (game_dir / 'sdk_mods' / 'mods_base.sdkmod').is_file() and not (game_dir / 'sdk_mods' / 'mods_base').is_dir():
         return False
-    for plugins in ('Binaries/Win32/Plugins', 'Binaries/Win64/Plugins', 'OakGame/Binaries/Win64/Plugins'):
+    for plugins in ('Binaries/Plugins', 'Binaries/Win32/Plugins', 'Binaries/Win64/Plugins',
+                    'OakGame/Binaries/Win64/Plugins'):
         if (game_dir / plugins / 'pyunrealsdk.dll').is_file():
             return True
     return False
@@ -46,7 +47,9 @@ def _pick_asset(assets: list, game: Game):
     zips = [a for a in assets if a.get('name', '').lower().endswith('.zip')]
     for hint in game.sdk_hint:
         for a in zips:
-            if hint in a['name'].lower():
+            name = a['name'].lower()
+            # a hint ending in .zip is a whole file name and must match exactly
+            if (name == hint) if hint.endswith('.zip') else (hint in name):
                 return a
     return zips[0] if len(zips) == 1 else None
 
