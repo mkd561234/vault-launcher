@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.1.4",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.1: co-op checks for two bugs where the player joining the game sees the host's Krieg in the default head and skin, and their own Krieg is missing from the trade screen. In co-op the Krieg log now records every player's head and skin. When the trade screen opens, it also records how each body is drawn. The krieg_coop console command writes the same details on demand. This version doesn't change anything in the game."
+  ]
+ },
+ {
   "version": "3.1.3",
   "date": "2026-10-08",
   "changes": [
