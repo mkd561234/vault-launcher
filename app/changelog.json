@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.19",
+  "date": "2026-10-08",
+  "changes": [
+   "Check for updates, GitHub page and What's new now use exactly the colour of the selected game's tab in the list (Wonderlands' purple, the two GOTY golds, and so on), always with black lettering."
+  ]
+ },
+ {
   "version": "2.1.18",
   "date": "2026-10-08",
   "changes": [
