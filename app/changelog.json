@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.0.0",
+  "date": "2026-10-08",
+  "changes": [
+   "New version numbering: 3.0.0, then 3.0.1 up to 3.0.9, then 3.1.0, and so on.",
+   "Krieg 1.0.17: Krieg now speaks when you pick him at character select, like the other Vault Hunters. Each click picks one of his own Borderlands 2 voice sets at random (never the same set twice in a row), and each set holds several recorded lines: rampage cries, idle rants, kill taunts, inner-voice moments and laughter."
+  ]
+ },
+ {
   "version": "2.1.22",
   "date": "2026-10-08",
   "changes": [
