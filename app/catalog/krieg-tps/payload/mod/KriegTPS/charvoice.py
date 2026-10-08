@@ -10,7 +10,7 @@ laughter.
 Borderlands 2 routes his voice through the Pre-Sequel's gameplay voice buses, which are silent at
 the menus (the Pre-Sequel's own select lines use a separate menu voice bus). The launcher adds a
 "_Menu" copy of each of these events to his voice bank, routed to that menu bus; the matching
-AkEvent objects are created here at runtime.
+events are posted by swapping in the copy's ID for the moment of the call.
 """
 
 import random
@@ -60,19 +60,44 @@ def _fnv(name: str) -> int:
     return h - (1 << 32) if h >= 1 << 31 else h
 
 
-def _menu_event(ev):
-    """The menu-bus copy of one of his events (same lines, heard at the menus)."""
-    name = f"{ev.Name}_Menu"
+_offset = {"value": None}
+
+
+def _wwise_id(ev) -> int:
+    name = ev.Name
+    return _fnv(name[3:] if name.startswith("Ak_") else name)
+
+
+def _id_offset(ev):
+    """Where the event keeps its Wwise ID in memory (the Pre-Sequel doesn't expose it to scripts)."""
+    if _offset["value"] is not None:
+        return _offset["value"]
+    import ctypes
+    want = _wwise_id(ev)
+    base = ev._get_address()
+    hits = [o for o in range(0x3C, 0x100, 4) if ctypes.c_int32.from_address(base + o).value == want]
+    if len(hits) != 1:
+        raise RuntimeError(f"found the event ID at {len(hits)} places")
+    # check the same spot on another of his events
+    for other in (e for e in (_find(p) for p in EVENTS) if e is not None and e is not ev):
+        if ctypes.c_int32.from_address(other._get_address() + hits[0]).value != _wwise_id(other):
+            raise RuntimeError("event ID offset differs between events")
+        break
+    _offset["value"] = hits[0]
+    log(f"character select voice: event ID kept at +0x{hits[0]:X}")
+    return hits[0]
+
+
+def _play_menu(ev, only: str | None = None) -> str:
+    """Posts the menu copy of the event (its ID + '_Menu'), routed to the menu voice bus."""
+    import ctypes
+    slot = ctypes.c_int32.from_address(ev._get_address() + _id_offset(ev))
+    original = slot.value
+    slot.value = _fnv(ev.Name[3:] + "_Menu")
     try:
-        menu = unrealsdk.find_object("AkEvent", f"{ev.Outer._path_name()}.{name}")
-    except ValueError:
-        menu = unrealsdk.construct_object("AkEvent", ev.Outer, name, template_obj=ev)
-    wwise = f"{ev.WwiseName}_Menu"
-    if str(menu.WwiseName) != wwise:
-        menu.WwiseName = wwise
-        menu.ShortId = _fnv(wwise)
-    menu.ObjectFlags |= ObjectFlags.KEEP_ALIVE
-    return menu
+        return _play(ev, only) + " [menu copy]"
+    finally:
+        slot.value = original
 
 
 def _pick():
@@ -134,14 +159,13 @@ def on_select_dialog(obj, args, *_):
                 log("character select voice: none of Krieg's voice events are loaded")
             return
         ev.ObjectFlags |= ObjectFlags.KEEP_ALIVE
-        try:
-            ev = _menu_event(ev)
-        except Exception as ex:  # noqa: BLE001
-            log(f"character select voice: menu copy failed ({type(ex).__name__}: {ex}), using the original")
         # The screen's own path stayed silent for Krieg (set as his MenuSelectDialog, nothing was
         # heard), so the line is played directly as a flat (2D) UI sound.
         body.MenuSelectDialog = None
-        result = _play(ev)
+        try:
+            result = _play_menu(ev)
+        except Exception as ex:  # noqa: BLE001
+            result = f"menu copy failed ({type(ex).__name__}: {ex}); " + _play(ev)
         if _state["logs"] < 10:
             _state["logs"] += 1
             log(f"character select voice: {ev.Name} ({result})")
@@ -184,9 +208,11 @@ def krieg_voice(args) -> None:
         name = f"Pre-Sequel menu line {ev.Name}" if ev else "no Pre-Sequel menu line loaded"
     else:
         ev = _pick()
-        if ev is not None and "orig" not in words:
-            ev = _menu_event(ev)
+        menu = ev is not None and "orig" not in words
         name = ev.Name if ev else "no voice events loaded"
+        if menu:
+            log(f"krieg_voice: {name} ({_play_menu(ev, only)})")
+            return
     log(f"krieg_voice: {name}" + (f" ({_play(ev, only)})" if ev else ""))
 
 

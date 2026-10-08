@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.6",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.4: 2.0.3 added menu copies of Krieg's voice lines but never played them. The Pre-Sequel doesn't let mods name a sound event directly, so the mod couldn't set up the menu copies and fell back to his in-game lines. It now plays the menu copy by briefly giving the original line the copy's ID."
+  ]
+ },
+ {
   "version": "3.0.5",
   "date": "2026-10-08",
   "changes": [
