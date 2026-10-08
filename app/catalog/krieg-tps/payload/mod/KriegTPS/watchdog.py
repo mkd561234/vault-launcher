@@ -185,6 +185,7 @@ def _watch() -> None:
         if stalled < STALL_SECONDS or _state["samples"] >= MAX_SAMPLES:
             continue
         _state["samples"] += 1
+        _state["stalled"] = True
         log(f"game thread has not ticked for {stalled:.0f}s")
         try:
             sample(handle)
@@ -193,7 +194,11 @@ def _watch() -> None:
 
 
 def _beat(name: str) -> None:
-    _state["beat"] = time.monotonic()
+    now = time.monotonic()
+    if _state.get("stalled"):
+        _state["stalled"] = False
+        log(f"game thread running again after {now - _state['beat']:.1f}s (in {name})")
+    _state["beat"] = now
     if _state["tid"] is None:
         _state["tid"] = threading.get_native_id()
         log(f"watching game thread {_state['tid']}")

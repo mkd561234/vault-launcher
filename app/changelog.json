@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.1.2",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.9: when the game freezes for more than a few seconds, the freeze log now also records when it starts running again and how long the freeze lasted. That makes the cause easier to track down."
+  ]
+ },
+ {
   "version": "3.1.1",
   "date": "2026-10-08",
   "changes": [
