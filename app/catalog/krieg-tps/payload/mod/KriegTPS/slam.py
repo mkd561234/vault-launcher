@@ -17,6 +17,12 @@ values from her sequence:
 * the oxygen-mask shatter hit (50 damage, 500 radius) every character's slam does;
 * the matching slam particle effect and sound.
 
+In co-op the slam is the host's business: damage, knock-back and status effects only count when the
+host's game applies them, and only the host knows the Oz kit's element and grade for every player
+(a client reads 0 for them, which turned a cryo kit into a plain explosive slam). So these run on
+whichever game has authority over the slamming Krieg - the host for a joining Krieg, the player's
+own game in single player or when Krieg hosts - and the particle and sound are sent to everyone.
+
 They are fired from the slam landing (WillowPlayerPawn.DoSlamEffects), with the landing itself as a
 fallback in case that is not called for Krieg.
 """
@@ -78,7 +84,7 @@ MOMENTUM_ATTR = "GD_Balance_HealthAndDamage.HealthAndDamage.Att_SlamMomentum"
 FX_PACKAGE = "GD_Gladiator_Streaming_SF"
 FX_KEEP = [ELEMENTS[k][3] for k in ELEMENTS]
 
-_state = {"pending": 0.0, "last": 0.0, "logs": 0, "warned": set(), "dist": (0.0, -1.0), "fx": None}
+_state = {"pending": {}, "last": {}, "logs": 0, "warned": set(), "dist": (0.0, -1.0), "fx": None}
 _objs: dict[str, object] = {}
 
 
@@ -122,8 +128,26 @@ def _formula(template, value: float):
 
 def upkeep() -> None:
     """Load the effects early (while Krieg is in the game) so the first slam doesn't hitch."""
-    if _state["fx"] is None and _is_local_krieg_pawn(get_pc().Pawn if get_pc() else None):
+    if _state["fx"] is not None:
+        return
+    pc = get_pc()
+    if pc is None:
+        return
+    if _is_local_krieg_pawn(pc.Pawn):
         ensure_fx()
+        return
+    # hosting a Krieg: load them too, so his first slam doesn't hitch the host
+    try:
+        pawn = pc.WorldInfo.PawnList
+        for _ in range(64):
+            if pawn is None:
+                break
+            if _runs_slam(pawn):
+                ensure_fx()
+                return
+            pawn = pawn.NextPawn
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def ensure_fx() -> None:
@@ -256,9 +280,12 @@ def _post(pawn, path: str) -> None:
         _warn(path, f"slam: sound {path} is not loaded")
         return
     try:
-        pawn.PostAkEvent(event)
-    except Exception as ex:  # noqa: BLE001
-        _warn("sound", f"slam: could not play the slam sound: {type(ex).__name__}: {ex}")
+        pawn.PlayAkEvent(event)          # plays here and is sent to the other players
+    except Exception:  # noqa: BLE001
+        try:
+            pawn.PostAkEvent(event)
+        except Exception as ex:  # noqa: BLE001
+            _warn("sound", f"slam: could not play the slam sound: {type(ex).__name__}: {ex}")
 
 
 def _is_local_krieg_pawn(pawn) -> bool:
@@ -274,6 +301,40 @@ def _is_local_krieg_pawn(pawn) -> bool:
         return False
 
 
+def _is_krieg_pawn(pawn) -> bool:
+    if pawn is None:
+        return False
+    try:
+        arch = pawn.ObjectArchetype
+        if arch is not None and "LilacPlayerClass" in arch._path_name():
+            return True
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        cls = pawn.Controller.PlayerClass
+        return cls is not None and "Lilac" in cls._path_name()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _has_authority(pawn) -> bool:
+    try:
+        role = pawn.Role
+    except Exception:  # noqa: BLE001
+        return True
+    name = getattr(role, "name", str(role))
+    return name.endswith("ROLE_Authority") or role == 3
+
+
+def _runs_slam(pawn) -> bool:
+    """This game applies the slam for that pawn: it is a Krieg and this game is in charge of it."""
+    return _is_krieg_pawn(pawn) and _has_authority(pawn)
+
+
+def _key(pawn) -> int:
+    return pawn._get_address()
+
+
 def _slam_distance(pawn, now: float) -> float:
     dist, when = _state["dist"]
     if 0 <= now - when < 2.0:
@@ -286,10 +347,11 @@ def _slam_distance(pawn, now: float) -> float:
 
 def do_slam_hit(pawn, why: str) -> None:
     now = time.monotonic()
-    if now - _state["last"] < 0.5:
+    key = _key(pawn)
+    if now - _state["last"].get(key, 0.0) < 0.5:
         return  # landing and DoSlamEffects both fire for one slam
-    _state["last"] = now
-    _state["pending"] = 0.0
+    _state["last"][key] = now
+    _state["pending"].pop(key, None)
 
     ensure_fx()
     grade = _attr(GRADE_ATTR, pawn)
@@ -317,7 +379,8 @@ def do_slam_hit(pawn, why: str) -> None:
     logging = _state["logs"] < 8
     if logging:
         _state["logs"] += 1
-        log(f"slam hit ({why}): {kind} {damage:.0f} damage"
+        who = "" if _is_local_krieg_pawn(pawn) else "co-op partner's "
+        log(f"{who}slam hit ({why}): {kind} {damage:.0f} damage"
             f"{f' + {dot:.0f} {kind} damage over time, status chance x{chance:g}' if element else ''}"
             f" in {RADIUS:.0f} radius, knock-back x{push:g} ({info}, grade {grade:g}, "
             f"elements {', '.join(f'{k} {v:g}' for k, v in values.items())}, "
@@ -333,8 +396,8 @@ def do_slam_hit(pawn, why: str) -> None:
 
 @hook("WillowGame.WillowPlayerPawn:DoSlam", Type.POST, hook_identifier="KriegTPSSlamStart")
 def on_slam_start(obj, *_):
-    if _is_local_krieg_pawn(obj):
-        _state["pending"] = time.monotonic()
+    if _runs_slam(obj):
+        _state["pending"][_key(obj)] = time.monotonic()
 
 
 @hook("WillowGame.PlayerEventProviderDefinition:DoSlamEffects", Type.PRE,
@@ -348,16 +411,16 @@ def on_slam_distance(obj, args, *_):
 
 @hook("WillowGame.WillowPlayerPawn:DoSlamEffects", Type.POST, hook_identifier="KriegTPSSlamEffects")
 def on_slam_effects(obj, *_):
-    if _is_local_krieg_pawn(obj):
+    if _runs_slam(obj):
         do_slam_hit(obj, "slam effects")
 
 
 @hook("WillowGame.WillowPlayerPawn:Landed", Type.POST, hook_identifier="KriegTPSSlamLanded")
 def on_landed(obj, *_):
-    started = _state["pending"]
+    started = _state["pending"].get(_key(obj), 0.0)
     if not started or time.monotonic() - started > 10.0:
         return
-    if _is_local_krieg_pawn(obj):
+    if _runs_slam(obj):
         do_slam_hit(obj, "landing")
 
 

@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.1.3",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.0: Oz kit slams now work in co-op. When Krieg joined someone else's game, his slam ran only on his own screen, so it did no real damage, and it read the Oz kit's element as none, which turned a cryo kit into a plain explosive slam. The game hosting the session now runs his slams, using his real Oz kit. The slam's particles and sound reach every player. Both players need this update."
+  ]
+ },
+ {
   "version": "3.1.2",
   "date": "2026-10-08",
   "changes": [
