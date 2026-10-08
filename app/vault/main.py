@@ -287,18 +287,27 @@ def migrate() -> bool:
 # --------------------------------------------------------------------------------------------
 # Keeping a copy of the launcher, and Nexus updates
 # --------------------------------------------------------------------------------------------
-EXE_NAME = 'Vault Launcher.exe'
+EXE_NAME = 'Vault Launcher - THE Borderlands Launcher.exe'
+OLD_EXE_NAMES = ('Vault Launcher.exe',)          # what the window exe was called before 2.1.20
+BUNDLED_EXE = Path('bin') / 'launcher.exe'      # a copy inside app\ so an update always carries it
 LAUNCH_ARGS = []      # --no-window / --url-file, passed on whenever the launcher hands over to another copy
 
 
+def _same_file(a: Path, b: Path) -> bool:
+    try:
+        return a.stat().st_size == b.stat().st_size and a.read_bytes() == b.read_bytes()
+    except OSError:
+        return False
+
+
 def install_exe(src: Path) -> None:
-    """Keeps Vault Launcher.exe (the launcher's window) next to the installed app, for the shortcuts.
+    """Keeps the launcher's window exe in %LOCALAPPDATA%\\VaultLauncher, for the shortcuts.
     A running exe can't be overwritten but can be renamed, so the old one is moved aside."""
     if not src.is_file():
         return
     dst = winutil.data_dir() / EXE_NAME
     try:
-        if dst.resolve() == src.resolve():
+        if dst.resolve() == src.resolve() or _same_file(src, dst):
             return
     except OSError:
         pass
@@ -313,13 +322,39 @@ def install_exe(src: Path) -> None:
         shutil.copyfile(src, dst)
     except OSError as ex:
         say(f'could not copy {EXE_NAME}: {ex}')
+    _remove_old_exes()
+
+
+def _remove_old_exes() -> None:
+    """The exe from before the rename: deleted, or (while it is still running) renamed so the next
+    start deletes it."""
+    for name in OLD_EXE_NAMES:
+        for p in (winutil.data_dir() / name, winutil.data_dir() / (name + '.old')):
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                try:
+                    p.replace(p.with_name(p.name + '.old'))
+                except OSError:
+                    pass
+
+
+def refresh_exe() -> None:
+    """After an update made by an older launcher (which only knew the old exe name), put the
+    window exe this version carries in place."""
+    bundled = APP_DIR / BUNDLED_EXE
+    dst = winutil.data_dir() / EXE_NAME
+    if bundled.is_file() and not _same_file(bundled, dst):
+        install_exe(bundled)
+    else:
+        _remove_old_exes()
 
 
 def install_self() -> None:
     """Keeps this launcher in %LOCALAPPDATA%\\VaultLauncher\\app so shortcuts and the updater work
     after the downloaded zip is gone."""
     target = winutil.data_dir() / 'app'
-    install_exe(APP_DIR.parent / EXE_NAME)
+    install_exe(APP_DIR.parent / EXE_NAME if (APP_DIR.parent / EXE_NAME).is_file() else APP_DIR / BUNDLED_EXE)
     if target.resolve() == APP_DIR:
         return
     if target.exists():
@@ -519,7 +554,7 @@ def apply_launcher_zip(archive: Path) -> Path:
         if target.exists():
             shutil.rmtree(target)
         shutil.copytree(src, target, ignore=shutil.ignore_patterns('__pycache__'))
-        install_exe(src.parent / EXE_NAME)
+        install_exe(src.parent / EXE_NAME if (src.parent / EXE_NAME).is_file() else src / BUNDLED_EXE)
     say(f'Vault Launcher updated from {archive.name}')
     own = winutil.data_dir() / 'downloads'
     for old in own.glob('VaultLauncher*.zip') if own.is_dir() else []:

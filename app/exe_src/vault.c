@@ -120,7 +120,7 @@ void *memcpy(void *d, const void *s, SIZE_T n) {
     return d;
 }
 
-static WCHAR dir[N], data[N], pyw[N], run[N], cmdline[4 * N], cmdexe[N], sysroot[N], urlfile[N], url[N],
+static WCHAR self_old[N], dir[N], data[N], pyw[N], run[N], cmdline[4 * N], cmdexe[N], sysroot[N], urlfile[N], url[N],
              udf[N], dll[N], tmp[N];
 static HWND g_hwnd;
 static void *g_controller;       /* ICoreWebView2Controller* */
@@ -146,7 +146,7 @@ static HANDLE start(const WCHAR *exe, WCHAR *line, const WCHAR *cwd, DWORD flags
     return pi.hProcess;
 }
 
-static void warn(const WCHAR *text) { MessageBoxW(0, text, L"Vault Launcher", MB_ICONWARNING); }
+static void warn(const WCHAR *text) { MessageBoxW(0, text, L"Vault Launcher - THE Borderlands Launcher", MB_ICONWARNING); }
 
 /* pythonw "<run.py>" launcher [extra] */
 static HANDLE start_launcher(const WCHAR *extra) {
@@ -331,14 +331,15 @@ void start_main(void) {
     MSG msg;
 
     n = GetModuleFileNameW(0, dir, N);
+    cpy(self_old, dir); cat(self_old, L".old");          /* this exe's own name + .old */
     while (n && dir[n - 1] != '\\') n--;
     dir[n] = 0;
     g_inst = GetModuleHandleW(0);
 
     cpy(run, dir); cat(run, L"app\\run.py");
     if (!exists(run)) {
-        warn(L"Vault Launcher.exe needs the app folder that came with it.\n\n"
-             L"Extract the whole zip (right-click it > Extract All) and open Vault Launcher.exe from the "
+        warn(L"The launcher needs the app folder that came with it.\n\n"
+             L"Extract the whole zip (right-click it > Extract All) and open the launcher from the "
              L"extracted folder.");
         ExitProcess(1);
     }
@@ -347,15 +348,14 @@ void start_main(void) {
     cat(data, L"\\VaultLauncher");
     CreateDirectoryW(data, 0);
     cpy(pyw, data); cat(pyw, L"\\python\\pythonw.exe");
-    cpy(tmp, dir); cat(tmp, L"Vault Launcher.exe.old");
-    DeleteFileW(tmp);                                   /* left over from an update */
+    DeleteFileW(self_old);                              /* left over from an update */
 
     if (!exists(pyw)) {
         /* First run: a console shows the one-time Python download. */
         sysroot[0] = 0;
         if (!GetEnvironmentVariableW(L"SystemRoot", sysroot, N)) cpy(sysroot, L"C:\\Windows");
         cpy(cmdexe, sysroot); cat(cmdexe, L"\\System32\\cmd.exe");
-        cpy(cmdline, L"cmd.exe /d /s /c \"title Vault Launcher & \"");
+        cpy(cmdline, L"cmd.exe /d /s /c \"title Vault Launcher - THE Borderlands Launcher & \"");
         cat(cmdline, dir); cat(cmdline, L"app\\launch.cmd\" setup || pause\"");
         proc = start(cmdexe, cmdline, data, CREATE_NEW_CONSOLE);
         if (!proc) { warn(L"Windows would not start the setup (cmd.exe)."); ExitProcess(1); }
@@ -399,7 +399,7 @@ void start_main(void) {
         w = 1180 * (int)dpi / 96; hgt = 760 * (int)dpi / 96;
         if (w > GetSystemMetrics(0)) w = GetSystemMetrics(0);
         if (hgt > GetSystemMetrics(1) - 40) hgt = GetSystemMetrics(1) - 40;
-        g_hwnd = CreateWindowExW(0, L"VaultLauncherWindow", L"Vault Launcher", WS_OVERLAPPEDWINDOW,
+        g_hwnd = CreateWindowExW(0, L"VaultLauncherWindow", L"Vault Launcher - THE Borderlands Launcher", WS_OVERLAPPEDWINDOW,
                                  (int)0x80000000, (int)0x80000000, w, hgt, 0, 0, g_inst, 0);
         if (!g_hwnd) { fallback_to_browser(); ExitProcess(0); }
         DwmSetWindowAttribute(g_hwnd, 20 /*DWMWA_USE_IMMERSIVE_DARK_MODE*/, &dark, sizeof dark);

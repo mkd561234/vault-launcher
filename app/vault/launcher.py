@@ -22,8 +22,8 @@ APP_DIR = main.APP_DIR
 ASSETS = APP_DIR / 'assets'
 IDLE_EXIT = 25          # seconds without the window before the launcher quits
 NO_WINDOW = 0x08000000
-SHORTCUT = 'Vault Launcher'
-OLD_SHORTCUTS = ('Krieg Launcher',)
+SHORTCUT = 'Vault Launcher - THE Borderlands Launcher'
+OLD_SHORTCUTS = ('Krieg Launcher', 'Vault Launcher')
 
 
 # --------------------------------------------------------------------------------------------
@@ -793,6 +793,10 @@ def _relaunch_from_data_dir() -> bool:
 def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int:
     if _relaunch_from_data_dir() or _already_running(url_file):
         return 0
+    try:
+        main.refresh_exe()
+    except Exception as ex:  # noqa: BLE001
+        main.say(f'could not update the window exe: {ex}')
     ensure_shortcuts()
     srv = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     port = srv.server_address[1]

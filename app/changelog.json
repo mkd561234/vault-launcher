@@ -1,5 +1,13 @@
 [
  {
+  "version": "2.1.20",
+  "date": "2026-10-08",
+  "changes": [
+   "Renamed to Vault Launcher - THE Borderlands Launcher (another app called Vault Launcher already exists). The window, shortcuts, taskbar and the exe now use the new name; your old \"Vault Launcher\" shortcuts are replaced by new ones.",
+   "New logo: a cel-shaded yellow loot badge with a vault wheel, in the games' cover style. It's the app icon, the shortcut icon and the badge at the top of the launcher, and its wheel still turns while something is downloading."
+  ]
+ },
+ {
   "version": "2.1.19",
   "date": "2026-10-08",
   "changes": [

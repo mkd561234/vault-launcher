@@ -1,5 +1,5 @@
-VAULT LAUNCHER  -  version 2.1.19
-================================
+VAULT LAUNCHER - THE BORDERLANDS LAUNCHER  -  version 2.1.20
+=========================================================
 
 One launcher for my Borderlands mods: download, update, repair and remove them for every game.
   Borderlands GOTY Enhanced, Borderlands 2, The Pre-Sequel, Borderlands 3, Tiny Tina's
@@ -20,7 +20,7 @@ MODS IN THIS RELEASE
     Other Borderlands 2 DLCs you own add his extra heads, skins and DLC class mods.
 
 INSTALL
-  1. Extract this zip anywhere (right-click > Extract All) and double-click "Vault Launcher.exe".
+  1. Extract this zip anywhere (right-click > Extract All) and double-click "Vault Launcher - THE Borderlands Launcher.exe".
      If Windows shows "Windows protected your PC", click "More info" > "Run anyway": the
      program is not code-signed, which costs money, so Windows does not recognise it yet.
      The first time it downloads a private copy of Python (about 10 MB, from python.org, checked
@@ -30,7 +30,7 @@ INSTALL
      missing is listed on the mod in red. Downloaded mods move to the Downloaded section; mods you
      uninstall go back to Uninstalled, where you can redownload them.
   3. Click "Play".
-  The launcher adds "Vault Launcher" shortcuts to your desktop and Start menu, so you can delete
+  The launcher adds "Vault Launcher - THE Borderlands Launcher" shortcuts to your desktop and Start menu, so you can delete
   the zip afterwards. If Windows blocks writing to a game folder, run it as administrator.
 
 COMING FROM THE KRIEG LAUNCHER

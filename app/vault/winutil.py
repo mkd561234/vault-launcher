@@ -17,7 +17,7 @@ MB_TOPMOST = 0x40000
 MB_SETFOREGROUND = 0x10000
 IDYES = 6
 
-TITLE = 'Vault Launcher'
+TITLE = 'Vault Launcher - THE Borderlands Launcher'
 
 
 def message(text: str, warning: bool = False) -> None:

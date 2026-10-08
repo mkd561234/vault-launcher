@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vault Launcher</title>
+<title>Vault Launcher - THE Borderlands Launcher</title>
 <link rel="icon" href="/icon.png">
 <style>
   :root {
@@ -44,6 +44,11 @@
   .busy .door .wheel { animation: turn 1.6s cubic-bezier(.6,0,.4,1) infinite; }
   @keyframes turn { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .busy .door .wheel { animation: none; } }
+  .brand-tag {
+    margin: 7px 0 0; font: 700 11.5px/1 var(--display); font-stretch: condensed; letter-spacing: .04em;
+    color: #000; background: var(--accent); padding: 3px 6px 2px; transform: skewX(-8deg); display: inline-block; white-space: nowrap;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
   .brand-name {
     margin: 0; font: 700 27px/0.92 var(--display); font-stretch: condensed; color: var(--bone);
     -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink);
@@ -364,7 +369,7 @@
 <body>
 <div class="app" id="app">
   <nav class="rail" aria-label="Games">
-    <div class="brand">{{EMBLEM}}<p class="brand-name">Vault<br>Launcher</p></div>
+    <div class="brand">{{EMBLEM}}<div class="brand-text"><p class="brand-name">Vault<br>Launcher</p><p class="brand-tag">THE Borderlands Launcher</p></div></div>
     <ul class="games" id="games"></ul>
     <div class="rail-foot">
       <p id="nexusText">Checking for updates…</p>
@@ -414,7 +419,7 @@
 </dialog>
 
 <dialog id="ask">
-  <h3 id="askTitle">Vault Launcher</h3>
+  <h3 id="askTitle">Vault Launcher - THE Borderlands Launcher</h3>
   <p id="askText"></p>
   <label id="restoreRow" hidden><input type="checkbox" id="restore"> <span id="restoreLabel">Put back the folder I had before</span></label>
   <div class="row">
@@ -770,7 +775,7 @@ function openAsk(mode, q, mod) {
   } else {
     $("askYes").classList.remove("destroy");
     askId = q.id;
-    $("askTitle").textContent = "Vault Launcher";
+    $("askTitle").textContent = "Vault Launcher - THE Borderlands Launcher";
     $("askText").textContent = q.text;
     $("askYes").firstChild.textContent = q.yes || "Yes";
     $("askNo").firstChild.textContent = q.no || "No";
