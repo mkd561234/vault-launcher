@@ -14,6 +14,7 @@ events are posted by swapping in the copy's ID for the moment of the call.
 """
 
 import random
+import time
 
 import unrealsdk
 from mods_base import ObjectFlags, hook
@@ -141,6 +142,7 @@ def _play(ev, only: str | None = None) -> str:
             result = METHODS[name](pc, ev)
             try:
                 _state["playing"] = (result.SourceComponent, result.AkPlayingId)
+                _state["played_at"] = time.monotonic()
             except Exception:  # noqa: BLE001
                 _state["playing"] = None
             return f"played with {name}" + (f" -> {result}" if result is not None else "")
@@ -155,7 +157,12 @@ def on_select_dialog(obj, args, *_):
     try:
         body = args.BodyClass
         _state["current"] = body._path_name() if body is not None else None
+        _state["pending"] = False
         if body is None or body._path_name() != KRIEG_BODY:
+            return
+        # The screen also "selects" the last-played character when it opens; only speak when the
+        # player actually picked him (a click or a key/pad press shortly before).
+        if time.monotonic() - _state.get("input_at", -99.0) > INPUT_WINDOW:
             return
         _say(body)
     except Exception as ex:  # noqa: BLE001
@@ -167,6 +174,8 @@ def _still_talking() -> bool:
     if not info:
         return False
     comp, pid = info
+    if time.monotonic() - _state.get("played_at", 0.0) > 12.0:   # no line of his is this long
+        return False
     try:
         return bool(comp.IsPlayingId(pid))
     except Exception:  # noqa: BLE001
@@ -181,18 +190,35 @@ def _selected_index(obj) -> int:
         return int(sel[0])
 
 
+INPUT_WINDOW = 6.0     # seconds between the player's click/press and the screen's select call
+
+
+@hook("WillowGame.CharacterSelectionReduxGFxMovie:HandleChooseCharacterInput", Type.PRE,
+      hook_identifier="KriegTPSSelectVoiceInput")
+def on_choose_input(*_):
+    _state["input_at"] = time.monotonic()
+
+
+@hook("WillowGame.CharacterSelectionReduxGFxMovie:OnClose", Type.PRE,
+      hook_identifier="KriegTPSSelectVoiceClose")
+def on_select_close(*_):
+    _state["pending"] = False
+    _state["current"] = None
+
+
 @hook("WillowGame.CharacterSelectionReduxGFxMovie:HandleCharacterClicked", Type.PRE,
       hook_identifier="KriegTPSSelectVoiceReclick")
 def on_character_clicked(obj, args, *_):
-    """The game only speaks when the selection changes; clicking Krieg again gets a new line too
-    (once the current one has finished, so the lines don't pile up on top of each other)."""
+    """The game only speaks when the selection changes; clicking Krieg again gets a new line too.
+    A click while he's still talking queues the next line, which starts as soon as he finishes."""
+    _state["input_at"] = time.monotonic()
     try:
         if _state.get("current") != KRIEG_BODY or args.CharacterIndex != _selected_index(obj):
             return
         if _still_talking():
+            _state["pending"] = True
             return
-        body = unrealsdk.find_object("BodyClassDefinition", KRIEG_BODY)
-        _say(body)
+        _say(unrealsdk.find_object("BodyClassDefinition", KRIEG_BODY))
     except Exception as ex:  # noqa: BLE001
         log(f"character select voice (click again) failed: {type(ex).__name__}: {ex}")
 
@@ -218,6 +244,19 @@ def _say(body) -> None:
             log(f"character select voice: {ev.Name} ({result})")
     except Exception as ex:  # noqa: BLE001
         log(f"character select voice failed: {type(ex).__name__}: {ex}")
+
+
+def tick() -> None:
+    """Plays a queued line once the current one has finished (per frame, cheap when idle)."""
+    if not _state.get("pending") or _still_talking():
+        return
+    _state["pending"] = False
+    if _state.get("current") != KRIEG_BODY:
+        return
+    try:
+        _say(unrealsdk.find_object("BodyClassDefinition", KRIEG_BODY))
+    except ValueError:
+        pass
 
 
 def upkeep() -> None:
@@ -266,4 +305,4 @@ def krieg_voice(args) -> None:
 krieg_voice.add_argument("words", nargs="*")
 
 
-voice_hooks = [on_select_dialog, on_character_clicked, krieg_voice]
+voice_hooks = [on_select_dialog, on_character_clicked, on_choose_input, on_select_close, krieg_voice]
