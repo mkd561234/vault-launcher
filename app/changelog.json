@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.1.1",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.8: he no longer talks when the character select screen opens. Letting go of the key you pressed to open the screen counted as picking him, so he still spoke right away. Now only key presses count.",
+   "Krieg 2.0.8: the start-up line in his log no longer claims the DLC folder wasn't picked up. It just means the game loads its DLCs a moment after the mod starts."
+  ]
+ },
+ {
   "version": "3.1.0",
   "date": "2026-10-08",
   "changes": [

@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.0.7"
+__version__ = "2.0.8"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -79,7 +79,8 @@ def apply_fixes(quiet: bool = False) -> bool:
     template = find("PlayerClassDefinition", TEMPLATE_CLASS)
     if krieg is None:
         if not quiet:
-            log("Krieg's class is not loaded - the DLC folder was not picked up. Run krieg_diag.")
+            log("Krieg's class isn't loaded yet (the game loads its DLCs a moment later; his fixes are applied then). "
+                "If he never shows up at character select, run krieg_diag.")
         return False
     if template is None:
         if not quiet:

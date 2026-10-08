@@ -195,8 +195,13 @@ INPUT_WINDOW = 6.0     # seconds between the player's click/press and the screen
 
 @hook("WillowGame.CharacterSelectionReduxGFxMovie:HandleChooseCharacterInput", Type.PRE,
       hook_identifier="KriegTPSSelectVoiceInput")
-def on_choose_input(*_):
-    _state["input_at"] = time.monotonic()
+def on_choose_input(obj, args, *_):
+    # Only key/pad presses: releasing the key that opened the screen also lands here, and that
+    # made him talk as soon as the screen opened.
+    ev = args.Event
+    name = getattr(ev, "name", str(ev))
+    if name.endswith("IE_Pressed") or name.endswith("IE_Repeat") or ev in (0, 2):
+        _state["input_at"] = time.monotonic()
 
 
 @hook("WillowGame.CharacterSelectionReduxGFxMovie:OnClose", Type.PRE,
