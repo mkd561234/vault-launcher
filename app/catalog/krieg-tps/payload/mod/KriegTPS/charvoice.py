@@ -57,6 +57,20 @@ def _pick():
     return ev
 
 
+def _play(ev) -> str:
+    from mods_base import get_pc
+    pc = get_pc()
+    if pc is None:
+        return "no player controller"
+    for name in ("PlayAkEvent", "ClientPlayAkEvent"):
+        try:
+            getattr(pc, name)(ev)
+            return f"played with {name}"
+        except Exception as ex:  # noqa: BLE001
+            last = f"{name}: {type(ex).__name__}: {ex}"
+    return last
+
+
 @hook("WillowGame.CharacterSelectionReduxGFxMovie:PlayCharacterSelectDialog", Type.PRE,
       hook_identifier="KriegTPSSelectVoice")
 def on_select_dialog(obj, args, *_):
@@ -71,26 +85,41 @@ def on_select_dialog(obj, args, *_):
                 log("character select voice: none of Krieg's voice events are loaded")
             return
         ev.ObjectFlags |= ObjectFlags.KEEP_ALIVE
-        body.MenuSelectDialog = ev
+        # The screen's own path stayed silent for Krieg (set as his MenuSelectDialog, nothing was
+        # heard), so the line is played directly, as a 2D sound from the local player.
+        body.MenuSelectDialog = None
+        result = _play(ev)
         if _state["logs"] < 10:
             _state["logs"] += 1
-            log(f"character select voice: {ev.Name}")
+            log(f"character select voice: {ev.Name} ({result})")
     except Exception as ex:  # noqa: BLE001
         log(f"character select voice failed: {type(ex).__name__}: {ex}")
 
 
 def upkeep() -> None:
-    """Make sure Krieg's body class always has a line set, in case the screen checks for one
-    before it calls PlayCharacterSelectDialog."""
+    """Keeps Krieg's voice events in memory once his class has loaded."""
     try:
         body = unrealsdk.find_object("BodyClassDefinition", KRIEG_BODY)
     except ValueError:
         return
-    if body.MenuSelectDialog is None:
-        ev = _pick()
+    if _state.get("kept"):
+        return
+    found = 0
+    for path in EVENTS:          # keep his voice events loaded for the menu
+        ev = _find(path)
         if ev is not None:
             ev.ObjectFlags |= ObjectFlags.KEEP_ALIVE
-            body.MenuSelectDialog = ev
+            found += 1
+    _state["kept"] = found == len(EVENTS)
 
 
-voice_hooks = [on_select_dialog]
+from mods_base import command  # noqa: E402
+
+
+@command("krieg_voice", description="Play one of Krieg's character select lines (sound test).")
+def krieg_voice(_args) -> None:
+    ev = _pick()
+    log(f"krieg_voice: {ev.Name if ev else 'no voice events loaded'}" + (f" ({_play(ev)})" if ev else ""))
+
+
+voice_hooks = [on_select_dialog, krieg_voice]

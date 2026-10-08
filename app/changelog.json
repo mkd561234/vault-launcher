@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.3",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.1: his character select line is now played directly instead of through the screen's own voice slot, which stayed silent for him. The krieg_voice console command plays one of the lines as a sound test."
+  ]
+ },
+ {
   "version": "3.0.2",
   "date": "2026-10-08",
   "changes": [
