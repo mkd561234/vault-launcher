@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.0.8",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.0.6: clicking Krieg again while he's already selected now plays a new random line. Before, a line only played when you switched to him from another character. If he's still talking, the click waits for the line to finish so lines don't pile up."
+  ]
+ },
+ {
   "version": "3.0.7",
   "date": "2026-10-08",
   "changes": [

@@ -139,6 +139,10 @@ def _play(ev, only: str | None = None) -> str:
     for name in ((only,) if only else ORDER):
         try:
             result = METHODS[name](pc, ev)
+            try:
+                _state["playing"] = (result.SourceComponent, result.AkPlayingId)
+            except Exception:  # noqa: BLE001
+                _state["playing"] = None
             return f"played with {name}" + (f" -> {result}" if result is not None else "")
         except Exception as ex:  # noqa: BLE001
             last = f"{name}: {type(ex).__name__}: {ex}"
@@ -150,8 +154,51 @@ def _play(ev, only: str | None = None) -> str:
 def on_select_dialog(obj, args, *_):
     try:
         body = args.BodyClass
+        _state["current"] = body._path_name() if body is not None else None
         if body is None or body._path_name() != KRIEG_BODY:
             return
+        _say(body)
+    except Exception as ex:  # noqa: BLE001
+        log(f"character select voice failed: {type(ex).__name__}: {ex}")
+
+
+def _still_talking() -> bool:
+    info = _state.get("playing")
+    if not info:
+        return False
+    comp, pid = info
+    try:
+        return bool(comp.IsPlayingId(pid))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _selected_index(obj) -> int:
+    sel = obj.SelectedCharacterIndex
+    try:
+        return int(sel)
+    except TypeError:
+        return int(sel[0])
+
+
+@hook("WillowGame.CharacterSelectionReduxGFxMovie:HandleCharacterClicked", Type.PRE,
+      hook_identifier="KriegTPSSelectVoiceReclick")
+def on_character_clicked(obj, args, *_):
+    """The game only speaks when the selection changes; clicking Krieg again gets a new line too
+    (once the current one has finished, so the lines don't pile up on top of each other)."""
+    try:
+        if _state.get("current") != KRIEG_BODY or args.CharacterIndex != _selected_index(obj):
+            return
+        if _still_talking():
+            return
+        body = unrealsdk.find_object("BodyClassDefinition", KRIEG_BODY)
+        _say(body)
+    except Exception as ex:  # noqa: BLE001
+        log(f"character select voice (click again) failed: {type(ex).__name__}: {ex}")
+
+
+def _say(body) -> None:
+    try:
         ev = _pick()
         if ev is None:
             if _state["logs"] < 3:
@@ -219,4 +266,4 @@ def krieg_voice(args) -> None:
 krieg_voice.add_argument("words", nargs="*")
 
 
-voice_hooks = [on_select_dialog, krieg_voice]
+voice_hooks = [on_select_dialog, on_character_clicked, krieg_voice]
