@@ -1,5 +1,12 @@
 [
  {
+  "version": "2.1.17",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 1.0.16: co-op joining, second fix. Joins still failed with \"Downloading package 'GD_Lobelia_ClassMods' (or 'CD_Heads_Psycho_Peony') failed\". The game only accepts a package the host names if it's listed in a DLC's package directory (GuidCache), and Krieg's directory only listed his own Psycho Pack packages, not the heads, skins and class mods that come from Borderlands 2's other DLCs. All 80 of them are now listed, so joining works whatever head, skin or class mod either player has on."
+  ]
+ },
+ {
   "version": "2.1.16",
   "date": "2026-10-08",
   "changes": [
