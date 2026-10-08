@@ -154,3 +154,27 @@ def running(game: Game) -> bool:
     except OSError:
         return False
     return any(f'"{n.lower()}"' in out for n in game.exe_names)
+
+
+def close(game: Game, wait: float = 8.0) -> bool:
+    """Closes the game: first politely (like clicking its X), then forcefully if it hasn't exited
+    after `wait` seconds (a game stuck on a loading screen ignores the polite request).
+    Returns True once it is no longer running."""
+    import time
+    if os.name != 'nt':
+        return True
+    flags = 0x08000000      # no console window
+    for n in game.exe_names:
+        subprocess.run(['taskkill', '/IM', n], capture_output=True, creationflags=flags)
+    deadline = time.time() + wait
+    while time.time() < deadline:
+        if not running(game):
+            return True
+        time.sleep(0.5)
+    for n in game.exe_names:
+        subprocess.run(['taskkill', '/F', '/T', '/IM', n], capture_output=True, creationflags=flags)
+    for _ in range(20):
+        if not running(game):
+            return True
+        time.sleep(0.5)
+    return not running(game)

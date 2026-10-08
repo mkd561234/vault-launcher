@@ -1,5 +1,15 @@
 [
  {
+  "version": "2.1.16",
+  "date": "2026-10-08",
+  "changes": [
+   "Close Game button next to Running: closes the game the normal way, and forces it closed if it hasn't exited after a few seconds.",
+   "Installing, updating or removing a mod now only shows its progress on that mod's own game page.",
+   "Check for updates, GitHub page and What's new have a purple border on Wonderlands, pink on Borderlands 3 and light blue on the Pre-Sequel.",
+   "Krieg 1.0.15: laser animations (Splitter and every other laser). Krieg came from Borderlands 2, which has no lasers, so he had no laser hold: lasers used a generic grip with no reload or firing animations. He now uses the Pre-Sequel's first-person laser animations, and a laser hold based on his own rifle hold in third person (what co-op partners see)."
+  ]
+ },
+ {
   "version": "2.1.15",
   "date": "2026-10-07",
   "changes": [

@@ -149,6 +149,7 @@ def _compute_status() -> dict:
         out_games.append({
             'id': g.id, 'name': g.name, 'short': g.short, 'path': str(p) if p else None,
             'running': bool(p) and games.running(g),
+            'closing': g.id in _closing,
             'store': _store(p),
             'sdk': {'repo': g.sdk, 'installed': bool(p) and sdk.installed(p), 'page': sdk.PAGE.format(repo=g.sdk)},
             'mods': [m.id for m in mods if m.game == g.id],
@@ -323,6 +324,25 @@ def play(game_id: str) -> None:
         if (p / exe).is_file():
             subprocess.Popen([str(p / exe)], cwd=str((p / exe).parent))  # noqa: S603
             return
+
+
+_closing: set = set()
+
+
+def close_game(game_id: str) -> None:
+    g = games.BY_ID[game_id]
+    if game_id in _closing:
+        return
+    _closing.add(game_id)
+    _refresh_status(force=True)
+    try:
+        ok = games.close(g)
+        main.say(f'{g.short} closed' if ok else f'{g.short} did not close')
+    except Exception as ex:  # noqa: BLE001
+        main.say(f'closing {g.short} failed: {ex}')
+    finally:
+        _closing.discard(game_id)
+        _refresh_status(force=True)
 
 
 def open_folder(which: str, game_id: str | None) -> None:
@@ -546,6 +566,9 @@ class Handler(BaseHTTPRequestHandler):
             ok = winutil.bring_picker_to_front()
         elif path == '/api/game/play' and game_id:
             play(game_id)
+            ok = True
+        elif path == '/api/game/close' and game_id:
+            threading.Thread(target=close_game, args=(game_id,), daemon=True).start()
             ok = True
         elif path == '/api/open':
             open_folder(body.get('which', ''), game_id)
