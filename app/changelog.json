@@ -1,5 +1,15 @@
 [
  {
+  "version": "3.1.6",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.3: Oz kit slams in co-op, take two. The host's game never saw a joining Krieg's slams, so 2.1.0 still did nothing. Now the joining player's game tells the host about each slam and how far he fell. The host then applies it with the real Oz kit element, and both players see and hear it.",
+   "Krieg 2.1.3: on the trade screen, a joining player now sees his own Krieg. His body was still hidden from his own camera, the way it is in first person. It's shown while the trade screen is open and hidden again when it closes.",
+   "Krieg 2.1.3: the class mod badge no longer cuts through his belt. It now sits lower on the side of his left thigh and is a little smaller.",
+   "Krieg 2.1.3: the co-op head/skin sharing now writes what it sends and receives to the Krieg log."
+  ]
+ },
+ {
   "version": "3.1.5",
   "date": "2026-10-08",
   "changes": [

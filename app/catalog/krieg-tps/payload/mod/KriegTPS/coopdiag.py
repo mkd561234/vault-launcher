@@ -156,14 +156,89 @@ def upkeep() -> None:
 
 
 def tick() -> None:
+    # safety net: never leave my own body showing in first person after the trade screen
+    if _shown:
+        now = time.monotonic()
+        if now >= _state.get("check", 0.0):
+            _state["check"] = now + 1.0
+            if not _trade_open():
+                _hide_own_body()
     at = _state["trade_at"]
     if at and time.monotonic() - at > 1.5:
         _state["trade_at"] = 0.0
         snapshot("trade screen, 1.5 s later")
 
 
+# Trade screen fix: the host's game draws your own body there, a joining player's didn't - his
+# Krieg's body is set to "hidden from his own camera" (as in first person) and on a joining
+# player's game the trade camera still counts as his own. So while the trade screen is open the
+# body, head and gear on his own pawn are shown to him, and put back afterwards.
+_shown: list = []
+
+
+def _show_own_body() -> None:
+    pc = get_pc()
+    pawn = pc.Pawn if pc is not None else None
+    if pawn is None or _shown:
+        return
+    addr = pawn._get_address()
+    for comp in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+        try:
+            owner = comp.Owner
+            if owner is None or owner._get_address() != addr:
+                continue
+            if comp.bOwnerNoSee and not comp.bOnlyOwnerSee:
+                try:
+                    comp.SetOwnerNoSee(False)
+                except Exception:  # noqa: BLE001
+                    comp.bOwnerNoSee = False
+                _shown.append(comp)
+        except Exception:  # noqa: BLE001
+            continue
+    if _shown:
+        log(f"trade screen: showing {len(_shown)} part(s) of my own body to me")
+
+
+def _hide_own_body() -> None:
+    for comp in _shown:
+        try:
+            try:
+                comp.SetOwnerNoSee(True)
+            except Exception:  # noqa: BLE001
+                comp.bOwnerNoSee = True
+        except Exception:  # noqa: BLE001
+            pass
+    _shown.clear()
+
+
+@hook("WillowGame.TradingGFxMovie:OnClose", Type.PRE, hook_identifier="KriegTPSTradeClose")
+def on_trade_close(*_):
+    _hide_own_body()
+
+
+@hook("WillowGame.TradingGFxMovie:BeginClosing", Type.PRE, hook_identifier="KriegTPSTradeClosing")
+def on_trade_closing(*_):
+    _hide_own_body()
+
+
+def _trade_open() -> bool:
+    for movie in unrealsdk.find_all("TradingGFxMovie", exact=False):
+        if "Default__" in movie._path_name():
+            continue
+        try:
+            if movie.bMovieIsOpen:
+                return True
+        except Exception:  # noqa: BLE001
+            return True
+    return False
+
+
 @hook("WillowGame.TradingGFxMovie:Start", Type.POST, hook_identifier="KriegTPSCoopDiagTrade")
 def on_trade_start(*_):
+    try:
+        _show_own_body()
+    except Exception as ex:  # noqa: BLE001
+        log(f"trade screen: could not show my body: {type(ex).__name__}: {ex}")
     if _state["trade_logged"] >= 3:
         return
     _state["trade_logged"] += 1
@@ -177,4 +252,4 @@ def krieg_coop(_args) -> None:
     snapshot("krieg_coop command")
 
 
-coop_hooks = [on_trade_start, krieg_coop]
+coop_hooks = [on_trade_start, on_trade_close, on_trade_closing, krieg_coop]

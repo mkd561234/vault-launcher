@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.1.2"
+__version__ = "2.1.3"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -239,6 +239,38 @@ def fix_krieg_pawn() -> None:
         if _pawn_seen.get("slamerr") is None:
             _pawn_seen["slamerr"] = True
             log(f"pawn slam: {ex}")
+
+
+# The class mod he wears: the Pre-Sequel shows class mods as a big round badge (Athena and co. wear
+# it on the upper arm). Krieg's Borderlands 2 "ClassMod" spot is on the front of his left thigh, right
+# under the belt, where that badge cut through the belt. Move the spot down the thigh and out a bit,
+# and draw the badge a little smaller. (Takes effect when the class mod is next put on him: a new
+# level, respawn, re-equip or the menu.)
+CLASSMOD_SOCKET = ("Lilac_Char_Psycho.Mesh.Skel_PsychoBody", "ClassMod")
+CLASSMOD_LOCATION = (19.0, -0.25, -15.0)     # was (12.65, -0.25, -12.82) along/around L_Thigh
+CLASSMOD_SCALE = 0.85
+_socket_done = [False]
+
+
+def fix_classmod_socket() -> None:
+    if _socket_done[0]:
+        return
+    mesh = find("SkeletalMesh", CLASSMOD_SOCKET[0])
+    if mesh is None:
+        return
+    for sock in mesh.Sockets:
+        if sock is not None and str(sock.SocketName) == CLASSMOD_SOCKET[1]:
+            loc = sock.RelativeLocation
+            old = (loc.X, loc.Y, loc.Z)
+            loc.X, loc.Y, loc.Z = CLASSMOD_LOCATION
+            try:
+                sc = sock.RelativeScale
+                sc.X = sc.Y = sc.Z = CLASSMOD_SCALE
+            except AttributeError:
+                pass
+            log(f"class mod badge moved off the belt: {tuple(round(v, 1) for v in old)} -> {CLASSMOD_LOCATION}")
+            break
+    _socket_done[0] = True
 
 
 # Safety net: if the game still isn't refilling Krieg's oxygen while he can breathe, refill it
@@ -1121,7 +1153,7 @@ def upkeep() -> None:
     _next_upkeep = now + 1.0
     # unlock_customizations is not run: the game's unlock check crashed on Krieg's BL2 profile
     # indices. The head/skin menus are filled directly instead (see on_char_select_cache).
-    for step in (keep_krieg_loaded, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, weaponholds.upkeep, charvoice.upkeep, coopcustom.upkeep, coopdiag.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
+    for step in (keep_krieg_loaded, fix_classmod_socket, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, weaponholds.upkeep, charvoice.upkeep, coopcustom.upkeep, coopdiag.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
                  disable_screen_overlays,
                  materials.fix_krieg_materials, materials.fix_krieg_gear_materials, materials.disable_broken_fx, diagnose_once,
                  nudge_hud_health):

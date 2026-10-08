@@ -199,6 +199,9 @@ def _send_to_clients(force: bool = False) -> None:
                 log(f"could not send to a joining player: {type(ex).__name__}: {ex}")
                 break
         _state["sent_to"][key] = version
+        if _table:
+            log(f"sent {len(_table)} player(s)' DLC heads/skins to "
+                f"{getattr(getattr(other, 'PlayerReplicationInfo', None), 'PlayerName', '?')}: {_table}")
 
 
 def upkeep() -> None:
@@ -211,6 +214,10 @@ def upkeep() -> None:
         return
     me = str(getattr(pc.PlayerReplicationInfo, "PlayerName", "")) if pc.PlayerReplicationInfo else ""
     mine = _my_extras()
+    role = "host" if _is_server() else "joining player"
+    if _state.get("said") != (role, repr(mine)):
+        _state["said"] = (role, repr(mine))
+        log(f"I'm the {role}; my DLC heads/skins: {mine or 'none'}")
     if _is_server():
         if mine:
             _table[me] = mine
@@ -236,6 +243,8 @@ def on_server_mutate(obj, args, *_):
         return None
     name, slots = _decode(msg)
     if name:
+        if slots or name in _table:
+            log(f"joining player {name} wears {slots or 'nothing special'}")
         if slots:
             _table[name] = slots
         else:
@@ -252,6 +261,7 @@ def on_client_message(obj, args, *_):
         return None
     name, slots = _decode(msg)
     if name:
+        log(f"host says {name} wears {slots or 'nothing special'}")
         _table[name] = slots
         _apply(name, slots, "from the host")
     return Block

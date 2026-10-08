@@ -19,9 +19,10 @@ values from her sequence:
 
 In co-op the slam is the host's business: damage, knock-back and status effects only count when the
 host's game applies them, and only the host knows the Oz kit's element and grade for every player
-(a client reads 0 for them, which turned a cryo kit into a plain explosive slam). So these run on
-whichever game has authority over the slamming Krieg - the host for a joining Krieg, the player's
-own game in single player or when Krieg hosts - and the particle and sound are sent to everyone.
+(a client reads 0 for them, which turned a cryo kit into a plain explosive slam). So a joining
+Krieg's game reports each slam (and how far he fell) to the host with an unused server command, and
+the host's game applies it; single player, or a Krieg who hosts, applies his own. The particle
+and sound are sent to everyone.
 
 They are fired from the slam landing (WillowPlayerPawn.DoSlamEffects), with the landing itself as a
 fallback in case that is not called for Krieg.
@@ -327,8 +328,52 @@ def _has_authority(pawn) -> bool:
 
 
 def _runs_slam(pawn) -> bool:
-    """This game applies the slam for that pawn: it is a Krieg and this game is in charge of it."""
-    return _is_krieg_pawn(pawn) and _has_authority(pawn)
+    """This game applies the slam for that pawn: my own Krieg, when this game is in charge of it
+    (single player, or I'm the host). A joining Krieg's slam is reported by his game instead
+    (see report_slam), because the host's game doesn't see his slams."""
+    return _is_local_krieg_pawn(pawn) and _has_authority(pawn)
+
+
+def _is_joining_krieg(pawn) -> bool:
+    return _is_local_krieg_pawn(pawn) and not _has_authority(pawn)
+
+
+SLAM_MSG = "KTPS|SLAM|"
+
+
+def report_slam(pawn, why: str) -> None:
+    """Joining player: tell the host my Krieg slammed, and how far he fell."""
+    now = time.monotonic()
+    key = _key(pawn)
+    if now - _state["last"].get(key, 0.0) < 0.5:
+        return
+    _state["last"][key] = now
+    _state["pending"].pop(key, None)
+    dist = _slam_distance(pawn, now)
+    try:
+        get_pc().ServerMutate(f"{SLAM_MSG}{dist:.0f}")
+        if _state["logs"] < 8:
+            _state["logs"] += 1
+            log(f"slam ({why}): fell {dist:.0f}, sent to the host to apply")
+    except Exception as ex:  # noqa: BLE001
+        _warn("report", f"slam: could not tell the host: {type(ex).__name__}: {ex}")
+
+
+@hook("Engine.PlayerController:ServerMutate", Type.PRE, hook_identifier="KriegTPSSlamFromClient")
+def on_slam_message(obj, args, *_):
+    msg = str(args.MutateString)
+    if not msg.startswith(SLAM_MSG):
+        return None
+    try:
+        dist = max(0.0, min(5000.0, float(msg[len(SLAM_MSG):] or 0)))
+    except ValueError:
+        dist = 0.0
+    pawn = getattr(obj, "Pawn", None)
+    if pawn is not None and _is_krieg_pawn(pawn) and _has_authority(pawn):
+        _state["dist"] = (dist, time.monotonic())
+        do_slam_hit(pawn, "joining player's slam")
+    from unrealsdk.hooks import Block
+    return Block
 
 
 def _key(pawn) -> int:
@@ -396,7 +441,7 @@ def do_slam_hit(pawn, why: str) -> None:
 
 @hook("WillowGame.WillowPlayerPawn:DoSlam", Type.POST, hook_identifier="KriegTPSSlamStart")
 def on_slam_start(obj, *_):
-    if _runs_slam(obj):
+    if _runs_slam(obj) or _is_joining_krieg(obj):
         _state["pending"][_key(obj)] = time.monotonic()
 
 
@@ -413,6 +458,8 @@ def on_slam_distance(obj, args, *_):
 def on_slam_effects(obj, *_):
     if _runs_slam(obj):
         do_slam_hit(obj, "slam effects")
+    elif _is_joining_krieg(obj):
+        report_slam(obj, "slam effects")
 
 
 @hook("WillowGame.WillowPlayerPawn:Landed", Type.POST, hook_identifier="KriegTPSSlamLanded")
@@ -422,6 +469,8 @@ def on_landed(obj, *_):
         return
     if _runs_slam(obj):
         do_slam_hit(obj, "landing")
+    elif _is_joining_krieg(obj):
+        report_slam(obj, "landing")
 
 
-slam_hooks = [on_slam_start, on_slam_distance, on_slam_effects, on_landed]
+slam_hooks = [on_slam_start, on_slam_distance, on_slam_effects, on_landed, on_slam_message]
