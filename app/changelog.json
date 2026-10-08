@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.1.5",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.2: in co-op you now see the heads and skins the mod adds from Borderlands 2's other DLCs (the Scav, Lobelia, holiday ones and so on) on the other players' Kriegs. Before, they showed as the default head and skin, because the game can't send these between players. The mod now sends them itself, and they stay on after a respawn. Both players need this version.",
+   "Krieg 2.1.2: when the trade screen opens, the co-op checks also record every Krieg body the game draws, to find out why a joining player's own Krieg is missing from his trade screen."
+  ]
+ },
+ {
   "version": "3.1.4",
   "date": "2026-10-08",
   "changes": [

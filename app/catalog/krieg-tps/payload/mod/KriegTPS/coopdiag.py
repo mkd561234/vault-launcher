@@ -14,7 +14,7 @@ from mods_base import command, get_pc, hook
 from unrealsdk.hooks import Type
 
 _state = {"seen": {}, "next": 0.0, "trade_at": 0.0, "trade_logged": 0, "lines": 0}
-MAX_LINES = 120
+MAX_LINES = 200
 
 
 def log(msg: str) -> None:
@@ -110,6 +110,25 @@ def snapshot(why: str) -> None:
         log("PRI " + _pri_line(pri))
     for pawn in _pawns():
         log(_pawn_line(pawn))
+    if "trade" in why or "command" in why:
+        _bodies()
+
+
+def _bodies() -> None:
+    """Every Krieg body mesh in memory (the trade screen may draw a stand-in, not the pawn)."""
+    count = 0
+    for comp in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+        mesh = _get(comp, "SkeletalMesh", None)
+        if mesh is None or "Psycho" not in str(mesh.Name) or "Default__" in comp._path_name():
+            continue
+        count += 1
+        if count > 8:
+            break
+        owner = _get(comp, "Owner", None)
+        log(f"body {comp._path_name().split('.')[-1]} owner={_name(owner).split('.')[-1]} "
+            f"ownerHidden={_get(owner, 'bHidden') if owner else '?'} {_mesh_line(comp)} "
+            f"depth={_get(comp, 'DepthPriorityGroup')} scene={_get(comp, 'bAttached')}")
+    log(f"{count} Krieg body mesh(es) found")
 
 
 def upkeep() -> None:
