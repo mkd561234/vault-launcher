@@ -608,7 +608,7 @@ def local_update(auto: bool) -> int | None:
 # --------------------------------------------------------------------------------------------
 # GitHub releases: the launcher checks <owner>/<repo>'s latest release for a VaultLauncher zip
 # --------------------------------------------------------------------------------------------
-GITHUB_EVERY = 3600         # automatic GitHub checks at most once an hour
+GITHUB_EVERY = 120          # automatic GitHub checks at most every 2 minutes (latest.json has no limit)
 
 
 def github_repo() -> str:

@@ -233,15 +233,58 @@ def _show_message() -> None:
     vp = _viewport()
     if vp is None:
         return
-    try:
-        vp.NotifyConnectionError(MessageType=4, Title=TITLE, Message=MESSAGE, StringVal="", LoginStatus=0)
-        return
-    except Exception as ex:  # noqa: BLE001
-        log(f"could not show the update message as a dialog: {type(ex).__name__}: {ex}")
+    # the Pre-Sequel's version of this function takes fewer arguments than Borderlands 2's
+    tries = (
+        lambda: vp.NotifyConnectionError(MessageType=4, Title=TITLE, Message=MESSAGE, StringVal="", LoginStatus=0),
+        lambda: vp.NotifyConnectionError(MessageType=4, Title=TITLE, Message=MESSAGE),
+        lambda: vp.NotifyConnectionError(4, TITLE, MESSAGE),
+        lambda: vp.NotifyConnectionError(4, MESSAGE),
+    )
+    errors = []
+    for attempt in tries:
+        try:
+            attempt()
+            return
+        except Exception as ex:  # noqa: BLE001
+            errors.append(f"{type(ex).__name__}: {ex}")
+    if not _state.get("dialog_logged"):
+        _state["dialog_logged"] = True
+        log("could not show the update message as a dialog: " + " / ".join(errors))
     try:
         get_pc().ClientMessage(MESSAGE, "Event", 10.0)
     except Exception:  # noqa: BLE001
         pass
+
+
+def _fetch_update() -> None:
+    """Have Vault Launcher fetch the new version right away (it otherwise checks GitHub at most
+    once an hour, which kept a player locked out for up to an hour). It installs the update as
+    soon as the game is closed."""
+    if _state.get("fetched"):
+        return
+    _state["fetched"] = True
+    try:
+        import subprocess
+        base = Path(os.environ.get("LOCALAPPDATA", "")) / "VaultLauncher"
+        py = base / "python" / "pythonw.exe"
+        run = base / "app" / "run.py"
+        if not (py.is_file() and run.is_file()):
+            return
+        state = base / "state.json"
+        try:
+            st = json.loads(state.read_text(encoding="utf-8"))
+            st["gh_last_check"] = 0
+            st["last_check"] = 0
+            state.write_text(json.dumps(st, indent=1), encoding="utf-8")
+        except (OSError, ValueError):
+            pass
+        subprocess.Popen(  # noqa: S603 - our own updater
+            [str(py), str(run), "update", "--auto", "--game-pid", str(os.getpid())],
+            cwd=str(base), close_fds=True, creationflags=0x00000008 | 0x00000200,
+        )
+        log("asked Vault Launcher to download the update now (it installs when the game is closed)")
+    except Exception as ex:  # noqa: BLE001
+        log(f"could not start the launcher's update: {type(ex).__name__}: {ex}")
 
 
 def _leave(why: str) -> None:
@@ -295,6 +338,7 @@ def tick() -> None:
         if _state["shown_for"] != key:
             _state["shown_for"] = key
             log(f"out of date: {', '.join(behind)}")
+            _fetch_update()
             _show_message()
         return
     if players < 2:

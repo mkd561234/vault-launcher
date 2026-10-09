@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.5.6",
+  "date": "2026-10-09",
+  "changes": [
+   "When the version lock sends you back to the menu, the launcher now downloads the new version straight away instead of waiting up to an hour, and installs it as soon as you close the game.",
+   "The launcher checks GitHub for updates every couple of minutes instead of once an hour.",
+   "Krieg 2.5.2: the \"You must update your launcher and mods\" message now shows as a box on the Pre-Sequel's menu (it wasn't showing before)."
+  ]
+ },
+ {
   "version": "3.5.5",
   "date": "2026-10-09",
   "changes": [
