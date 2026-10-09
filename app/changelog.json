@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.4.1",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.4.1: the update lock is now instant. The game checks for new versions every minute instead of every 10. An out-of-date game saves and leaves within half a second. Hosts remove an out-of-date player after one second (enough for his game to save), and a player whose game doesn't report its versions after 10 seconds instead of 30."
+  ]
+ },
+ {
   "version": "3.4.0",
   "date": "2026-10-09",
   "changes": [

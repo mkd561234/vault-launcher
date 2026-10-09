@@ -1,12 +1,12 @@
 """Only the latest Vault Launcher and mods may play.
 
 * The newest versions are read from the launcher's GitHub repository (latest.json for the
-  launcher, the Krieg mod's mod.json for the mod) when the game starts and every 10 minutes.
+  launcher, the Krieg mod's mod.json for the mod) when the game starts and every minute.
 * If this game's launcher or Krieg mod is older: in a level, the character is saved and the game
   goes back to the main menu with the update message; at the main menu the message is shown, and
   starting or joining a game sends the player straight back. Solo and co-op alike.
 * In co-op the host also checks everyone who joins: the joining game reports its versions; anyone
-  who is out of date, or doesn't report within 30 seconds (a mod too old to have this check), is
+  who is out of date, or doesn't report within 10 seconds (a mod too old to have this check), is
   told to save and leave, and removed by the host if he is still there a few seconds later.
 If the newest versions can't be read (no internet), nobody is blocked for being out of date;
 the host still requires joining players to be at least on the host's own versions.
@@ -27,9 +27,9 @@ MESSAGE = "You must update your launcher and mods to the latest versions to cont
 TITLE = "Update required"
 REPO = "mkd561234/vault-launcher"
 RAW = f"https://raw.githubusercontent.com/{REPO}/main/"
-CHECK_EVERY = 600.0
-REPORT_WAIT = 30.0          # seconds a joining player has to report his versions
-KICK_GRACE = 5.0            # seconds he gets to save and leave on his own before the host removes him
+CHECK_EVERY = 60.0
+REPORT_WAIT = 10.0          # seconds a joining player has to report his versions
+KICK_GRACE = 1.0            # a moment for his game to save before the host removes him
 PREFIX_VER = "KTPS|VER|"
 PREFIX_KICK = "KTPS|KICK|"
 
@@ -212,7 +212,7 @@ def _leave(why: str) -> None:
     log(f"leaving the game: {why}")
     if not _in_menu():
         _save(pc)
-    _state["leaving"] = time.monotonic() + (2.0 if not _in_menu() else 0.2)
+    _state["leaving"] = time.monotonic() + (0.5 if not _in_menu() else 0.0)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ def tick() -> None:
     now = time.monotonic()
     if now < _state["next"]:
         return
-    _state["next"] = now + 0.5
+    _state["next"] = now + 0.25
     _refresh()
     pc = get_pc()
     if pc is None:
@@ -260,7 +260,7 @@ def tick() -> None:
         return
     if _is_server():
         _check_players(pc, now)
-    elif now - _state["told"] > 10.0:
+    elif now - _state["told"] > 5.0:
         _state["told"] = now
         mine = my_versions()
         try:
