@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.5.1",
+  "date": "2026-10-09",
+  "changes": [
+   "New mod for the Pre-Sequel: Infinity. Borderlands 2's Infinity pistol is now its own mod, so you can install or remove it separately from Krieg, and it works with every character. Install it from the Pre-Sequel's mods in the launcher. Three purple Vladof pistols in the Grinder make an Infinity, and every one rolls its own element, accessory, grip and sight.",
+   "Krieg 2.5.1: the Infinity is no longer part of the Krieg mod. The update lock also covers the Infinity mod: if you have it installed it must be the newest version, and if the host has it, everyone who joins needs it too."
+  ]
+ },
+ {
   "version": "3.5.0",
   "date": "2026-10-09",
   "changes": [

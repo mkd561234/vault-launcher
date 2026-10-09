@@ -61,14 +61,43 @@ def _launcher_dir() -> Path:
     return Path(os.environ.get("LOCALAPPDATA", "")) / "VaultLauncher"
 
 
+# Other Vault Launcher mods for the Pre-Sequel: launcher id -> (folder in sdk_mods, name shown)
+OTHER_MODS = {"infinity-tps": ("InfinityTPS", "Infinity mod")}
+SDK_MODS = Path(__file__).resolve().parents[1]
+
+
+def _folder_version(folder: str):
+    try:
+        text = (SDK_MODS / folder / "__init__.py").read_text("utf-8", errors="replace")
+    except OSError:
+        return None
+    import re
+    m = re.search(r'__version__\s*=\s*["\']([^"\']+)', text)
+    return m.group(1) if m else None
+
+
 def my_versions() -> dict:
+    """{"launcher", "krieg", "mod:<id>" for each other launcher mod installed in this game}."""
     from . import __version__
     launcher = None
     try:
         launcher = json.loads((_launcher_dir() / "app" / "release.json").read_text("utf-8")).get("version")
     except (OSError, ValueError):
         pass
-    return {"launcher": launcher, "krieg": __version__}
+    out = {"launcher": launcher, "krieg": __version__}
+    for mod_id, (folder, _label) in OTHER_MODS.items():
+        v = _folder_version(folder)
+        if v:
+            out[f"mod:{mod_id}"] = v
+    return out
+
+
+def _label(key: str) -> str:
+    if key == "launcher":
+        return "launcher"
+    if key == "krieg":
+        return "Krieg mod"
+    return OTHER_MODS.get(key[4:], (None, key[4:]))[1]
 
 
 def _get_json(path: str):
@@ -82,9 +111,17 @@ def _fetch() -> None:
     try:
         launcher = str(_get_json("latest.json").get("version") or "").lstrip("vV") or None
         krieg = str(_get_json("app/catalog/krieg-tps/mod.json").get("version") or "") or None
+        mods = {}
+        for mod_id in OTHER_MODS:
+            try:
+                mods[f"mod:{mod_id}"] = str(_get_json(f"app/catalog/{mod_id}/mod.json").get("version") or "") or None
+            except Exception:  # noqa: BLE001
+                pass
         if launcher or krieg:
             _latest.update(launcher=launcher, krieg=krieg, error=None)
-            log(f"newest versions: launcher {launcher}, Krieg mod {krieg}")
+            _latest.update(mods)
+            log(f"newest versions: launcher {launcher}, Krieg mod {krieg}"
+                + "".join(f", {_label(k)} {v}" for k, v in mods.items()))
     except Exception as ex:  # noqa: BLE001
         _latest["error"] = f"{type(ex).__name__}: {ex}"
         # the launcher remembers the newest version it saw on GitHub
@@ -110,18 +147,23 @@ def _refresh() -> None:
     threading.Thread(target=_fetch, name="KriegVersionCheck", daemon=True).start()
 
 
-def required() -> dict:
-    """The versions everyone needs: the newest known ones."""
-    return {"launcher": _latest["launcher"], "krieg": _latest["krieg"]}
+def required(mods_of: dict | None = None) -> dict:
+    """The versions everyone needs: the newest known ones, for the launcher, the Krieg mod and
+    every other launcher mod in mods_of (default: the ones installed in this game)."""
+    need = {"launcher": _latest["launcher"], "krieg": _latest["krieg"]}
+    for key in (mods_of if mods_of is not None else my_versions()):
+        if key.startswith("mod:"):
+            need[key] = _latest.get(key)
+    return need
 
 
 def _outdated(have: dict, need: dict) -> list:
     out = []
-    for key, label in (("launcher", "launcher"), ("krieg", "Krieg mod")):
+    for key in need:
         if need.get(key) and have.get(key) and _vt(have[key]) < _vt(need[key]):
-            out.append(f"{label} {have[key]} < {need[key]}")
+            out.append(f"{_label(key)} {have[key]} < {need[key]}")
         elif need.get(key) and not have.get(key):
-            out.append(f"{label} unknown < {need[key]}")
+            out.append(f"{_label(key)} {'missing' if key.startswith('mod:') else 'unknown'} (needs {need[key]})")
     return out
 
 
@@ -129,7 +171,7 @@ def i_am_outdated() -> list:
     mine = my_versions()
     need = required()
     if not mine["launcher"]:
-        need = dict(need, launcher=None)     # no launcher install found: only the mod can be checked
+        need = dict(need, launcher=None)     # no launcher install found: only the mods can be checked
     return _outdated(mine, need)
 
 
@@ -263,8 +305,9 @@ def tick() -> None:
     elif now - _state["told"] > 5.0:
         _state["told"] = now
         mine = my_versions()
+        extra = ",".join(f"{k[4:]}={v}" for k, v in mine.items() if k.startswith("mod:"))
         try:
-            pc.ServerMutate(f"{PREFIX_VER}{mine['launcher'] or '?'}|{mine['krieg']}")
+            pc.ServerMutate(f"{PREFIX_VER}{mine['launcher'] or '?'}|{mine['krieg']}|{extra}")
         except Exception as ex:  # noqa: BLE001
             log(f"could not tell the host my versions: {type(ex).__name__}: {ex}")
 
@@ -286,9 +329,9 @@ def _controllers(pc) -> list:
 
 def _check_players(pc, now: float) -> None:
     """Host: everyone else must report up-to-date versions."""
-    need = required()
     mine = my_versions()
-    for key in ("launcher", "krieg"):
+    need = required(mine)                   # the host's mods are needed by everyone
+    for key in mine:
         if not need.get(key):
             need[key] = mine.get(key)       # newest unknown: at least the host's own
     seen = set()
@@ -351,10 +394,15 @@ def on_server_mutate(obj, args, *_):
     parts = msg[len(PREFIX_VER):].split("|")
     report = {"launcher": parts[0] if parts and parts[0] != "?" else None,
               "krieg": parts[1] if len(parts) > 1 else None}
+    if len(parts) > 2:
+        for pair in parts[2].split(","):
+            if "=" in pair:
+                k, v = pair.split("=", 1)
+                report[f"mod:{k}"] = v
     info = _state["players"].setdefault(obj._get_address(), {"since": time.monotonic(), "report": None, "kick_at": 0.0})
     if info["report"] != report:
         name = str(getattr(getattr(obj, "PlayerReplicationInfo", None), "PlayerName", "?"))
-        log(f"{name} has launcher {report['launcher']}, Krieg mod {report['krieg']}")
+        log(f"{name} has " + ", ".join(f"{_label(k)} {v}" for k, v in report.items()))
     info["report"] = report
     return Block
 
@@ -383,8 +431,9 @@ def on_client_message_willow(obj, args, *_):
 def krieg_versions(_args) -> None:
     _state["logs"] = 0
     mine = my_versions()
-    log(f"this game: launcher {mine['launcher']}, Krieg mod {mine['krieg']}; newest: launcher "
-        f"{_latest['launcher']}, Krieg mod {_latest['krieg']}"
+    need = required()
+    log("this game: " + ", ".join(f"{_label(k)} {v}" for k, v in mine.items())
+        + "; newest: " + ", ".join(f"{_label(k)} {v}" for k, v in need.items())
         + (f" (last check failed: {_latest['error']})" if _latest["error"] else "")
         + (f"; OUT OF DATE: {', '.join(i_am_outdated())}" if i_am_outdated() else "; up to date"))
     _latest["at"] = 0.0

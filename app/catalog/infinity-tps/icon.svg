@@ -1,0 +1,23 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <pattern id="infDots" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3.5" cy="3.5" r="1.8" fill="#000" fill-opacity=".25"/></pattern>
+    <linearGradient id="infBurst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6a00"/></linearGradient>
+  </defs>
+  <polygon points="109.8,6.5 123.9,30.0 149.4,20.0 151.9,47.3 179.2,49.4 169.7,75.0 193.3,88.8 173.6,107.7 189.0,130.4 163.0,138.9 167.0,166.0 139.8,162.4 131.7,188.5 108.8,173.5 90.2,193.5 76.1,170.0 50.6,180.0 48.1,152.7 20.8,150.6 30.3,125.0 6.7,111.2 26.4,92.3 11.0,69.6 37.0,61.1 33.0,34.0 60.2,37.6 68.3,11.5" fill="url(#infBurst)" stroke="#1a1a1a" stroke-width="5" stroke-linejoin="round"/>
+  <polygon points="109.8,6.5 123.9,30.0 149.4,20.0 151.9,47.3 179.2,49.4 169.7,75.0 193.3,88.8 173.6,107.7 189.0,130.4 163.0,138.9 167.0,166.0 139.8,162.4 131.7,188.5 108.8,173.5 90.2,193.5 76.1,170.0 50.6,180.0 48.1,152.7 20.8,150.6 30.3,125.0 6.7,111.2 26.4,92.3 11.0,69.6 37.0,61.1 33.0,34.0 60.2,37.6 68.3,11.5" fill="url(#infDots)"/>
+  <!-- infinity sign below the gun -->
+  <g transform="translate(0 32)">
+  <path d="M100 118 C88 103 78 96 66 96 C54 96 45 104 45 115 S54 134 66 134 C78 134 88 127 100 112 C112 97 122 90 134 90 C146 90 155 98 155 109 S146 128 134 128 C122 128 112 121 100 106"
+        fill="none" stroke="#1a1a1a" stroke-width="17" stroke-linecap="round"/>
+  <path d="M100 118 C88 103 78 96 66 96 C54 96 45 104 45 115 S54 134 66 134 C78 134 88 127 100 112 C112 97 122 90 134 90 C146 90 155 98 155 109 S146 128 134 128 C122 128 112 121 100 106"
+        fill="none" stroke="#c4161c" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <!-- pistol -->
+  <g transform="translate(4 -10)">
+  <g stroke="#1a1a1a" stroke-width="5" stroke-linejoin="round">
+    <path d="M38 62 H138 L146 56 H162 V82 H148 L143 88 H98 L92 98 H82 L70 140 H44 L56 96 H40 Z" fill="#d9d4cc"/>
+    <path d="M44 70 H140 V78 H44 Z" fill="#c4161c" stroke-width="3"/>
+    <rect x="90" y="50" width="18" height="10" rx="2" fill="#8f8a83"/>
+  </g>
+  </g>
+</svg>

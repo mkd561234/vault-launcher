@@ -54,7 +54,7 @@ _state = {"done": False, "tries": 0, "objects": [], "recipe": False, "errors": 0
 
 def log(msg: str) -> None:
     from . import log as _log
-    _log("Infinity: " + msg)
+    _log(msg)
 
 
 def _find(path: str, cls: str = "Object"):
@@ -248,8 +248,8 @@ def upkeep() -> None:
     build()
 
 
-@command("krieg_infinity", description="Write whether the Infinity pistol and its Grinder recipe are set up to the Krieg log.")
-def krieg_infinity(_args) -> None:
+@command("infinity_status", description="Write whether the Infinity pistol and its Grinder recipe are set up to infinity_log.txt.")
+def infinity_status(_args) -> None:
     bal = _find(BALANCE)
     log(f"balance {'present' if bal is not None else 'MISSING'}, Grinder recipe "
         f"{'added' if _state['recipe'] else 'not added'}, {_state['errors']} setting(s) skipped")
@@ -258,4 +258,4 @@ def krieg_infinity(_args) -> None:
         build()
 
 
-infinity_hooks = [krieg_infinity]
+infinity_hooks = [infinity_status]
