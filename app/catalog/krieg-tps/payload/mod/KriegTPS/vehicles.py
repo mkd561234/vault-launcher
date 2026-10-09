@@ -444,6 +444,16 @@ def _show(mesh) -> bool:
 
 
 def tick() -> None:
+    try:
+        hide_guns_in_vehicles()
+    except Exception as ex:  # noqa: BLE001
+        if not _guns.get("err"):
+            _guns["err"] = True
+            _dlog(f"hiding guns in vehicles: {type(ex).__name__}: {ex}")
+    _seat_tick()
+
+
+def _seat_tick() -> None:
     """Called every frame: shows Krieg again once his seat animation has fully taken over (he is
     shown after HIDE_MAX regardless, so he can never stay invisible)."""
     mesh = _hide["mesh"]
@@ -480,7 +490,7 @@ def tick() -> None:
 def _unhide_now(*_) -> None:
     _hide["until"] = 0.0
     _hide["max"] = 0.0
-    tick()
+    _seat_tick()
 
 
 seat_hooks = [
@@ -488,3 +498,95 @@ seat_hooks = [
     hook("Engine.Pawn:StartDriving", Type.PRE, hook_identifier="KriegTPSSeatHideIn")(_hide_briefly),
     hook("Engine.Pawn:StopDriving", Type.POST, hook_identifier="KriegTPSSeatShowOut")(_unhide_now),
 ]
+
+
+# ---------------------------------------------------------------------------
+# No gun in his hand while he drives or rides.
+# The game hides a character's gun when he gets into a vehicle; Krieg's third-person gun (the
+# piece attached to his hand bones) stayed visible, so he drove with a rifle in his hand. Every
+# Krieg in a vehicle (mine and the other players') has whatever is held in his hands hidden, and
+# shown again when he gets out. Guns stowed on his back are left alone.
+# ---------------------------------------------------------------------------
+HAND_BONES = ("R_Weapon_Bone", "L_Weapon_Bone")
+_guns = {"next": 0.0, "hidden": {}, "logged": 0}
+
+
+def _all_kriegs() -> list:
+    pc = get_pc()
+    out = []
+    try:
+        pawn = pc.WorldInfo.PawnList
+        for _ in range(512):
+            if pawn is None:
+                break
+            try:
+                if "Lilac" in pawn.ObjectArchetype._path_name():
+                    out.append(pawn)
+            except Exception:  # noqa: BLE001
+                pass
+            pawn = pawn.NextPawn
+    except Exception:  # noqa: BLE001
+        pass
+    return out
+
+
+def _in_vehicle(pawn) -> bool:
+    try:
+        return pawn.DrivenVehicle is not None
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _hand_items(pawn) -> list:
+    mesh = getattr(pawn, "Mesh", None)
+    items = []
+    try:
+        for att in mesh.Attachments:
+            comp = att.Component
+            if comp is not None and str(att.BoneName) in HAND_BONES:
+                items.append(comp)
+    except Exception:  # noqa: BLE001
+        pass
+    return items
+
+
+def _set_hidden(comp, hidden: bool) -> None:
+    try:
+        comp.SetHidden(hidden)
+    except Exception:  # noqa: BLE001
+        try:
+            comp.HiddenGame = hidden
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def hide_guns_in_vehicles() -> None:
+    now = time.monotonic()
+    if now < _guns["next"]:
+        return
+    _guns["next"] = now + 0.1
+    seen = set()
+    for pawn in _all_kriegs():
+        key = pawn._get_address()
+        seen.add(key)
+        hidden = _guns["hidden"].get(key)
+        if _in_vehicle(pawn):
+            items = _hand_items(pawn)
+            fresh = [c for c in items if not c.HiddenGame]
+            for c in fresh:
+                _set_hidden(c, True)
+            if fresh:
+                kept = hidden or []
+                kept += [c for c in fresh if all(c._get_address() != k._get_address() for k in kept)]
+                _guns["hidden"][key] = kept
+                if _guns["logged"] < 6:
+                    _guns["logged"] += 1
+                    who = getattr(getattr(pawn, "PlayerReplicationInfo", None), "PlayerName", "?")
+                    _dlog(f"hid the gun in {who}'s hand while he's in a vehicle ({len(fresh)} piece(s))")
+        elif hidden:
+            for c in hidden:
+                _set_hidden(c, False)
+            del _guns["hidden"][key]
+    for key in list(_guns["hidden"]):
+        if key not in seen:
+            del _guns["hidden"][key]

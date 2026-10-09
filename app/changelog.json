@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.9",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.3.4: Krieg no longer drives or rides with a gun in his hand. Whatever he holds is hidden while he's in a vehicle, for every Krieg in the game, and shown again when he gets out. Guns stowed on his back stay as they are."
+  ]
+ },
+ {
   "version": "3.3.8",
   "date": "2026-10-09",
   "changes": [
