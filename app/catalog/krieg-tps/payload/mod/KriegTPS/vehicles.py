@@ -307,6 +307,9 @@ diag_hooks = [
 # ---------------------------------------------------------------------------
 HIDE_MIN = 0.05      # never show him sooner than this
 HIDE_MAX = 0.35      # ...or later than this, whatever the animation does
+# A joining player's game only starts the seat animation when the host tells it to, up to ~2 s
+# after getting in. Until then he stood upright in the seat, his body filling the vehicle camera.
+HIDE_MAX_CLIENT = 2.5
 SEAT_ANIMS = ("Driver_", "Gunner_")
 _hide = {"until": 0.0, "max": 0.0, "mesh": None, "nodes": [], "switching": 0.0, "since": 0.0, "parts": []}
 
@@ -386,7 +389,8 @@ def _seat_nodes(mesh) -> list:
 def _seat_anim_showing() -> bool:
     for node in _hide["nodes"]:
         try:
-            if str(node.AnimSeqName).startswith(SEAT_ANIMS) and float(node.NodeTotalWeight) > 0.9:
+            if (str(node.AnimSeqName).startswith(SEAT_ANIMS) and float(node.NodeTotalWeight) > 0.9
+                    and node.AnimSeq is not None and node.bPlaying):
                 return True
         except Exception:  # noqa: BLE001
             continue
@@ -422,7 +426,9 @@ def _hide_briefly(obj, *_) -> None:
         _hide["since"] = now
         _hide["rescanned"] = False
         _hide["until"] = now + HIDE_MIN
-        _hide["max"] = now + HIDE_MAX
+        role = str(getattr(getattr(obj, "Role", None), "name", getattr(obj, "Role", "")))
+        _hide["client"] = "Authority" not in role
+        _hide["max"] = now + (HIDE_MAX_CLIENT if _hide["client"] else HIDE_MAX)
         _hide["mesh"] = mesh
         _hide["nodes"] = _seat_nodes(mesh)
         _dlog("Krieg hidden while he sits down")
@@ -463,8 +469,9 @@ def _seat_tick() -> None:
     if now < _hide["until"]:
         return
     seated = _seat_anim_showing()
-    if not seated and not _hide.get("rescanned") and now - _hide["since"] > 0.1:
-        _hide["rescanned"] = True          # the seat animation may play on a node made after we looked
+    if not seated and now - _hide["since"] > 0.1 and now >= _hide.get("next_scan", 0.0):
+        # the seat animation may play on a node made after we looked
+        _hide["next_scan"] = now + (0.1 if _hide.get("client") else 1.0)
         _hide["nodes"] = _seat_nodes(mesh)
         seated = _seat_anim_showing()
     if not seated and now < _hide["max"]:

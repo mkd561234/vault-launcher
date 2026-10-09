@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.6.2",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.5.4: for the player who joins a co-op game, getting into a vehicle no longer shows Krieg standing up in the seat with his body filling the camera. The joining player's game only starts the seat animation when the host says so, up to about 2 seconds later; Krieg now stays hidden until he's actually sitting (at most 2.5 seconds). The host never saw this."
+  ]
+ },
+ {
   "version": "3.6.1",
   "date": "2026-10-09",
   "changes": [
