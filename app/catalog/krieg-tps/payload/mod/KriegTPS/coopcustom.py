@@ -111,90 +111,11 @@ def _decode(msg: str):
     return parts[0], slots
 
 
-def _my_character():
-    """(class, level) of the character I'm playing, or None while not known."""
-    pc = get_pc()
-    if pc is None:
-        return None
-    cls = None
-    for holder in (pc, getattr(pc, "PlayerReplicationInfo", None)):
-        for attr in ("PlayerClass", "CharacterClass"):
-            try:
-                val = getattr(holder, attr) if holder is not None else None
-            except Exception:  # noqa: BLE001
-                val = None
-            if val is not None:
-                cls = val
-                break
-        if cls is not None:
-            break
-    if cls is None:
-        return None
-    try:
-        level = int(pc.PlayerReplicationInfo.ExpLevel)
-    except Exception:  # noqa: BLE001
-        level = 0
-    return (cls._path_name(), level)
-
-
-def _i_am_krieg() -> bool:
-    ch = _my_character()
-    return ch is not None and "Lilac" in ch[0]
-
-
-def _check_character() -> None:
-    """Forget my remembered head/skin when I switch to another character (another class, or a
-    Krieg of a clearly different level), so one character's look never goes on another."""
-    ch = _my_character()
-    if ch is None:
-        return
-    had = _state.get("own_char")
-    if had is not None and (had[0] != ch[0] or abs(had[1] - ch[1]) > 1):
-        if _state.get("own") is not None:
-            log(f"switched character ({had[0].rsplit('.', 1)[-1]} level {had[1]} -> "
-                f"{ch[0].rsplit('.', 1)[-1]} level {ch[1]}); forgetting the old head/skin")
-        _state["own"] = None
-        _state["mine"] = None
-    _state["own_char"] = ch
-
-
-def _is_krieg_def(cd) -> bool:
-    try:
-        path = cd._path_name()
-    except Exception:  # noqa: BLE001
-        return False
-    return "Lilac" in path or "Psycho" in path
-
-
-def _list_is_krieg(pri) -> bool:
-    """False when the head/skin list holds another class's head/skin (another character)."""
-    try:
-        items = [pri.RemoteCustomizations[i] for i in SLOTS]
-    except Exception:  # noqa: BLE001
-        return False
-    return all(cd is None or _is_krieg_def(cd) for cd in items)
-
-
-def _is_krieg_standin(standin) -> bool:
-    body = getattr(standin, "BodyClass", None)
-    try:
-        return body is not None and "Lilac" in body._path_name()
-    except Exception:  # noqa: BLE001
-        return False
-
-
-def _is_krieg_pawn(pawn) -> bool:
-    try:
-        return "Lilac" in pawn.ObjectArchetype._path_name()
-    except Exception:  # noqa: BLE001
-        return False
-
-
 def _my_extras() -> dict:
     """My own DLC heads/skins (only those the other games can't receive the normal way)."""
     pc = get_pc()
     pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
-    if pri is None or not _i_am_krieg():
+    if pri is None:
         return {}
     extras = _extra_names()
     out = {}
@@ -247,7 +168,7 @@ def _apply(name: str, slots: dict, why: str) -> None:
                     changed_list = True
             except Exception:  # noqa: BLE001
                 pass
-        if pawn is None or mgr is None or not _is_krieg_pawn(pawn) or _wears(pawn, cd, kind):
+        if pawn is None or mgr is None or _wears(pawn, cd, kind):
             continue
         try:
             before = None
@@ -371,8 +292,6 @@ def _track_own(pc, players: int) -> None:
         return
     if picked:
         _state["capture_at"] = 0.0
-    if not _i_am_krieg() or not _list_is_krieg(getattr(pc, "PlayerReplicationInfo", None)):
-        return
     own = _my_extras()
     pri = getattr(pc, "PlayerReplicationInfo", None)
     try:
@@ -393,8 +312,6 @@ def _set_own(own: dict) -> None:
 
 def _coop_mine() -> dict:
     """My DLC heads/skins to tell the others: what I picked, not what the game swapped in."""
-    if not _i_am_krieg():
-        return {}
     own = _state.get("own")
     return dict(own) if own is not None else _my_extras()
 
@@ -405,10 +322,10 @@ def _restore_own(pc, players: int) -> None:
     Krieg isn't wearing it and he isn't in the head/skin menu."""
     own = _state.get("own")
     now = time.monotonic()
-    if not own or _menu_recent(now) or not _i_am_krieg():
+    if not own or _menu_recent(now):
         return
     pri = getattr(pc, "PlayerReplicationInfo", None)
-    if pri is None or not _list_is_krieg(pri):
+    if pri is None:
         return
     pawn = getattr(pc, "Pawn", None)
     put = []
@@ -452,7 +369,6 @@ def upkeep() -> None:
     pc = get_pc()
     if pc is None:
         return
-    _check_character()
     players = len(_pris())
     if players >= 2 and not _state.get("ever_coop"):
         _track_own(pc, 1)      # last chance to see my own look before the co-op game touches it
@@ -531,9 +447,7 @@ def _standin_wants(standin) -> dict:
     if pri is None or pc is None:
         return {}
     if _same(pri, getattr(pc, "PlayerReplicationInfo", None)):
-        return dict(_state.get("own") or {}) if _i_am_krieg() and _list_is_krieg(pri) else {}
-    if not _list_is_krieg(pri):
-        return {}
+        return dict(_state.get("own") or {})
     return _table.get(str(pri.PlayerName), {})
 
 
@@ -556,111 +470,45 @@ def _put_back(pri, before) -> None:
             pass
 
 
-_dressing = [False]
-
-
-def _dress(standin, force: bool) -> None:
-    """Dress one lobby Krieg in its player's DLC head/skin (see _refresh_lobby)."""
-    if _dressing[0] or "Default__" in standin._path_name() or not _is_krieg_standin(standin):
-        return
-    wants = _standin_wants(standin)
-    if not wants:
-        return
-    mgr = _manager()
-    if mgr is None:
-        return
-    now = time.monotonic()
-    addr = standin._get_address()
-    seen = _state.setdefault("dressed", {})        # stand-in -> (time, count in the last 10 s)
-    last, count = seen.get(addr, (-100.0, 0))
-    if not force and now - last < 30.0:
-        return
-    if force and now - last < 10.0 and count >= 3:
-        return                                     # never fight the game in a loop
-    seen[addr] = (now, count + 1 if now - last < 10.0 else 1)
-    pc = get_pc()
-    pri = standin.OwningPRI
-    mine = _same(pri, getattr(pc, "PlayerReplicationInfo", None) if pc else None)
-    _dressing[0] = True
-    try:
-        for def_name in wants.values():
-            cd = _def(def_name)
-            if cd is None:
-                continue
-            before = None if mine else _snapshot(pri)
-            mgr.InitiateCustomizationRequest(Target=standin, NewCustomization=cd)
-            _put_back(pri, before)
-            key = ("dresslog", addr, def_name)
-            if key not in _lobby_logged:
-                _lobby_logged.add(key)
-                log(f"lobby: dressed {'my' if mine else str(pri.PlayerName) + chr(39) + 's'} Krieg in {def_name}")
-    finally:
-        _dressing[0] = False
-
-
 def _refresh_lobby() -> None:
     """The lobby draws each player as a stand-in Krieg, which falls back to the default look for
     these heads/skins. Dress each stand-in in its player's own pick: mine from what I picked, the
     others' from the host's table. For another player's stand-in, his head/skin list is put back
     straight after (dressing a stand-in also rewrites its player's list; the 2.2.2 lobby code
-    changed both players' looks that way). New stand-ins are dressed the moment the lobby builds
-    or redraws them (hooks below), so the default look doesn't flash up."""
+    changed both players' looks that way)."""
+    mgr = _manager()
+    if mgr is None:
+        return
+    pc = get_pc()
+    my_pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
     for standin in unrealsdk.find_all("PlayerStandIn", exact=False):
         try:
-            _dress(standin, force=False)
+            if "Default__" in standin._path_name():
+                continue
+            wants = _standin_wants(standin)
+            if not wants:
+                continue
+            pri = standin.OwningPRI
+            mine = _same(pri, my_pri)
+            for idx, def_name in wants.items():
+                # again every 30 s: the lobby rebuilds its Kriegs now and then
+                key = ("standin", standin._get_address(), def_name, int(time.monotonic() // 30))
+                if key in _lobby_logged:
+                    continue
+                cd = _def(def_name)
+                if cd is None:
+                    continue
+                first = not any(k[:3] == key[:3] for k in _lobby_logged if isinstance(k, tuple) and len(k) == 4)
+                _lobby_logged.add(key)
+                before = None if mine else _snapshot(pri)
+                mgr.InitiateCustomizationRequest(Target=standin, NewCustomization=cd)
+                _put_back(pri, before)
+                if first:
+                    log(f"lobby: dressed {'my' if mine else str(pri.PlayerName) + chr(39) + 's'} Krieg in {def_name}")
         except Exception as ex:  # noqa: BLE001
             if ("lobbyerr",) not in _lobby_logged:
                 _lobby_logged.add(("lobbyerr",))
                 log(f"lobby: could not dress a stand-in: {type(ex).__name__}: {ex}")
-
-
-def _coop_lobby() -> bool:
-    return len(_pris()) >= 2 and _is_menu()
-
-
-@hook("WillowGame.PlayerStandIn:RefreshCustomizationsOnInstanceData", Type.POST,
-      hook_identifier="KriegTPSLobbyRedraw")
-def on_standin_redraw(obj, *_):
-    """The lobby just (re)drew a Krieg in his saved look: put the DLC head/skin straight back."""
-    if _dressing[0]:
-        return
-    try:
-        if _coop_lobby():
-            _dress(obj, force=True)
-    except Exception as ex:  # noqa: BLE001
-        if ("redrawerr",) not in _lobby_logged:
-            _lobby_logged.add(("redrawerr",))
-            log(f"lobby redraw: {type(ex).__name__}: {ex}")
-
-
-@hook("WillowGame.WillowCustomizationManager:PlayerCustomizationsUpdated", Type.POST,
-      hook_identifier="KriegTPSLobbyUpdated")
-def on_customizations_updated(_obj, args, *_):
-    """A player's head/skin list changed (it does when he joins): redress his lobby Krieg now."""
-    if _dressing[0]:
-        return
-    try:
-        if not _coop_lobby():
-            return
-        pri = getattr(args, "PRI", None)
-        for standin in unrealsdk.find_all("PlayerStandIn", exact=False):
-            if pri is None or _same(getattr(standin, "OwningPRI", None), pri):
-                _dress(standin, force=True)
-    except Exception as ex:  # noqa: BLE001
-        if ("updatederr",) not in _lobby_logged:
-            _lobby_logged.add(("updatederr",))
-            log(f"lobby update: {type(ex).__name__}: {ex}")
-
-
-def tick() -> None:
-    """Every quarter second in a co-op lobby: dress any lobby Krieg that just appeared."""
-    now = time.monotonic()
-    if now < _state.get("tick_next", 0.0):
-        return
-    _state["tick_next"] = now + 0.25
-    if _table or _state.get("own"):
-        if _coop_lobby():
-            _refresh_lobby()
 
 
 @hook("WillowGame.PlayerStandIn:GetDesiredCustomizationOfType", Type.PRE,
@@ -769,4 +617,4 @@ def on_client_message_willow(obj, args, *_):
     return _client_message(obj, args)
 
 
-custom_hooks = [on_standin_redraw, on_customizations_updated, on_standin_customization, on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]
+custom_hooks = [on_standin_customization, on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]

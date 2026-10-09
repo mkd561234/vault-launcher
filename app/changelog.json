@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.5",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.3.0: back to the Krieg mod from launcher 3.3.2 (Krieg 2.2.7). The lobby flash fix (2.2.8) and the character-switch checks (2.2.9) are taken out for now."
+  ]
+ },
+ {
   "version": "3.3.4",
   "date": "2026-10-08",
   "changes": [
