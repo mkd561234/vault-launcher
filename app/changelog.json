@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.5.2",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.1: new Grinder recipe. A legendary pistol, any legendary weapon and a purple Vladof pistol make an Infinity. This recipe comes before the game's own \"two legendaries and a purple pistol\" recipe, so these three always give an Infinity."
+  ]
+ },
+ {
   "version": "3.5.1",
   "date": "2026-10-09",
   "changes": [

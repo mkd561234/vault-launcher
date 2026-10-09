@@ -1,6 +1,6 @@
 """Infinity for TPS: Borderlands 2's Infinity pistol in the Pre-Sequel, made in the Grinder.
 
-Three purple Vladof pistols in the Grinder make an Infinity. Every one rolls its own element,
+A legendary pistol, any legendary weapon and a purple Vladof pistol in the Grinder make an Infinity. Every one rolls its own element,
 accessory, grip and sight. See infinity.py for how it is built. Works with every character.
 """
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from mods_base import Game, ModType, build_mod, hook
 from unrealsdk.hooks import Type
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 _LOG = Path(__file__).with_name("infinity_log.txt")
 _log_lines = [0]
@@ -52,7 +52,7 @@ def on_tick(*_) -> None:
 
 _mod = build_mod(
     name="Infinity",
-    description="Borderlands 2's Infinity pistol, made in the Grinder from three purple Vladof pistols.",
+    description="Borderlands 2's Infinity pistol, made in the Grinder from a legendary pistol, a legendary weapon and a purple Vladof pistol.",
     mod_type=ModType.Standard,
     supported_games=Game.TPS,
     auto_enable=True,
