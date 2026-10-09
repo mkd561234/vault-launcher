@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.1.8",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.5: the class mod badge fix now actually runs. In 2.1.4 it never found his body model, so it changed nothing. It now also moves a badge he's already wearing straight away, and the Krieg log says where it put it. The new krieg_classmod console command moves it live (krieg_classmod X Y Z scale) for fine-tuning."
+  ]
+ },
+ {
   "version": "3.1.7",
   "date": "2026-10-08",
   "changes": [

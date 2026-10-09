@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.1.4"
+__version__ = "2.1.5"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -252,25 +252,74 @@ CLASSMOD_SCALE = 0.85
 _socket_done = [False]
 
 
+def _reattach_classmods() -> int:
+    """Class mods already hanging on him keep their old spot until re-attached: do that now."""
+    moved = 0
+    for comp in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+        try:
+            sm = comp.SkeletalMesh
+            if sm is None or "ClassMod" not in str(sm.Name) or not comp.bAttached:
+                continue
+            owner = comp.Owner
+            parent = getattr(owner, "Mesh", None) if owner is not None else None
+            if parent is None or parent.SkeletalMesh is None or "Psycho" not in str(parent.SkeletalMesh.Name):
+                continue
+            parent.DetachComponent(comp)
+            parent.AttachComponentToSocket(comp, CLASSMOD_SOCKET[1])
+            moved += 1
+        except Exception:  # noqa: BLE001
+            continue
+    return moved
+
+
 def fix_classmod_socket() -> None:
     if _socket_done[0]:
         return
-    mesh = find("SkeletalMesh", CLASSMOD_SOCKET[0])
+    mesh = find("SkeletalMesh", CLASSMOD_SOCKET[0]) or find("Object", CLASSMOD_SOCKET[0])
+    if mesh is None:
+        pc = get_pc()
+        comp = getattr(getattr(pc, "Pawn", None), "Mesh", None) if pc is not None else None
+        sm = getattr(comp, "SkeletalMesh", None) if comp is not None else None
+        if sm is not None and str(sm.Name) == CLASSMOD_SOCKET[0].split(".")[-1]:
+            mesh = sm
     if mesh is None:
         return
-    for sock in mesh.Sockets:
-        if sock is not None and str(sock.SocketName) == CLASSMOD_SOCKET[1]:
-            loc = sock.RelativeLocation
-            old = (loc.X, loc.Y, loc.Z)
-            loc.X, loc.Y, loc.Z = CLASSMOD_LOCATION
-            try:
-                sc = sock.RelativeScale
-                sc.X = sc.Y = sc.Z = CLASSMOD_SCALE
-            except AttributeError:
-                pass
-            log(f"class mod badge moved off the belt: {tuple(round(v, 1) for v in old)} -> {CLASSMOD_LOCATION}")
-            break
     _socket_done[0] = True
+    names = []
+    for sock in mesh.Sockets:
+        if sock is None:
+            continue
+        names.append(str(sock.SocketName))
+        if str(sock.SocketName).lower() != CLASSMOD_SOCKET[1].lower():
+            continue
+        loc = sock.RelativeLocation
+        old = (round(loc.X, 1), round(loc.Y, 1), round(loc.Z, 1))
+        loc.X, loc.Y, loc.Z = CLASSMOD_LOCATION
+        try:
+            sc = sock.RelativeScale
+            sc.X = sc.Y = sc.Z = CLASSMOD_SCALE
+        except AttributeError:
+            pass
+        log(f"class mod badge moved off the belt: {old} -> {CLASSMOD_LOCATION} on {sock.BoneName}, "
+            f"re-attached {_reattach_classmods()} worn class mod(s)")
+        return
+    log(f"class mod badge: no '{CLASSMOD_SOCKET[1]}' spot on his body mesh (spots: {names})")
+
+
+@command("krieg_classmod", description="Move Krieg's class mod badge: krieg_classmod X Y Z [scale] "
+         "(along the thigh, sideways, out; default 19 -0.25 -15 0.85)")
+def krieg_classmod(args: argparse.Namespace) -> None:
+    global CLASSMOD_LOCATION, CLASSMOD_SCALE
+    vals = list(args.values or [])
+    if len(vals) >= 3:
+        CLASSMOD_LOCATION = tuple(vals[:3])
+    if len(vals) >= 4:
+        CLASSMOD_SCALE = vals[3]
+    _socket_done[0] = False
+    fix_classmod_socket()
+
+
+krieg_classmod.add_argument("values", nargs="*", type=float)
 
 
 # Safety net: if the game still isn't refilling Krieg's oxygen while he can breathe, refill it
