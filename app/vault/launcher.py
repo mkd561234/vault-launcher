@@ -230,15 +230,21 @@ def act_uninstall(mod_id: str, restore: bool) -> int:
 
 
 def act_update_mods(mod_ids: list) -> int:
+    failed = 0
     for mod_id in mod_ids:
-        main.install_mod(mod_id)
-    return 0
+        try:
+            main.install_mod(mod_id)
+        except Exception as ex:  # noqa: BLE001  - one mod failing doesn't stop the others
+            failed += 1
+            main.say(f'{mod_id} could not be installed: {ex}')
+    return 1 if failed else 0
 
 
 def _auto_update_mods() -> None:
-    """Mods this launcher carries a newer version of are updated as soon as it opens
-    (unless their game is running; then the Update button waits on the mod)."""
-    ready = [m.id for m in main.outdated_mods() if not main._running_games(m)]
+    """As soon as the launcher opens: mods it carries a newer version of are updated, and mods not
+    installed yet are installed (every mod whose game is on this PC, unless the player removed it).
+    A mod whose game is running waits for the next time."""
+    ready = [m.id for m in main.pending_mods() if not main._running_games(m)]
     if ready:
         JOB.start('modupdate', lambda: act_update_mods(ready), ready[0])
 

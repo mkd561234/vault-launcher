@@ -183,6 +183,7 @@ def install_mod(mod_id: str, log=None, wait_for_games: bool = False) -> None:
         save_state(st)
         raise
     ctx.state.update({'installed': True, 'version': mod.version, 'installed_at': int(time.time())})
+    ctx.state.pop('removed_by_user', None)
     save_state(st)
     log(f'{mod.name} {mod.version} is downloaded and ready to play.')
 
@@ -203,8 +204,42 @@ def uninstall_mod(mod_id: str, restore: bool, log=None) -> None:
     finally:
         save_state(st)
     ctx.state.pop('version', None)
+    ctx.state['removed_by_user'] = True      # never put back automatically
     save_state(st)
     log(f'{mod.name} was removed.' + (' The mod SDK stays in place for other mods.' if mod.kind == 'sdkmod' else ''))
+
+
+def missing_mods(st: dict | None = None) -> list:
+    """Mods that install themselves: every mod in the launcher whose game is on this PC, unless the
+    player removed it (removing it is remembered; installing it again by hand undoes that)."""
+    st = st or load_state()
+    out = []
+    for mod in catalog.load():
+        try:
+            mst = st.get('mods', {}).get(mod.id, {})
+            if mst.get('removed_by_user'):
+                continue
+            s = mod_status(mod, st)
+            if s['installed']:
+                continue
+            if mst.get('installed_at') and not mst.get('installed'):
+                continue                      # removed with an older launcher that didn't remember it
+            if all(c['ok'] for c in s['checks']):
+                out.append(mod)
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+def pending_mods(st: dict | None = None) -> list:
+    """Mods to install now: newer versions of installed ones, and ones not installed yet."""
+    st = st or load_state()
+    seen, out = set(), []
+    for mod in outdated_mods(st) + missing_mods(st):
+        if mod.id not in seen:
+            seen.add(mod.id)
+            out.append(mod)
+    return out
 
 
 def outdated_mods(st: dict | None = None) -> list:
@@ -369,18 +404,20 @@ def install_self() -> None:
 
 def cmd_selfinstall(args) -> int:
     install_self()
-    pending = outdated_mods()
+    pending = pending_mods()
+    done, failed = [], 0
     for mod in pending:
         try:
             install_mod(mod.id, wait_for_games=args.unattended)
-        except Exception as ex:  # noqa: BLE001
-            say(f'{mod.name} could not be updated: {ex}')
+            done.append(mod)
+        except Exception as ex:  # noqa: BLE001  - one mod failing doesn't stop the others
+            failed += 1
+            say(f'{mod.name} could not be installed: {ex}')
             if args.unattended:
                 winutil.message(f'{mod.name} {mod.version} could not be installed: {ex}', warning=True)
-            return 1
-    if args.unattended and pending:
-        winutil.message('Updated ' + ', '.join(f'{m.name} to {m.version}' for m in pending) + '.')
-    return 0
+    if args.unattended and done:
+        winutil.message('Installed ' + ', '.join(f'{m.name} {m.version}' for m in done) + '.')
+    return 1 if failed else 0
 
 
 def nexus_client(st: dict | None = None):

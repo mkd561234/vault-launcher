@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.8.0",
+  "date": "2026-10-09",
+  "changes": [
+   "Every mod in the launcher now installs itself for any game you have, and new mods added later do too. It happens when the launcher opens and after each launcher update, and waits if that game is running.",
+   "Removing a mod is remembered: it is never put back by itself. Install it again by hand and it goes back to installing and updating by itself. Mods you removed with an older launcher stay removed.",
+   "If one mod can't be installed, the others still are."
+  ]
+ },
+ {
   "version": "3.7.1",
   "date": "2026-10-09",
   "changes": [
