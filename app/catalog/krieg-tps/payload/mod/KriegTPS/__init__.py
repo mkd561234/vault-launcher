@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -659,6 +659,8 @@ for _i, _h in enumerate(fulldiag.diag_hooks):
     globals()[f"_fulldiag_hook_{_i}"] = _h
 for _i, _h in enumerate(coopdiag.coop_hooks):
     globals()[f"_coop_hook_{_i}"] = _h
+for _i, _h in enumerate(weaponholds.hold_hooks):
+    globals()[f"_hold_hook_{_i}"] = _h
 for _i, _h in enumerate(gearfix.gear_hooks):
     globals()[f"_gear_hook_{_i}"] = _h
 
@@ -1258,7 +1260,7 @@ def upkeep() -> None:
     _next_upkeep = now + 1.0
     # unlock_customizations is not run: the game's unlock check crashed on Krieg's BL2 profile
     # indices. The head/skin menus are filled directly instead (see on_char_select_cache).
-    for step in (keep_krieg_loaded, fix_classmod_socket, classmod_upkeep, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, weaponholds.upkeep, charvoice.upkeep, coopcustom.upkeep, coopdiag.upkeep, fulldiag.upkeep, gearfix.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
+    for step in (keep_krieg_loaded, fix_classmod_socket, classmod_upkeep, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, weaponholds.upkeep_all, charvoice.upkeep, coopcustom.upkeep, coopdiag.upkeep, fulldiag.upkeep, gearfix.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
                  disable_screen_overlays,
                  materials.fix_krieg_materials, materials.fix_krieg_gear_materials, materials.disable_broken_fx, diagnose_once,
                  nudge_hud_health):

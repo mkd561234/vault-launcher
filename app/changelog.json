@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.6",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.3.1: Krieg now holds guns with Wilhelm's third-person animations (what your co-op partner sees): pistols, rifles, SMGs, shotguns, snipers, rocket launchers and lasers, with Wilhelm's grip and reloads. Krieg came from Borderlands 2 with one rifle animation for every gun and nothing for lasers, which is why lasers looked twisted in his hands. He keeps his own walk, run and aiming. krieg_holds krieg in the console puts his own animations back, krieg_holds wilhelm switches again."
+  ]
+ },
+ {
   "version": "3.3.5",
   "date": "2026-10-08",
   "changes": [
