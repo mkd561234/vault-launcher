@@ -3,11 +3,10 @@
 * Once you are in the game, one Infinity is made from the Grinder's output pool and thrown away
   again, and what came out (or why nothing did) is written to infinity_log.txt.
 * Pressing the Grinder's button, the recipe check and the spawn are written to the log.
-* Console command `infinity_give` puts an Infinity in your backpack (for testing).
 """
 
 import unrealsdk
-from mods_base import command, get_pc, hook
+from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
 from . import infinity
@@ -170,28 +169,6 @@ def _serial_test(inv) -> None:
         log(f"test: rebuilding from the serial number failed: {type(ex).__name__}: {ex}")
 
 
-@command("infinity_give", description="Put an Infinity pistol in your backpack (for testing the Infinity mod).")
-def infinity_give(_args) -> None:
-    try:
-        items = _spawn()
-    except Exception as ex:  # noqa: BLE001
-        log(f"give: failed: {type(ex).__name__}: {ex}")
-        return
-    if not items:
-        log("give: the game made nothing from the Infinity's pool")
-        return
-    pawn = _pawn()
-    mgr = getattr(pawn, "InvManager", None)
-    for inv in items:
-        for add in (lambda: mgr.AddInventoryToBackpack(inv), lambda: mgr.AddInventory(inv, True)):
-            try:
-                add()
-                log("give: put in your backpack: " + _describe(inv))
-                break
-            except Exception as ex:  # noqa: BLE001
-                log(f"give: could not add it: {type(ex).__name__}: {ex}")
-
-
 # ---------------------------------------------------------------------------------------------
 # what the Grinder does
 # ---------------------------------------------------------------------------------------------
@@ -232,4 +209,4 @@ def on_spawn_locked(obj, args, ret, *_) -> None:
     log(f"Grinder: made the moonstone item -> result {ret}")
 
 
-diag_hooks = [infinity_give, on_grind, on_status, on_has_recipe, on_spawn, on_spawn_locked]
+diag_hooks = [on_grind, on_status, on_has_recipe, on_spawn, on_spawn_locked]

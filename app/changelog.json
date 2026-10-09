@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.6.1",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.5.3: the class mod badge is back where the game normally puts it. The mover that pushed it lower onto his thigh (and the krieg_classmod command) is gone.",
+   "Infinity 1.0.9: the infinity_give test command is gone. The Grinder is the only way to get an Infinity."
+  ]
+ },
+ {
   "version": "3.6.0",
   "date": "2026-10-09",
   "changes": [
