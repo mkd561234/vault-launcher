@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.2.5",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.1: co-op DLC heads/skins now actually go on. The message with the host's Scav look arrived, but putting it on his Krieg failed every time because the game expected its two inputs the other way round. The mod now also tells the menus when a player's head/skin changes, so the lobby can show it too."
+  ]
+ },
+ {
   "version": "3.2.4",
   "date": "2026-10-08",
   "changes": [

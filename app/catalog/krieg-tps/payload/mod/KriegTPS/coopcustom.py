@@ -148,6 +148,7 @@ def _apply(name: str, slots: dict, why: str) -> None:
     pawn = _pawn_of(pri)
     mgr = _manager()
     done = []
+    changed_list = False
     for idx, def_name in slots.items():
         cd = _def(def_name)
         if cd is None:
@@ -156,6 +157,7 @@ def _apply(name: str, slots: dict, why: str) -> None:
         try:
             if pri.RemoteCustomizations[idx] is None or pri.RemoteCustomizations[idx].Name != def_name:
                 pri.RemoteCustomizations[idx] = cd
+                changed_list = True
         except Exception:  # noqa: BLE001
             pass
         if pawn is not None and _wears(pawn, cd, kind):
@@ -163,10 +165,17 @@ def _apply(name: str, slots: dict, why: str) -> None:
         if mgr is None or pawn is None:
             continue
         try:
-            mgr.InitiateCustomizationRequest(pawn, cd)     # the pawn is the "customizable" target
+            # keywords: the game's parameter order is not (target, customization)
+            mgr.InitiateCustomizationRequest(Target=pawn, NewCustomization=cd)
             done.append(def_name)
         except Exception as ex:  # noqa: BLE001
             log(f"could not put {def_name} on {name}: {type(ex).__name__}: {ex}")
+    if changed_list and mgr is not None:
+        # tells the menus (the lobby's Krieg for that player) that his head/skin list changed
+        try:
+            mgr.PlayerCustomizationsUpdated(PRI=pri)
+        except Exception as ex:  # noqa: BLE001
+            log(f"could not refresh {name}'s look in the menus: {type(ex).__name__}: {ex}")
     if done:
         log(f"{name} wears {', '.join(done)} ({why})")
 
