@@ -28,7 +28,7 @@ _table: dict[str, dict[int, str]] = {}      # player name -> {slot: definition n
 
 
 def log(msg: str) -> None:
-    if _state["logs"] >= 40:
+    if _state["logs"] >= 120:
         return
     _state["logs"] += 1
     from . import log as _log
@@ -212,8 +212,9 @@ def _send_to_clients(force: bool = False) -> None:
             except Exception as ex:  # noqa: BLE001
                 log(f"could not send to a joining player: {type(ex).__name__}: {ex}")
                 break
+        first = _state["sent_to"].get(key) != version
         _state["sent_to"][key] = version
-        if _table:
+        if _table and first:
             log(f"sent {len(_table)} player(s)' DLC heads/skins to "
                 f"{getattr(getattr(other, 'PlayerReplicationInfo', None), 'PlayerName', '?')}: {_table}")
 
@@ -237,29 +238,61 @@ def _net_mode() -> str:
 
 
 def _track_own(pc, players: int) -> None:
-    """Remember the player's own DLC head/skin, but only from moments it can't have been touched
-    by a co-op game: playing alone (no network game) or right after he picks one himself."""
+    """Remember the player's own DLC head/skin while he plays alone (character select, the
+    Quick Change station...), never in the moments after a co-op game, when the game may have
+    put the default back."""
     now = time.monotonic()
     picked = _state.get("capture_at") and now >= _state["capture_at"]
-    alone = players <= 1 and "Standalone" in _net_mode() and now > _state.get("restore_until", 0.0)
+    alone = players <= 1 and not _state.get("was_coop") and now > _state.get("restore_until", 0.0)
     if not (picked or alone):
         return
     if picked:
         _state["capture_at"] = 0.0
         _state["restore_until"] = 0.0
-    own = _my_extras()
+    _set_own(_my_extras())
+
+
+def _set_own(own: dict) -> None:
     if own != _state.get("own"):
         if _state.get("own") is not None or own:
             log(f"my own DLC head/skin: {own or 'none'}")
-        _state["own"] = own
+        _state["own"] = dict(own)
+
+
+def _coop_mine() -> dict:
+    """My DLC heads/skins during a co-op game. A joining player's own list loses them now and
+    then (the host only has "nothing" for them and sends that back), so an empty slot keeps what
+    he had; a real change (he picks another head/skin) is taken over."""
+    own = _state.get("own")
+    if own is None:
+        return _my_extras()
+    pc = get_pc()
+    pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
+    if pri is None:
+        return dict(own)
+    extras = _extra_names()
+    new = dict(own)
+    for idx in SLOTS:
+        try:
+            cd = pri.RemoteCustomizations[idx]
+        except Exception:  # noqa: BLE001
+            cd = None
+        if cd is None:
+            continue
+        if cd.Name in extras:
+            new[idx] = str(cd.Name)
+        else:
+            new.pop(idx, None)
+    _set_own(new)
+    return new
 
 
 def _restore_own(pc, players: int) -> None:
     """After a co-op game the game can fall back to the default head/skin for the player's own DLC
-    head/skin (the host only ever had "nothing" for it). Put his own choice back - only what he
-    picked himself, and only once the co-op game is over."""
+    head/skin (the host only ever had "nothing" for it). Put his own choice back - only once the
+    co-op game is really over."""
     own = _state.get("own")
-    if not own or players > 1 or time.monotonic() > _state.get("restore_until", 0.0):
+    if not own or players > 1 or _state.get("was_coop") or time.monotonic() > _state.get("restore_until", 0.0):
         return
     pri = getattr(pc, "PlayerReplicationInfo", None)
     if pri is None:
@@ -284,6 +317,9 @@ def _restore_own(pc, players: int) -> None:
         log(f"the co-op game reset my head/skin; put back {', '.join(put)}")
 
 
+SESSION_END_AFTER = 10.0   # alone this long = the co-op game is over (not just a level loading)
+
+
 def upkeep() -> None:
     now = time.monotonic()
     if now < _state["next"]:
@@ -295,14 +331,19 @@ def upkeep() -> None:
     players = len(_pris())
     if players >= 2:
         _state["was_coop"] = True
-    elif _state.get("was_coop"):
-        # the co-op game is over: forget everyone else and watch for a reset of my own look
-        _state["was_coop"] = False
-        _table.clear()
-        _state["sent_to"].clear()
-        _state["mine"] = None
-        _state["restore_until"] = now + 120.0
-        _lobby_logged.clear()
+        _state["alone_since"] = None
+    else:
+        if _state.get("alone_since") is None:
+            _state["alone_since"] = now
+        if _state.get("was_coop") and now - _state["alone_since"] >= SESSION_END_AFTER:
+            # the co-op game is over: forget everyone else and watch for a reset of my own look
+            _state["was_coop"] = False
+            _table.clear()
+            _state["sent_to"].clear()
+            _state["mine"] = None
+            _state["restore_until"] = now + 120.0
+            _lobby_logged.clear()
+            log("co-op game over")
     _track_own(pc, players)
     _restore_own(pc, players)
     if players < 2:
@@ -310,7 +351,7 @@ def upkeep() -> None:
     if _is_menu():
         _refresh_lobby()
     me = str(getattr(pc.PlayerReplicationInfo, "PlayerName", "")) if pc.PlayerReplicationInfo else ""
-    mine = _my_extras()
+    mine = _coop_mine()
     role = "host" if _is_server() else "joining player"
     if _state.get("said") != (role, repr(mine)):
         _state["said"] = (role, repr(mine))
@@ -320,8 +361,12 @@ def upkeep() -> None:
             _table[me] = mine
         else:
             _table.pop(me, None)
-        _send_to_clients()
-    elif mine != _state["mine"] or now - _state.get("told", 0.0) > 30.0:
+        # again every 20 s too: a joining player's game can lose the list while a level loads
+        force = now - _state.get("sent_at", 0.0) > 20.0
+        if force:
+            _state["sent_at"] = now
+        _send_to_clients(force)
+    elif mine != _state["mine"] or now - _state.get("told", 0.0) > 20.0:
         _state["told"] = now
         try:
             pc.ServerMutate(_encode(me, mine))
@@ -472,7 +517,8 @@ def _client_message(obj, args):
         return None
     name, slots = _decode(msg)
     if name:
-        log(f"host says {name} wears {slots or 'nothing special'}")
+        if _table.get(name) != slots:
+            log(f"host says {name} wears {slots or 'nothing special'}")
         _table[name] = slots
         _apply(name, slots, "from the host")
     return Block

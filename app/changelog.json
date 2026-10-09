@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.2.9",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.4: in co-op, the joining player's DLC head and skin now stay on his Krieg in game on the host's screen too. Loading into the level made his game forget them, so he showed the default look.",
+   "Krieg 2.2.4: a joining player no longer loses his own DLC head in co-op. The game sometimes blanked it out, and the mod then told everyone he had none and didn't put it back afterwards.",
+   "Krieg 2.2.4: heads/skins picked at the Quick Change station are remembered too, so the mod can put them back if a co-op game resets them."
+  ]
+ },
+ {
   "version": "3.2.8",
   "date": "2026-10-08",
   "changes": [
