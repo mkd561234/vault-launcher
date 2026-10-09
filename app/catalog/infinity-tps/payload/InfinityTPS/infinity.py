@@ -54,6 +54,28 @@ def _rename_refs(v):
 
 OBJECTS = {_renamed(k): _rename_refs(v) for k, v in _BL2_OBJECTS.items()}
 
+
+def _pre_sequel_weights(objects: dict) -> None:
+    """Borderlands 2 lists each Infinity part with a 'Manufacturers' entry of None (any maker) and
+    a 0 default weight on the barrel and skin. The Pre-Sequel reads those as weight 0, so every
+    Infinity part was skipped and the gun came out with the purple Vladof pistol's normal parts.
+    Written the way the Pre-Sequel's own legendaries (the Maggie) are: no maker list, and the
+    barrel and skin at weight 1 (ConsolidatedAttributeInitData[0] is 1.0)."""
+    for path, props in objects.items():
+        if not path.endswith(".PartList"):
+            continue
+        for slot, data in props.items():
+            if not (slot.endswith("PartData") and isinstance(data, dict) and "struct" in data):
+                continue
+            for entry in data["struct"].get("WeightedParts", []):
+                fields = entry["struct"]
+                fields["Manufacturers"] = []
+                if slot in ("BarrelPartData", "MaterialPartData"):
+                    fields["DefaultWeightIndex"] = 0
+
+
+_pre_sequel_weights(OBJECTS)
+
 # (asset library, sublibrary, index) each new object is listed at in the Pre-Sequel
 LIBRARY_SLOTS = {
     "GD_Cork_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity": ("AL_Balance", 122, 19),
@@ -252,11 +274,23 @@ def _pool_of_one(template, name: str, balance):
     first = items[0]
     first.ItmPoolDefinition = None
     first.InvBalanceDefinition = balance
-    items[0] = first
+    # a plain 100% chance: the template's chance is worked out from the Grinder's context,
+    # which came out as nothing ("FailedToSpawnItem") for the Infinity
     try:
-        pool.MinGameStageRequirement = None
-    except Exception:  # noqa: BLE001
-        pass
+        chance = first.Probability
+        chance.BaseValueConstant = 1.0
+        chance.BaseValueAttribute = None
+        chance.InitializationDefinition = None
+        chance.BaseValueScaleConstant = 1.0
+        first.Probability = chance
+    except Exception as ex:  # noqa: BLE001
+        log(f"could not set the pool's chance: {type(ex).__name__}: {ex}")
+    items[0] = first
+    for field in ("MinGameStageRequirement", "MaxGameStageRequirement"):
+        try:
+            setattr(pool, field, None)
+        except Exception:  # noqa: BLE001
+            pass
     return pool
 
 

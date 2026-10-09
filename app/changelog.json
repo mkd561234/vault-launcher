@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.5.8",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.6: the Grinder now makes the Infinity. Its item pool had a chance worked out from the Grinder that came to zero, so grinding failed and nothing came out.",
+   "Infinity 1.0.6: the Infinity now gets its own barrel (no ammo use, figure-8 shots), skin, title and Dva accessory. The parts were weighted the Borderlands 2 way, which the Pre-Sequel reads as zero, so it came out with a normal Vladof pistol's parts."
+  ]
+ },
+ {
   "version": "3.5.7",
   "date": "2026-10-09",
   "changes": [
