@@ -124,9 +124,96 @@ def upkeep() -> None:
     _state["wilhelm_body"] = None      # his body class was (re)loaded: put Wilhelm's holds in again
 
 
+RELOAD_SOURCE = "Anim_1st_Person.1st_Person_SMG"
+LASER_1P_COPY = "WeaponHold_LilacPlayerClass_Laser1st"
+RELOAD_SET_NAME = "Krieg_LaserReloads1st"
+
+
+def _laser_reload_style() -> str:
+    try:
+        return "laser" if LASER_SETTING.read_text().strip().lower() == "laser" else "smg"
+    except OSError:
+        return "smg"
+
+
+LASER_SETTING = Path(__file__).with_name("laser_reload.txt")
+
+
+def fix_laser_reloads(force: bool = False) -> None:
+    """First-person laser reloads. The Pre-Sequel's laser reloads were made for its own
+    characters' arms; on Krieg's Borderlands 2 arms the battery flies off the top-left of the
+    screen. His Borderlands 2 SMG reloads (Dahl, Hyperion, Maliwan, Tediore, Bandit/Scav) were made
+    for his arms, so his own first-person laser hold uses those reloads on top of the laser set;
+    holding, firing and everything else still come from the laser set."""
+    body = _find("BodyClassDefinition", KRIEG_BODY)
+    shared_hold = _laser_1p()
+    if body is None or shared_hold is None:
+        return
+    address = body._get_address()
+    if not force and _state.get("reload_body") == address:
+        return
+    _state["reload_body"] = address
+    outer = body.Outer
+    copy = _find("BodyWeaponHoldDefinition", f"{outer._path_name()}.{LASER_1P_COPY}")
+    holds = list(body.FirstPersonWeaponHoldDefs)
+    if _laser_reload_style() == "laser":
+        holds = [shared_hold if (h is not None and str(h.Name) == LASER_1P_COPY) else h for h in holds]
+        body.FirstPersonWeaponHoldDefs = holds
+        log("lasers: first-person laser reloads are the Pre-Sequel's own")
+        return
+    src = None
+    try:
+        src = unrealsdk.find_object("AnimSet", RELOAD_SOURCE)
+    except ValueError:
+        pass
+    if src is None:
+        log(f"lasers: {RELOAD_SOURCE} isn't loaded; laser reloads unchanged")
+        return
+    rset = _find("AnimSet", f"{outer._path_name()}.{RELOAD_SET_NAME}")
+    if rset is None:
+        rset = unrealsdk.construct_object("AnimSet", outer, RELOAD_SET_NAME, template_obj=src)
+    rset.Sequences = [q for q in src.Sequences if q is not None and str(q.SequenceName).startswith("Reload_")]
+    src.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+    rset.ObjectFlags |= ObjectFlags.KEEP_ALIVE
+    if copy is None:
+        copy = unrealsdk.construct_object("BodyWeaponHoldDefinition", outer, LASER_1P_COPY,
+                                          template_obj=shared_hold)
+    copy.HoldName = "Laser"
+    copy.AnimSetList = [a for a in shared_hold.AnimSetList if a is not None] + [rset]
+    _keep(copy)
+    replaced = False
+    for i, h in enumerate(holds):
+        if h is not None and str(h.HoldName) == "Laser":
+            holds[i] = copy
+            replaced = True
+    if not replaced:
+        holds.append(copy)
+    body.FirstPersonWeaponHoldDefs = holds
+    log(f"lasers: first-person laser reloads now use Krieg's SMG reloads "
+        f"({', '.join(sorted(str(q.SequenceName) for q in rset.Sequences)[:12])})")
+
+
+@command("krieg_laser_reload", description="Krieg's first-person laser reloads: 'smg' (default, made for his arms) or 'laser' (the Pre-Sequel's).")
+def krieg_laser_reload(args) -> None:
+    want = (getattr(args, "style", "") or "").strip().lower()
+    if want in ("smg", "laser"):
+        try:
+            LASER_SETTING.write_text(want)
+        except OSError as ex:
+            log(f"lasers: could not save the setting: {ex}")
+        fix_laser_reloads(force=True)
+        log(f"lasers: reloads now '{want}' (switch weapons to see it)")
+    else:
+        log(f"lasers: reloads are '{_laser_reload_style()}'. Use krieg_laser_reload smg or krieg_laser_reload laser")
+
+
+krieg_laser_reload.add_argument("style", nargs="?", default="")
+
+
 def upkeep_all() -> None:
     upkeep()
     apply_wilhelm()
+    fix_laser_reloads()
 
 
 def _wilhelm_hold(name: str):
@@ -234,3 +321,5 @@ def krieg_holds(args) -> None:
 
 krieg_holds.add_argument("style", nargs="?", default="")
 hold_hooks = [krieg_holds]
+
+hold_hooks.append(krieg_laser_reload)

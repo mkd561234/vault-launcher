@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.8",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.3.3: first-person laser reloads no longer throw the battery off the top of the screen. The Pre-Sequel's laser reloads were made for its own characters' arms, so on Krieg's Borderlands 2 arms the battery ended up far from the gun. Krieg now reloads lasers with his own SMG reload animations, which were made for his arms. krieg_laser_reload laser in the console switches back."
+  ]
+ },
+ {
   "version": "3.3.7",
   "date": "2026-10-08",
   "changes": [
