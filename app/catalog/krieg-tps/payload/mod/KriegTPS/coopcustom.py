@@ -254,8 +254,7 @@ def on_server_mutate(obj, args, *_):
     return Block
 
 
-@hook("Engine.PlayerController:ClientMessage", Type.PRE, hook_identifier="KriegTPSCoopCustomOut")
-def on_client_message(obj, args, *_):
+def _client_message(args):
     msg = str(args.S)
     if not msg.startswith(PREFIX):
         return None
@@ -267,9 +266,14 @@ def on_client_message(obj, args, *_):
     return Block
 
 
+@hook("Engine.PlayerController:ClientMessage", Type.PRE, hook_identifier="KriegTPSCoopCustomOut")
+def on_client_message(obj, args, *_):
+    return _client_message(args)
+
+
 @hook("WillowGame.WillowPlayerController:ClientMessage", Type.PRE, hook_identifier="KriegTPSCoopCustomOutW")
 def on_client_message_willow(obj, args, *_):
-    return on_client_message(obj, args)
+    return _client_message(args)
 
 
 custom_hooks = [on_server_mutate, on_client_message, on_client_message_willow]

@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.1.7"
+__version__ = "2.1.8"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -249,6 +249,7 @@ def fix_krieg_pawn() -> None:
 CLASSMOD_SOCKET = ("Lilac_Char_Psycho.Mesh.Skel_PsychoBody", "ClassMod")
 CLASSMOD_LOCATION = (19.0, -0.25, -15.0)     # was (12.65, -0.25, -12.82) along/around L_Thigh
 CLASSMOD_SCALE = 0.85
+CLASSMOD_BONE = "L_Thigh"
 _socket_done = [False]
 
 
@@ -280,13 +281,17 @@ def _reattach_classmods(skip=frozenset(), done=None) -> int:
         key = body._path_name()
         if key not in _attach_logged and len(_attach_logged) < 6:
             _attach_logged.add(key)
-            log(f"class mod badge: {key.split('.')[-1]} has " + ", ".join(
-                f"{_comp_mesh_name(a.Component) or '?'}@{a.SocketName or a.BoneName}" for a in atts if a.Component is not None))
+            log(f"class mod badge: {key.split('.')[-1]} has " + (", ".join(
+                f"{_comp_mesh_name(a.Component) or '?'}@{a.BoneName}" for a in atts if a.Component is not None)
+                or "nothing attached"))
         for att in atts:
             comp = att.Component
             if comp is None:
                 continue
-            if str(att.SocketName) != CLASSMOD_SOCKET[1] and "ClassMod" not in _comp_mesh_name(comp):
+            # Attachments made to a socket are stored as its bone plus offset (the socket name is
+            # not kept), so the class mod is recognised by its model or by hanging on his thigh.
+            name = _comp_mesh_name(comp)
+            if "ClassMod" not in name and str(att.BoneName) != CLASSMOD_BONE:
                 continue
             try:
                 body.DetachComponent(comp)

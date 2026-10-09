@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.2.1",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.8: fixed the bug that stopped other players' DLC heads/skins (like the Scav) showing in co-op. The host's game was sending them, but the joining player's game crashed on every message instead of using it. The new error copying in the Krieg log caught it.",
+   "Krieg 2.1.8: fixed the class mod badge mover. It looked for an attachment detail the game doesn't keep, so it failed every two seconds and never moved the badge. It now finds the badge by its model or by where it hangs on his thigh."
+  ]
+ },
+ {
   "version": "3.2.0",
   "date": "2026-10-08",
   "changes": [

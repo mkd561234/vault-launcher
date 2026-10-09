@@ -194,7 +194,7 @@ def _krieg_details(pawn) -> None:
                 if c is None:
                     continue
                 rl = att.RelativeLocation
-                log(f"diag:      attached {_mesh_name(c)} at {att.SocketName or att.BoneName} "
+                log(f"diag:      attached {_mesh_name(c)} at {att.BoneName} "
                     f"offset ({rl.X:.1f}, {rl.Y:.1f}, {rl.Z:.1f}) hidden={_get(c, 'HiddenGame')}")
         except Exception as ex:  # noqa: BLE001
             log(f"diag:      attachments: {type(ex).__name__}: {ex}")
