@@ -345,7 +345,7 @@ EXTRA_CUSTOMIZATIONS = (
     ('Skin_PsychoHP05', 'Skin', 'DRINK IT DOWN', 'CD_Psycho_Skin_PsychoHP05', 'PsychoHP05', 25, 0),
     ('Head_Lobelia', 'Head', 'WEAR YOUR TORSO LIKE A HAT', 'CD_Psycho_Head_Lobelia', 'Lobelia', 23, 0),
     ('Skin_Lobelia', 'Skin', 'LORD OF MEAT', 'CD_Psycho_Skin_Lobelia', 'Lobelia', 24, 0),
-    ('Head_LootChest2', 'Head', 'Goliath', 'CD_Psycho_Head_LootChest2', 'LootChest2', 19, 0),
+    ('Head_LootChest2', 'Head', 'GOLIATH', 'CD_Psycho_Head_LootChest2', 'LootChest2', 19, 0),
     ('Head_PsychoEaster', 'Head', 'AM I PRETTY NOW', 'CD_Psycho_Head_PsychoEaster', 'PsychoEaster', 29, 0),
     ('Head_PsychoVday', 'Head', 'BONE DADDYYYYY', 'CD_Psycho_Head_PsychoVday', 'PsychoVday', 29, 1),
     ('Skin_PsychoEaster', 'Skin', 'BEEN WORKING ON MY TAN', 'CD_Psycho_Skin_PsychoEaster', 'PsychoEaster', 28, 0),
