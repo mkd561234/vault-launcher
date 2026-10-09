@@ -660,10 +660,20 @@ def github_latest() -> dict | None:
     repo = github_repo()
     if not repo:
         return None
-    found = [x for x in (_github_release(repo), _github_file(repo)) if x]
-    if not found:
-        return None
-    return max(found, key=lambda x: nexus.version_tuple(x['version']))
+    # latest.json (raw.githubusercontent.com) first: it has no request limit. GitHub's API allows
+    # only 60 requests an hour per connection, which friends checking a lot could use up
+    # ("HTTP Error 403: rate limit exceeded"). The API is only the fallback.
+    errors = []
+    try:
+        found = _github_file(repo)
+    except (OSError, ValueError) as ex:
+        found, errors = None, [ex]
+    if found:
+        return found
+    try:
+        return _github_release(repo)
+    except (OSError, ValueError) as ex:
+        raise (errors[0] if errors else ex)
 
 
 def github_fetch(auto: bool, raise_errors: bool = False) -> Path | None:

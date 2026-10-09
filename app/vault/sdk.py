@@ -9,6 +9,7 @@ player already set up is reused (the same release serves both of those games).
 import json
 import shutil
 import tempfile
+import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -73,10 +74,39 @@ def latest_release(game: Game, ua: str) -> dict:
         return hit[1]
     req = urllib.request.Request(API.format(repo=game.sdk), headers={'User-Agent': ua,
                                                                      'Accept': 'application/vnd.github+json'})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        release = json.load(r)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            release = json.load(r)
+    except OSError as api_error:
+        # GitHub's API allows 60 requests an hour per connection; past that it answers 403
+        # "rate limit exceeded". The normal release pages have no such limit.
+        try:
+            release = _release_from_pages(game.sdk, ua)
+        except OSError:
+            raise api_error from None
     _latest_cache[game.sdk] = (time.time(), release)
     return release
+
+
+def _release_from_pages(repo: str, ua: str) -> dict:
+    """The latest release read from github.com's pages instead of the API (same information)."""
+    import re
+    base = f'https://github.com/bl-sdk/{repo}/releases'
+    with urllib.request.urlopen(urllib.request.Request(f'{base}/latest', headers={'User-Agent': ua}),
+                                timeout=30) as r:
+        final = r.geturl()                       # .../releases/tag/<tag>
+    if '/tag/' not in final:
+        raise OSError(f'no release found for {repo}')
+    tag = final.rstrip('/').rsplit('/tag/', 1)[1]
+    with urllib.request.urlopen(urllib.request.Request(f'{base}/expanded_assets/{tag}',
+                                                       headers={'User-Agent': ua}), timeout=30) as r:
+        page = r.read().decode('utf-8', 'replace')
+    links = sorted(set(re.findall(rf'href="(/bl-sdk/{re.escape(repo)}/releases/download/[^"]+)"', page)))
+    if not links:
+        raise OSError(f'no downloads listed for {repo} {tag}')
+    assets = [{'name': urllib.parse.unquote(link.rsplit('/', 1)[1]),
+               'browser_download_url': 'https://github.com' + link} for link in links]
+    return {'tag_name': urllib.parse.unquote(tag), 'assets': assets, 'html_url': final}
 
 
 def _install_release(game: Game, game_dir: Path, release: dict, ua: str, say) -> bool:

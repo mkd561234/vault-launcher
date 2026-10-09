@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.2.4",
+  "date": "2026-10-08",
+  "changes": [
+   "Check for updates no longer fails with \"HTTP Error 403: rate limit exceeded\". GitHub's API only allows 60 requests an hour per internet connection, and lots of update checks used that up. The launcher now reads the latest version from a plain file on GitHub, which has no such limit, and only falls back to the API. Mod-manager updates (the SDKs) also fall back to GitHub's normal release pages when the API limit is reached."
+  ]
+ },
+ {
   "version": "3.2.3",
   "date": "2026-10-08",
   "changes": [
