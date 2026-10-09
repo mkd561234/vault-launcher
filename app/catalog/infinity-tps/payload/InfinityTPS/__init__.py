@@ -10,7 +10,7 @@ from pathlib import Path
 from mods_base import Game, ModType, build_mod, hook
 from unrealsdk.hooks import Type
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 _LOG = Path(__file__).with_name("infinity_log.txt")
 _log_lines = [0]

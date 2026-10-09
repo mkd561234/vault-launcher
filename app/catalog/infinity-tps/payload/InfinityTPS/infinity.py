@@ -203,8 +203,15 @@ def _set(target, key: str, val) -> None:
     setattr(target, key, _resolve(val))
 
 
+# Borderlands 2 keeps a part's game stages and weight both as values and as indexes into the part
+# list's ConsolidatedAttributeInitData; the Pre-Sequel only has the indexes, which are set too.
+BL2_ONLY = {"MinGameStage", "MaxGameStage", "DefaultWeight"}
+
+
 def _apply(target, props: dict) -> None:
     for key, val in props.items():
+        if key in BL2_ONLY and not hasattr(target, key):
+            continue
         try:
             _set(target, key, val)
         except Exception as ex:  # noqa: BLE001
@@ -245,7 +252,6 @@ def _pool_of_one(template, name: str, balance):
     first = items[0]
     first.ItmPoolDefinition = None
     first.InvBalanceDefinition = balance
-    first.ProbabilityDisplayString = "100.00%"
     items[0] = first
     try:
         pool.MinGameStageRequirement = None
@@ -298,26 +304,17 @@ def _add_recipe(balance) -> None:
 # asset libraries: what lets an Infinity be saved, loaded and sent to the other player in co-op
 # ---------------------------------------------------------------------------------------------
 def _list_in_libraries(made: dict) -> None:
-    listed = 0
-    for path, (lib_name, sub, index) in LIBRARY_SLOTS.items():
-        obj = made.get(path) or _find(path)
-        lib = _find("GD_AssetLibraries.Inventory." + lib_name)
-        if obj is None or lib is None:
-            log(f"could not list {path}: {'library' if lib is None else 'object'} missing")
-            continue
-        try:
-            sublib = lib.SublibraryLinks[sub]
-            assets = sublib.Assets
-            while len(assets) <= index:
-                assets.append(None)
-            current = assets[index]
-            if current is None or current._get_address() != obj._get_address():
-                assets[index] = obj
-            listed += 1
-        except Exception as ex:  # noqa: BLE001
-            log(f"could not list {path} in {lib_name}: {type(ex).__name__}: {ex}")
-    _state["listed"] = listed
-    log(f"listed {listed} of {len(LIBRARY_SLOTS)} Infinity parts in the game's item lists (needed to save it)")
+    """The game finds a saved gun's parts by these paths (each library entry is a package name
+    plus a path), so having the objects at exactly those paths is what lets an Infinity save.
+    This only checks and logs that every entry now finds its object."""
+    found = 0
+    for path in LIBRARY_SLOTS:
+        if _find(path) is not None:
+            found += 1
+        else:
+            log(f"missing for saving: {path}")
+    _state["listed"] = found
+    log(f"{found} of {len(LIBRARY_SLOTS)} Infinity parts are where the game's item lists look for them")
 
 
 # ---------------------------------------------------------------------------------------------

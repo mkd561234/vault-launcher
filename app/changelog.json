@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.5.5",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.4: the mod now finishes setting up the Infinity and its Grinder recipe. 1.0.3 started but stopped on a Borderlands 2 setting the Pre-Sequel doesn't have, so the Grinder still gave a normal gun."
+  ]
+ },
+ {
   "version": "3.5.4",
   "date": "2026-10-09",
   "changes": [
