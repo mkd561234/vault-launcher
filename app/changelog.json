@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.5.7",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.5: writes what the Grinder does to infinity_log.txt (the recipe check, the grind and what came out), and checks once per game that the game can make an Infinity. New console command infinity_give puts one in your backpack for testing."
+  ]
+ },
+ {
   "version": "3.5.6",
   "date": "2026-10-09",
   "changes": [

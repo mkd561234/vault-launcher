@@ -10,7 +10,7 @@ from pathlib import Path
 from mods_base import Game, ModType, build_mod, hook
 from unrealsdk.hooks import Type
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 _LOG = Path(__file__).with_name("infinity_log.txt")
 _log_lines = [0]
@@ -35,6 +35,10 @@ except OSError:
 from . import infinity  # noqa: E402
 
 infinity_status = infinity.infinity_status     # console command, found by build_mod
+from . import diag  # noqa: E402
+
+for _i, _h in enumerate(diag.diag_hooks):      # build_mod finds hooks and commands in this module
+    globals()[f"_diag_{_i}"] = _h
 _next = [0.0]
 
 
@@ -51,6 +55,7 @@ def _tick() -> None:
     _next[0] = now + 1.0
     try:
         infinity.upkeep()
+        diag.self_test()
     except Exception as ex:  # noqa: BLE001
         log(f"upkeep failed: {type(ex).__name__}: {ex}")
 
