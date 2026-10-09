@@ -3,7 +3,7 @@ Vault Launcher mod catalog
 Each folder here is one mod. mod.json fields:
   id        unique id (folder name)
   name      shown in the launcher
-  game      bl1e | bl2 | tps | bl3 | wl | bl4
+  game      bl1e | bl2 | tps | bl3 | wl
   version   bump it to push an update to everyone who has the mod installed
   kind      "sdkmod"  -> copies payload/ into the game's sdk_mods folder (installs the SDK first)
             "krieg"   -> Krieg's rebuild-from-Borderlands-2 recipe

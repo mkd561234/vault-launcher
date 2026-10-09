@@ -867,6 +867,10 @@ def run(open_ui: bool = True, port: int = 0, url_file: str | None = None) -> int
     _refresh_status(force=True)
     _refresh_nexus()
     try:
+        main.retire_old_mods()
+    except Exception as ex:  # noqa: BLE001
+        main.say(f'could not tidy up removed mods: {ex}')
+    try:
         _auto_update_mods()
     except Exception as ex:  # noqa: BLE001
         main.say(f'automatic mod update not started: {ex}')

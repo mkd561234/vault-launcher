@@ -209,6 +209,33 @@ def uninstall_mod(mod_id: str, restore: bool, log=None) -> None:
     log(f'{mod.name} was removed.' + (' The mod SDK stays in place for other mods.' if mod.kind == 'sdkmod' else ''))
 
 
+# Mods taken out of the launcher: if one is still installed, its changes are undone once.
+RETIRED = {'bl4-tune': 'bl4tune'}
+
+
+def retire_old_mods(st: dict | None = None) -> None:
+    st = st or load_state()
+    changed = False
+    for mod_id, kind in RETIRED.items():
+        mst = st.get('mods', {}).get(mod_id)
+        if not mst:
+            continue
+        try:
+            import importlib
+            module = importlib.import_module(f'vault.kinds.{kind}')
+            fake = catalog.Mod(id=mod_id, name=mod_id, game='', version='0', kind=kind, summary='', details='',
+                               dir=catalog.CATALOG_DIR / mod_id)
+            ctx = catalog.Context(mod=fake, paths={}, state=mst, say=say)
+            module.uninstall(ctx, False)
+            say(f'{mod_id}: taken out of the launcher, its changes were undone')
+        except Exception as ex:  # noqa: BLE001
+            say(f'{mod_id}: could not undo its changes: {ex}')
+        st['mods'].pop(mod_id, None)
+        changed = True
+    if changed:
+        save_state(st)
+
+
 def missing_mods(st: dict | None = None) -> list:
     """Mods that install themselves: every mod in the launcher whose game is on this PC, unless the
     player removed it (removing it is remembered; installing it again by hand undoes that)."""
@@ -404,6 +431,10 @@ def install_self() -> None:
 
 def cmd_selfinstall(args) -> int:
     install_self()
+    try:
+        retire_old_mods()
+    except Exception as ex:  # noqa: BLE001
+        say(f'could not tidy up removed mods: {ex}')
     pending = pending_mods()
     done, failed = [], 0
     for mod in pending:

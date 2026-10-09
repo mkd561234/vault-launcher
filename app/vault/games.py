@@ -30,8 +30,6 @@ class Game:
 
 
 GAMES = (
-    Game('bl1', 'Borderlands Game of the Year', 'Borderlands GOTY', 8980, 'Borderlands',
-         ('Binaries/Borderlands.exe',), 'willow1-mod-manager', ('bl1-sdk.zip',)),
     Game('bl1e', 'Borderlands Game of the Year Enhanced', 'GOTY Enhanced', 729040, 'BorderlandsGOTYEnhanced',
          ('Binaries/Win64/BorderlandsGOTY.exe',), 'willow1-mod-manager', ('bl1-enhanced-sdk.zip', 'enhanced')),
     Game('bl2', 'Borderlands 2', 'Borderlands 2', 49520, 'Borderlands 2',
@@ -44,9 +42,6 @@ GAMES = (
     Game('wl', "Tiny Tina's Wonderlands", 'Wonderlands', 1286680, "Tiny Tina's Wonderlands",
          ('OakGame/Binaries/Win64/Wonderlands.exe',), 'oak-mod-manager', ('wl', 'wonderlands'),
          ("Tiny Tina's Wonderlands",)),
-    Game('bl4', 'Borderlands 4', 'Borderlands 4', 1285190, 'Borderlands 4',
-         ('OakGame/Binaries/Win64/Borderlands4.exe',), 'oak2-mod-manager', ('bl4',),
-         ('Borderlands 4',)),
 )
 BY_ID = {g.id: g for g in GAMES}
 

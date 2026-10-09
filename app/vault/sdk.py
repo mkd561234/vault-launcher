@@ -1,5 +1,5 @@
 """Installs the Python SDK mod manager a game needs (all from github.com/bl-sdk):
-willow1 (Borderlands GOTY: bl1-sdk.zip, and GOTY Enhanced: bl1-enhanced-sdk.zip), willow2 (BL2, Pre-Sequel), oak (BL3, Wonderlands), oak2 (BL4).
+willow1 (GOTY Enhanced: bl1-enhanced-sdk.zip), willow2 (BL2, Pre-Sequel), oak (BL3, Wonderlands).
 
 Each release is laid out like the game folder: an sdk_mods folder plus the game's Binaries (or
 OakGame\\Binaries) files. If a download is not possible, a willow2 copy from another game the
