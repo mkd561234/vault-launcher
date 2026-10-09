@@ -295,43 +295,29 @@ def _pool_of_one(template, name: str, balance):
 
 
 def _add_recipe(balance) -> None:
-    """Grinder: legendary pistol + any legendary weapon + any purple pistol -> Infinity.
-    Put first in the Grinder's list, ahead of the game's own "two legendaries and a purple
-    pistol make a legendary pistol" recipe, which the same three guns also fit."""
+    """Makes the Infinity's item pool. The Grinder itself is handled in grinder.py: a recipe added
+    to the Grinder's list matched but the game refused to make anything from it, so instead the
+    game's own "two legendaries and a purple" recipe is used and its output is switched to the
+    Infinity while the three guns fit (legendary pistol + any legendary + any purple pistol)."""
     holder = _find(RECIPES)
     out_template = _find(POOL_TEMPLATE)
-    leg_pistols = _find(LEGENDARY_PISTOLS)
-    leg_any = _find(LEGENDARY_WEAPONS)
-    purple_pistols = _find(PURPLE_PISTOLS)
-    if None in (holder, out_template, leg_pistols, leg_any, purple_pistols):
+    if None in (holder, out_template):
         if _state.get("recipe_note") != "missing":
             _state["recipe_note"] = "missing"
             log("the Grinder's recipes aren't loaded yet (they load with Concordia)")
         _state["recipe"] = False
         return
     output = _pool_of_one(out_template, POOL_NAME, balance)
+    # take out a recipe an older version of this mod added (it only made the Grinder fail)
     recipes = holder.GrinderRecipes
-    for r in recipes:
-        if r.OutputItemPoolDefinition is not None and r.OutputItemPoolDefinition._get_address() == output._get_address():
-            _state["recipe"] = True
-            return
-    _state["recipe_note"] = "adding"
-    model = next((r for r in recipes if len(r.InputItemPoolDefinitions) == 3), None)
-    if model is None:
-        log("no Grinder recipe to copy")
-        return
-    recipes.insert(0, model)
-    new = recipes[0]
-    new.InputItemPoolDefinitions = [leg_pistols, leg_any, purple_pistols]
-    new.InputInvBalanceDefinitions = []
-    new.OutputItemPoolDefinition = output
-    new.OutputInvBalanceDefinition = None
-    locked = new.OutputLockedItemPoolDefinition
-    locked.LockedItemPoolDefinition = output
-    new.OutputLockedItemPoolDefinition = locked
-    recipes[0] = new
+    for i in range(len(recipes) - 1, -1, -1):
+        out = recipes[i].OutputItemPoolDefinition
+        if out is not None and out._get_address() == output._get_address():
+            recipes.pop(i)
+            log("took out the old Infinity recipe")
+    if not _state["recipe"]:
+        log("Grinder ready: legendary pistol + legendary weapon + any purple pistol -> Infinity")
     _state["recipe"] = True
-    log("Grinder recipe added: legendary pistol + legendary weapon + any purple pistol -> Infinity")
 
 
 # ---------------------------------------------------------------------------------------------

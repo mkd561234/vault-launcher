@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.6.0",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.8: new way of making the Infinity in the Grinder. The game refused to make anything from the mod's own recipe (and grinding a few times in a row could crash the game), so the mod no longer adds one. A legendary pistol, any legendary weapon and any purple pistol already fit the game's own recipe; while the Grinder works on those three, its output is switched to the Infinity. Other guns grind as before.",
+   "Infinity 1.0.8: the Infinity now gets all its own parts (Infinity barrel, skin, title and Dva accessory) and saves like any other gun."
+  ]
+ },
+ {
   "version": "3.5.9",
   "date": "2026-10-09",
   "changes": [

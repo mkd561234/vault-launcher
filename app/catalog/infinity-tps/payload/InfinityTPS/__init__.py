@@ -10,7 +10,7 @@ from pathlib import Path
 from mods_base import Game, ModType, build_mod, hook
 from unrealsdk.hooks import Type
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 _LOG = Path(__file__).with_name("infinity_log.txt")
 _log_lines = [0]
@@ -39,6 +39,10 @@ from . import diag  # noqa: E402
 
 for _i, _h in enumerate(diag.diag_hooks):      # build_mod finds hooks and commands in this module
     globals()[f"_diag_{_i}"] = _h
+from . import grinder  # noqa: E402
+
+for _i, _h in enumerate(grinder.grinder_hooks):
+    globals()[f"_grinder_{_i}"] = _h
 _next = [0.0]
 
 

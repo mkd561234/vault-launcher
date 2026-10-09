@@ -161,6 +161,8 @@ def _serial_test(inv) -> None:
     try:
         cdo = unrealsdk.find_class("WillowWeapon").ClassDefaultObject
         copy = cdo.CreateWeaponFromSerialNumber(serial, get_pc())
+        if isinstance(copy, tuple):
+            copy = next((x for x in copy if hasattr(x, "Class")), None)
         log("test: rebuilt from the serial number: " + (_describe(copy) if copy is not None else "NOTHING (it can't be saved)"))
         if copy is not None:
             copy.Destroy()
