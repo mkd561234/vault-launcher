@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.6.3",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.5.5: checks whether class mods can actually drop for you. About 10 seconds after you load into a level as Krieg, it rolls the pools enemies and chests really use, at your level, and writes to the Krieg log how many class mods came out (and how many were Krieg's)."
+  ]
+ },
+ {
   "version": "3.6.2",
   "date": "2026-10-09",
   "changes": [

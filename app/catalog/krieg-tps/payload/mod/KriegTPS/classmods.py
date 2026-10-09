@@ -263,13 +263,13 @@ def _level(pc) -> int:
         return 1
 
 
-def _roll(pool, pawn, level: int):
+def _roll(pool, pawn, level: int, ignore_level: bool = True):
     cdo = unrealsdk.find_class("ItemPool").ClassDefaultObject
     result = cdo.SpawnBalancedInventoryFromPool(Definition=pool, GameStage=level, AwesomeLevel=0,
                                                 ContextSource=pawn, SpawnedInventory=[],
                                                 GameStageVarianceFormula=None, OuterPoolChance=1.0,
                                                 bInventoryMayDropOnDeath=False,
-                                                bIgnoreGameStageRequirement=True)
+                                                bIgnoreGameStageRequirement=ignore_level)
     spawned = result[1] if isinstance(result, tuple) and len(result) > 1 else []
     names = []
     for inv in spawned:
@@ -375,6 +375,7 @@ def drop_check() -> None:
             log(f"class mod check: Krieg's own common pool gave {got}")
         except Exception as ex:  # noqa: BLE001
             log(f"class mod check: rolling Krieg's own pool failed: {type(ex).__name__}: {ex}")
+    _real_drop_check(pc, level)
     if krieg_hits == 0:
         added = 0
         for path, suffix in GAME_POOLS:
@@ -388,3 +389,32 @@ def drop_check() -> None:
         _check["injected"] = added > 0
         log(f"class mod check: no Krieg class mods came out; added his pools to {added} of the game's pools "
             f"(the rest already had them)")
+
+
+# Real drops: the pools enemies and chests actually use, with the level requirement on, at your
+# level. Tells whether class mods (Krieg's or anyone's) can come out of them for you.
+REAL_POOLS = (
+    ("GD_Itempools.ClassModPools.Pool_ClassMod_01_Common", "class mod pool", 20),
+    ("GD_Itempools.ClassModPools.Pool_ClassMod_All", "any-rarity class mod pool", 20),
+    ("GD_Itempools.Treasure_ChestPools.Pool_WeaponChest_ClassMods", "chest class mod slot", 20),
+    ("GD_Itempools.Treasure_ChestPools.Pool_WeaponChest_Items", "chest item slot", 40),
+    ("GD_Itempools.EnemyDropPools.Pool_GunsAndGear_01_Common", "enemy gear drop", 100),
+)
+
+
+def _real_drop_check(pc, level: int) -> None:
+    for path, label, rolls in REAL_POOLS:
+        pool = _find(path)
+        if pool is None:
+            log(f"real drops: {label}: pool not loaded")
+            continue
+        try:
+            got = []
+            for _ in range(rolls):
+                got += _roll(pool, pc.Pawn, level, ignore_level=False)
+            mods = [n for n in got if "ClassMod" in n]
+            mine = [n for n in mods if "Psycho" in n or "Lilac" in n]
+            log(f"real drops: {label} at level {level}: {rolls} rolls gave {len(got)} items, "
+                f"{len(mods)} class mods ({len(mine)} Krieg's); e.g. {sorted(set(mods))[:4]}")
+        except Exception as ex:  # noqa: BLE001
+            log(f"real drops: {label}: {type(ex).__name__}: {ex}")
