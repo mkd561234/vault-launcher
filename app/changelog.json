@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.4",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.9: Krieg's DLC heads/skins only ever go on Krieg. If you switched to another character (another class, or another Krieg), the mod kept your old Krieg look and tried to put it on the new character, in the lobby and on your own character. Now it forgets the old look when you switch, never touches a non-Krieg character, and only dresses Krieg's lobby model."
+  ]
+ },
+ {
   "version": "3.3.3",
   "date": "2026-10-08",
   "changes": [

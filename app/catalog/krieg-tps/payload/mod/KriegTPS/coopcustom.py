@@ -111,11 +111,90 @@ def _decode(msg: str):
     return parts[0], slots
 
 
+def _my_character():
+    """(class, level) of the character I'm playing, or None while not known."""
+    pc = get_pc()
+    if pc is None:
+        return None
+    cls = None
+    for holder in (pc, getattr(pc, "PlayerReplicationInfo", None)):
+        for attr in ("PlayerClass", "CharacterClass"):
+            try:
+                val = getattr(holder, attr) if holder is not None else None
+            except Exception:  # noqa: BLE001
+                val = None
+            if val is not None:
+                cls = val
+                break
+        if cls is not None:
+            break
+    if cls is None:
+        return None
+    try:
+        level = int(pc.PlayerReplicationInfo.ExpLevel)
+    except Exception:  # noqa: BLE001
+        level = 0
+    return (cls._path_name(), level)
+
+
+def _i_am_krieg() -> bool:
+    ch = _my_character()
+    return ch is not None and "Lilac" in ch[0]
+
+
+def _check_character() -> None:
+    """Forget my remembered head/skin when I switch to another character (another class, or a
+    Krieg of a clearly different level), so one character's look never goes on another."""
+    ch = _my_character()
+    if ch is None:
+        return
+    had = _state.get("own_char")
+    if had is not None and (had[0] != ch[0] or abs(had[1] - ch[1]) > 1):
+        if _state.get("own") is not None:
+            log(f"switched character ({had[0].rsplit('.', 1)[-1]} level {had[1]} -> "
+                f"{ch[0].rsplit('.', 1)[-1]} level {ch[1]}); forgetting the old head/skin")
+        _state["own"] = None
+        _state["mine"] = None
+    _state["own_char"] = ch
+
+
+def _is_krieg_def(cd) -> bool:
+    try:
+        path = cd._path_name()
+    except Exception:  # noqa: BLE001
+        return False
+    return "Lilac" in path or "Psycho" in path
+
+
+def _list_is_krieg(pri) -> bool:
+    """False when the head/skin list holds another class's head/skin (another character)."""
+    try:
+        items = [pri.RemoteCustomizations[i] for i in SLOTS]
+    except Exception:  # noqa: BLE001
+        return False
+    return all(cd is None or _is_krieg_def(cd) for cd in items)
+
+
+def _is_krieg_standin(standin) -> bool:
+    body = getattr(standin, "BodyClass", None)
+    try:
+        return body is not None and "Lilac" in body._path_name()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _is_krieg_pawn(pawn) -> bool:
+    try:
+        return "Lilac" in pawn.ObjectArchetype._path_name()
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _my_extras() -> dict:
     """My own DLC heads/skins (only those the other games can't receive the normal way)."""
     pc = get_pc()
     pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
-    if pri is None:
+    if pri is None or not _i_am_krieg():
         return {}
     extras = _extra_names()
     out = {}
@@ -168,7 +247,7 @@ def _apply(name: str, slots: dict, why: str) -> None:
                     changed_list = True
             except Exception:  # noqa: BLE001
                 pass
-        if pawn is None or mgr is None or _wears(pawn, cd, kind):
+        if pawn is None or mgr is None or not _is_krieg_pawn(pawn) or _wears(pawn, cd, kind):
             continue
         try:
             before = None
@@ -292,6 +371,8 @@ def _track_own(pc, players: int) -> None:
         return
     if picked:
         _state["capture_at"] = 0.0
+    if not _i_am_krieg() or not _list_is_krieg(getattr(pc, "PlayerReplicationInfo", None)):
+        return
     own = _my_extras()
     pri = getattr(pc, "PlayerReplicationInfo", None)
     try:
@@ -312,6 +393,8 @@ def _set_own(own: dict) -> None:
 
 def _coop_mine() -> dict:
     """My DLC heads/skins to tell the others: what I picked, not what the game swapped in."""
+    if not _i_am_krieg():
+        return {}
     own = _state.get("own")
     return dict(own) if own is not None else _my_extras()
 
@@ -322,10 +405,10 @@ def _restore_own(pc, players: int) -> None:
     Krieg isn't wearing it and he isn't in the head/skin menu."""
     own = _state.get("own")
     now = time.monotonic()
-    if not own or _menu_recent(now):
+    if not own or _menu_recent(now) or not _i_am_krieg():
         return
     pri = getattr(pc, "PlayerReplicationInfo", None)
-    if pri is None:
+    if pri is None or not _list_is_krieg(pri):
         return
     pawn = getattr(pc, "Pawn", None)
     put = []
@@ -369,6 +452,7 @@ def upkeep() -> None:
     pc = get_pc()
     if pc is None:
         return
+    _check_character()
     players = len(_pris())
     if players >= 2 and not _state.get("ever_coop"):
         _track_own(pc, 1)      # last chance to see my own look before the co-op game touches it
@@ -447,7 +531,9 @@ def _standin_wants(standin) -> dict:
     if pri is None or pc is None:
         return {}
     if _same(pri, getattr(pc, "PlayerReplicationInfo", None)):
-        return dict(_state.get("own") or {})
+        return dict(_state.get("own") or {}) if _i_am_krieg() and _list_is_krieg(pri) else {}
+    if not _list_is_krieg(pri):
+        return {}
     return _table.get(str(pri.PlayerName), {})
 
 
@@ -475,7 +561,7 @@ _dressing = [False]
 
 def _dress(standin, force: bool) -> None:
     """Dress one lobby Krieg in its player's DLC head/skin (see _refresh_lobby)."""
-    if _dressing[0] or "Default__" in standin._path_name():
+    if _dressing[0] or "Default__" in standin._path_name() or not _is_krieg_standin(standin):
         return
     wants = _standin_wants(standin)
     if not wants:
