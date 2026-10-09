@@ -204,7 +204,7 @@ def uninstall_mod(mod_id: str, restore: bool, log=None) -> None:
         save_state(st)
     ctx.state.pop('version', None)
     save_state(st)
-    log(f'{mod.name} was removed. The mod SDK stays in place for other mods.')
+    log(f'{mod.name} was removed.' + (' The mod SDK stays in place for other mods.' if mod.kind == 'sdkmod' else ''))
 
 
 def outdated_mods(st: dict | None = None) -> list:

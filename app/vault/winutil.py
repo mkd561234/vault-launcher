@@ -86,6 +86,28 @@ def downloads_dir() -> Path:
     return Path.home() / 'Downloads'
 
 
+def documents_dir() -> Path:
+    """The player's Documents folder (wherever Windows keeps it, e.g. inside OneDrive)."""
+    if IS_WINDOWS:
+        try:
+            from ctypes import wintypes
+
+            class GUID(ctypes.Structure):
+                _fields_ = [('Data1', wintypes.DWORD), ('Data2', wintypes.WORD), ('Data3', wintypes.WORD),
+                            ('Data4', ctypes.c_ubyte * 8)]
+
+            # FOLDERID_Documents {FDD39AD0-238F-46AF-ADB4-6C85480369C7}
+            g = GUID(0xFDD39AD0, 0x238F, 0x46AF, (ctypes.c_ubyte * 8)(0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7))
+            p = ctypes.c_wchar_p()
+            if ctypes.windll.shell32.SHGetKnownFolderPath(ctypes.byref(g), 0, None, ctypes.byref(p)) == 0:
+                path = Path(p.value)
+                ctypes.windll.ole32.CoTaskMemFree(p)
+                return path
+        except Exception:  # noqa: BLE001
+            pass
+    return Path.home() / 'Documents'
+
+
 # ---- Windows DPAPI: the Nexus API key is stored encrypted for the current Windows user ----------
 class _Blob(ctypes.Structure):
     _fields_ = [('cbData', ctypes.c_uint32), ('pbData', ctypes.POINTER(ctypes.c_char))]

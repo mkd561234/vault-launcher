@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.7.0",
+  "date": "2026-10-09",
+  "changes": [
+   "New mod for Borderlands 4: Borderlands 4 Tuning. It checks your graphics card, video memory, processor, memory and screen, and writes settings to Borderlands 4's Engine.ini that cut stutter and wasted work. Shaders compile ahead of time, texture streaming is sized to your card, and motion blur, film grain, chromatic aberration and lens flares are off. Weaker PCs also get cheaper fog, shadows and foliage.",
+   "Borderlands 4 Tuning also lists the in-game options to pick for your PC (upscaler and its quality, frame cap, frame generation, fog, shadows, textures). It shows them in the launcher and saves them as \"Vault Launcher - BL4 settings.txt\" next to the game's settings. Removing the mod takes only its own lines out of Engine.ini."
+  ]
+ },
+ {
   "version": "3.6.4",
   "date": "2026-10-09",
   "changes": [
