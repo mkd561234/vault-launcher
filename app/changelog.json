@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.5.4",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.3: the Grinder gave a normal pistol instead of an Infinity because the mod never started its setup. It now starts reliably and puts its recipe back whenever Concordia reloads the Grinder.",
+   "Infinity 1.0.3: an Infinity now saves and loads like any other gun (it's listed under the names the Pre-Sequel already keeps for it)."
+  ]
+ },
+ {
   "version": "3.5.3",
   "date": "2026-10-09",
   "changes": [

@@ -10,7 +10,7 @@ from pathlib import Path
 from mods_base import Game, ModType, build_mod, hook
 from unrealsdk.hooks import Type
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 _LOG = Path(__file__).with_name("infinity_log.txt")
 _log_lines = [0]
@@ -38,8 +38,13 @@ infinity_status = infinity.infinity_status     # console command, found by build
 _next = [0.0]
 
 
-@hook("Engine.GameViewportClient:Tick", Type.PRE, hook_identifier="InfinityTPSTick")
-def on_tick(*_) -> None:
+_first = [True]
+
+
+def _tick() -> None:
+    if _first[0]:
+        _first[0] = False
+        log("running")
     now = time.monotonic()
     if now < _next[0]:
         return
@@ -48,6 +53,23 @@ def on_tick(*_) -> None:
         infinity.upkeep()
     except Exception as ex:  # noqa: BLE001
         log(f"upkeep failed: {type(ex).__name__}: {ex}")
+
+
+# The Pre-Sequel doesn't always run GameViewportClient.Tick through the SDK, so the player's tick
+# and the HUD's draw call run it too (it does its work at most once a second).
+@hook("Engine.GameViewportClient:Tick", Type.PRE, hook_identifier="InfinityTPSTick")
+def on_tick(*_) -> None:
+    _tick()
+
+
+@hook("Engine.PlayerController:PlayerTick", Type.PRE, hook_identifier="InfinityTPSPlayerTick")
+def on_player_tick(*_) -> None:
+    _tick()
+
+
+@hook("Engine.HUD:PostRender", Type.PRE, hook_identifier="InfinityTPSHUD")
+def on_hud(*_) -> None:
+    _tick()
 
 
 _mod = build_mod(

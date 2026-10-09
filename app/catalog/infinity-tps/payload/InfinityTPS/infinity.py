@@ -5,7 +5,9 @@ sign), spins up two barrels, and has its own skin ("Infinity" pattern) and red t
 than you think! (no it isn't)"). The Pre-Sequel still has everything it is built from - the Vladof
 pistol body, barrel model, parts, elements and the Infinity pattern texture - but not the gun
 itself. This rebuilds it from Borderlands 2's own data (infinity_data.py, read from Borderlands 2's
-Startup.upk) under the same names it has in Borderlands 2:
+Startup.upk). The gun and its own parts get the names the Pre-Sequel's item lists already keep
+for it (GD_Cork_Weap_Pistol..., left over from when Gearbox cut it), so an Infinity saves and
+loads like any other gun:
 * barrel (no ammo use, one-round display, two spinning barrels, accuracy, legendary rarity),
 * the figure-8 firing pattern, the title "Infinity" with its red text,
 * the Dva accessory (25% chance of an extra shot) and its legendary skin,
@@ -17,9 +19,51 @@ Grinder: a legendary pistol, any legendary weapon and any purple pistol make an 
 import unrealsdk
 from mods_base import ObjectFlags, command
 
-from .infinity_data import MATERIAL, OBJECTS
+from .infinity_data import MATERIAL, OBJECTS as _BL2_OBJECTS
 
-BALANCE = "GD_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity"
+# Borderlands 2 name -> the name the Pre-Sequel's asset libraries list it under. Saves store a gun
+# as positions in those lists, so the objects have to live exactly there.
+RENAME = {
+    "GD_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity":
+        "GD_Cork_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity",
+    "GD_Weap_Pistol.Barrel.Pistol_Barrel_Vladof_Infinity":
+        "GD_Cork_Weap_Pistol.Barrel.Pistol_Barrel_Vladof_Infinity",
+    "GD_Weap_Pistol.Accessory.Pistol_Accessory_Laser_Double_DvaInfinity":
+        "GD_Cork_Weap_Pistol.Accessory.Pistol_Accessory_Laser_Double_DvaInfinity",
+    "GD_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity":
+        "GD_Cork_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity",
+}
+
+
+def _renamed(path: str) -> str:
+    for old, new in RENAME.items():
+        if path == old or path.startswith(old + "."):
+            return new + path[len(old):]
+    return path
+
+
+def _rename_refs(v):
+    if isinstance(v, str) and v.startswith("@"):
+        return "@" + _renamed(v[1:])
+    if isinstance(v, dict):
+        return {k: _rename_refs(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_rename_refs(x) for x in v]
+    return v
+
+
+OBJECTS = {_renamed(k): _rename_refs(v) for k, v in _BL2_OBJECTS.items()}
+
+# (asset library, sublibrary, index) each new object is listed at in the Pre-Sequel
+LIBRARY_SLOTS = {
+    "GD_Cork_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity": ("AL_Balance", 122, 19),
+    "GD_Cork_Weap_Pistol.Barrel.Pistol_Barrel_Vladof_Infinity": ("AL_WeaponParts", 11, 43),
+    "GD_Cork_Weap_Pistol.Accessory.Pistol_Accessory_Laser_Double_DvaInfinity": ("AL_WeaponParts", 11, 50),
+    "GD_Cork_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity": ("AL_WeaponParts", 11, 52),
+    "GD_Weap_Pistol.ManufacturerMaterials.Mat_Vladof_5_Legendary": ("AL_WeaponParts", 19, 296),
+}
+
+BALANCE = "GD_Cork_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity"
 MIC_PATH = "Common_GunMaterials.Materials.Pistol.Mati_VladofLegendaryPistol_Infinity"
 MIC_PARENT = "Common_GunMaterials.MasterMaterials.Vladof.MasterMati_VladofLegendary"
 LEGENDARY_PISTOLS = "GD_Itempools.WeaponPools.Pool_Weapons_Pistols_06_Legendary"
@@ -34,16 +78,16 @@ SHELLS = (
     # (path, class, template or None)
     ("GD_Weap_Pistol.FiringModes.Bullet_Pistol_Infinity", "FiringModeDefinition",
      "GD_Weap_Pistol.FiringModes.Bullet_Pistol_Default"),
-    ("GD_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity", "WeaponNamePartDefinition",
+    ("GD_Cork_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity", "WeaponNamePartDefinition",
      "GD_Weap_Pistol.Name.Title_Vladof.Title_Barrel_Vladof_Rapid"),
-    ("GD_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity.AttributePresentationDefinition_8",
+    ("GD_Cork_Weap_Pistol.Name.Title_Vladof.Title_Legendary_Infinity.AttributePresentationDefinition_8",
      "AttributePresentationDefinition", None),
     (MIC_PATH, "MaterialInstanceConstant", None),
     ("GD_Weap_Pistol.ManufacturerMaterials.Mat_Vladof_5_Legendary", "WeaponPartDefinition",
      "GD_Weap_Pistol.ManufacturerMaterials.Mat_Vladof_4"),
-    ("GD_Weap_Pistol.Accessory.Pistol_Accessory_Laser_Double_DvaInfinity", "WeaponPartDefinition",
+    ("GD_Cork_Weap_Pistol.Accessory.Pistol_Accessory_Laser_Double_DvaInfinity", "WeaponPartDefinition",
      "GD_Weap_Pistol.Accessory.Pistol_Accessory_Laser_Double"),
-    ("GD_Weap_Pistol.Barrel.Pistol_Barrel_Vladof_Infinity", "WeaponPartDefinition",
+    ("GD_Cork_Weap_Pistol.Barrel.Pistol_Barrel_Vladof_Infinity", "WeaponPartDefinition",
      "GD_Weap_Pistol.Barrel.Pistol_Barrel_Vladof"),
     (BALANCE, "WeaponBalanceDefinition", None),
     (BALANCE + ".PartList", "WeaponPartListCollectionDefinition", None),
@@ -51,7 +95,7 @@ SHELLS = (
 ENUM_FALLBACK = {"MT_Scale": 0, "MT_PreAdd": 1, "MT_PostAdd": 2,
                  "EPRM_Additive": 0, "EPRM_Selective": 1, "EPRM_Complete": 2}
 
-_state = {"done": False, "tries": 0, "objects": [], "recipe": False, "errors": 0}
+_state = {"done": False, "tries": 0, "objects": [], "recipe": False, "errors": 0, "listed": 0}
 
 
 def log(msg: str) -> None:
@@ -71,14 +115,26 @@ def _keep(obj) -> None:
     _state["objects"].append(obj)
 
 
+def _package(path: str):
+    """The object at path; missing packages inside an already loaded one are made empty."""
+    obj = _find(path)
+    if obj is not None:
+        return obj
+    if "." not in path:
+        raise LookupError(f"{path} isn't loaded")
+    outer_path, name = path.rsplit(".", 1)
+    outer = _package(outer_path)
+    pkg = unrealsdk.construct_object("Package", outer, name)
+    _keep(pkg)
+    return pkg
+
+
 def _make(path: str, cls: str, template_path):
     obj = _find(path)
     if obj is not None:
         return obj
     outer_path, name = path.rsplit(".", 1)
-    outer = _find(outer_path)
-    if outer is None:
-        raise LookupError(f"{outer_path} isn't loaded")
+    outer = _package(outer_path)
     template = _find(template_path) if template_path else None
     if template_path and template is None:
         raise LookupError(f"{template_path} isn't loaded")
@@ -208,7 +264,10 @@ def _add_recipe(balance) -> None:
     leg_any = _find(LEGENDARY_WEAPONS)
     purple_pistols = _find(PURPLE_PISTOLS)
     if None in (holder, out_template, leg_pistols, leg_any, purple_pistols):
-        log("the Grinder's recipes aren't loaded yet")
+        if _state.get("recipe_note") != "missing":
+            _state["recipe_note"] = "missing"
+            log("the Grinder's recipes aren't loaded yet (they load with Concordia)")
+        _state["recipe"] = False
         return
     output = _pool_of_one(out_template, POOL_NAME, balance)
     recipes = holder.GrinderRecipes
@@ -216,6 +275,7 @@ def _add_recipe(balance) -> None:
         if r.OutputItemPoolDefinition is not None and r.OutputItemPoolDefinition._get_address() == output._get_address():
             _state["recipe"] = True
             return
+    _state["recipe_note"] = "adding"
     model = next((r for r in recipes if len(r.InputItemPoolDefinitions) == 3), None)
     if model is None:
         log("no Grinder recipe to copy")
@@ -235,8 +295,36 @@ def _add_recipe(balance) -> None:
 
 
 # ---------------------------------------------------------------------------------------------
+# asset libraries: what lets an Infinity be saved, loaded and sent to the other player in co-op
+# ---------------------------------------------------------------------------------------------
+def _list_in_libraries(made: dict) -> None:
+    listed = 0
+    for path, (lib_name, sub, index) in LIBRARY_SLOTS.items():
+        obj = made.get(path) or _find(path)
+        lib = _find("GD_AssetLibraries.Inventory." + lib_name)
+        if obj is None or lib is None:
+            log(f"could not list {path}: {'library' if lib is None else 'object'} missing")
+            continue
+        try:
+            sublib = lib.SublibraryLinks[sub]
+            assets = sublib.Assets
+            while len(assets) <= index:
+                assets.append(None)
+            current = assets[index]
+            if current is None or current._get_address() != obj._get_address():
+                assets[index] = obj
+            listed += 1
+        except Exception as ex:  # noqa: BLE001
+            log(f"could not list {path} in {lib_name}: {type(ex).__name__}: {ex}")
+    _state["listed"] = listed
+    log(f"listed {listed} of {len(LIBRARY_SLOTS)} Infinity parts in the game's item lists (needed to save it)")
+
+
+# ---------------------------------------------------------------------------------------------
 def build() -> None:
-    if _state["done"] or _state["tries"] >= 5:
+    if _state["done"]:
+        # the Grinder's recipe list is reloaded with the level, so check it is still there
+        _add_recipe(_find(BALANCE))
         return
     _state["tries"] += 1
     try:
@@ -248,12 +336,14 @@ def build() -> None:
             _apply(made[path], props)
         _material(made[MIC_PATH])
         bal = made[BALANCE]
+        _list_in_libraries(made)
         _add_recipe(bal)
         _state["done"] = True
         log(f"ready ({len(made)} parts made from Borderlands 2's data"
             + (f", {_state['errors']} setting(s) skipped" if _state["errors"] else "") + ")")
     except Exception as ex:  # noqa: BLE001
-        log(f"not ready yet (try {_state['tries']}): {type(ex).__name__}: {ex}")
+        if _state["tries"] <= 5 or _state["tries"] % 60 == 0:
+            log(f"not ready yet (try {_state['tries']}): {type(ex).__name__}: {ex}")
 
 
 def upkeep() -> None:
@@ -264,7 +354,8 @@ def upkeep() -> None:
 def infinity_status(_args) -> None:
     bal = _find(BALANCE)
     log(f"balance {'present' if bal is not None else 'MISSING'}, Grinder recipe "
-        f"{'added' if _state['recipe'] else 'not added'}, {_state['errors']} setting(s) skipped")
+        f"{'added' if _state['recipe'] else 'not added'}, {_state['listed']} part(s) listed for saving, "
+        f"{_state['errors']} setting(s) skipped")
     if not _state["done"]:
         _state["tries"] = 0
         build()
