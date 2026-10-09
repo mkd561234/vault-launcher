@@ -213,13 +213,62 @@ def _send_to_clients(force: bool = False) -> None:
                 f"{getattr(getattr(other, 'PlayerReplicationInfo', None), 'PlayerName', '?')}: {_table}")
 
 
+def note_disconnect() -> None:
+    """Called when a co-op game ends under us (the host left)."""
+    _state["restore_until"] = time.monotonic() + 120.0
+
+
+def note_own_change(*_) -> None:
+    """The player picked a head/skin himself: never 'restore' over that."""
+    _state["last_mine"] = None
+
+
+def _restore_own(pc) -> None:
+    """When the host leaves first, the game falls back to the default head/skin for the joining
+    player's own DLC head/skin (it only had "nothing" from the host for them) and keeps that.
+    Put the player's own choice back."""
+    last = _state.get("last_mine")
+    if not last or time.monotonic() > _state.get("restore_until", 0.0):
+        return
+    pri = getattr(pc, "PlayerReplicationInfo", None)
+    if pri is None:
+        return
+    put = []
+    for idx, name in last.items():
+        cd = _def(name)
+        if cd is None:
+            continue
+        try:
+            current = pri.RemoteCustomizations[idx]
+        except Exception:  # noqa: BLE001
+            current = None
+        if current is not None and current.Name == name:
+            continue
+        try:
+            pri.InitiateCustomizationRequest(NewCustomization=cd)
+            put.append(name)
+        except Exception as ex:  # noqa: BLE001
+            log(f"could not put my {name} back: {type(ex).__name__}: {ex}")
+    if put:
+        log(f"the co-op game ended and reset my head/skin; put back {', '.join(put)}")
+
+
 def upkeep() -> None:
     now = time.monotonic()
     if now < _state["next"]:
         return
     _state["next"] = now + 3.0
     pc = get_pc()
-    if pc is None or len(_pris()) < 2:
+    if pc is None:
+        return
+    own = _my_extras()
+    if own:
+        _state["last_mine"] = dict(own)
+    else:
+        _restore_own(pc)
+    if _is_menu() and len(_pris()) >= 2:
+        _apply_lobby()
+    if len(_pris()) < 2:
         return
     me = str(getattr(pc.PlayerReplicationInfo, "PlayerName", "")) if pc.PlayerReplicationInfo else ""
     mine = _my_extras()
@@ -243,6 +292,95 @@ def upkeep() -> None:
     # keep the others' DLC heads/skins on (a respawn puts the default back)
     for name, slots in list(_table.items()):
         _apply(name, slots, "kept on")
+
+
+def _is_menu() -> bool:
+    try:
+        return "menumap" in str(get_pc().WorldInfo.GetMapName(True)).lower()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+_lobby_logged = set()
+
+
+def _apply_lobby() -> None:
+    """The main-menu lobby draws every player's Krieg as a stand-in, not as his in-game pawn. Put
+    the other players' DLC heads/skins on those stand-ins too."""
+    if not _table:
+        return
+    pc = get_pc()
+    me = str(getattr(getattr(pc, "PlayerReplicationInfo", None), "PlayerName", ""))
+    mine = {}
+    try:
+        mine = {i: pc.PlayerReplicationInfo.RemoteCustomizations[i] for i in SLOTS}
+    except Exception:  # noqa: BLE001
+        pass
+    wanted = [(n, sl) for n, sl in _table.items() if n != me]
+    if not wanted:
+        return
+    mgr = _manager()
+    if mgr is None:
+        return
+    my_pawn = getattr(pc, "Pawn", None)
+    for body in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+        try:
+            sm = body.SkeletalMesh
+            if sm is None or str(sm.Name) != "Skel_PsychoBody" or "Default__" in body._path_name():
+                continue
+            owner = body.Owner
+            if owner is None or (my_pawn is not None and owner._get_address() == my_pawn._get_address()):
+                continue
+            head = getattr(owner, "HeadCustomizationData", None)
+            skin = getattr(owner, "SkinCustomizationData", None)
+            key = owner._get_address()
+            if key not in _lobby_logged and len(_lobby_logged) < 6:
+                _lobby_logged.add(key)
+                log(f"lobby Krieg {owner.Class.Name} {_short(owner)} wears head {_short(head)} skin {_short(skin)}")
+            # skip my own lobby Krieg (it wears my head/skin)
+            if mine and _short(head) == str(getattr(mine.get(0), "CustomizationDataName", "?")) and \
+                    _short(skin) == str(getattr(mine.get(4), "CustomizationDataName", "?")):
+                continue
+        except Exception:  # noqa: BLE001
+            continue
+        # with one other player the remaining lobby Krieg is his
+        if len(wanted) != 1:
+            continue
+        name, slots = wanted[0]
+        for idx, def_name in slots.items():
+            cd = _def(def_name)
+            if cd is None:
+                continue
+            kind = SLOTS.get(idx, "Head")
+            if _wears(owner, cd, kind) or ("lobbydone", key, def_name) in _lobby_logged:
+                continue
+            _lobby_logged.add(("lobbydone", key, def_name))
+            try:
+                mgr.InitiateCustomizationRequest(Target=owner, NewCustomization=cd)
+                log(f"lobby: put {def_name} on {name}'s Krieg")
+            except Exception as ex:  # noqa: BLE001
+                if ("lobbyerr", key) not in _lobby_logged:
+                    _lobby_logged.add(("lobbyerr", key))
+                    log(f"lobby: could not put {def_name} on {name}'s Krieg: {type(ex).__name__}: {ex}")
+
+
+def _short(obj) -> str:
+    try:
+        return str(obj.Name) if obj is not None else "None"
+    except Exception:  # noqa: BLE001
+        return "?"
+
+
+@hook("WillowGame.CharacterSelectionReduxGFxMovie:CommitHeadCustomization", Type.PRE,
+      hook_identifier="KriegTPSOwnHeadPick")
+def on_own_head(*_):
+    note_own_change()
+
+
+@hook("WillowGame.CharacterSelectionReduxGFxMovie:CommitSkinCustomization", Type.PRE,
+      hook_identifier="KriegTPSOwnSkinPick")
+def on_own_skin(*_):
+    note_own_change()
 
 
 @hook("Engine.PlayerController:ServerMutate", Type.PRE, hook_identifier="KriegTPSCoopCustomIn")
@@ -301,4 +439,4 @@ def on_client_message_willow(obj, args, *_):
     return _client_message(obj, args)
 
 
-custom_hooks = [on_server_mutate, on_client_message, on_client_message_willow]
+custom_hooks = [on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]

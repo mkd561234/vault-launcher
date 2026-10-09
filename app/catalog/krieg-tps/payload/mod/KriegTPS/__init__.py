@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.2.1"
+__version__ = "2.2.2"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -1460,6 +1460,7 @@ def on_login(obj, args, ret, *_):
 @hook("WillowGame.WillowGameViewportClient:NotifyConnectionError", Type.PRE, hook_identifier="KriegTPSCoopError")
 def on_connection_error(obj, args, *_):
     log(f"co-op: connection error {_arg(args, 'Title')!r}: {_arg(args, 'Message')!r}")
+    coopcustom.note_disconnect()
 
 
 @hook("WillowGame.WillowPlayerController:ClientWasKicked", Type.PRE, hook_identifier="KriegTPSCoopKicked")

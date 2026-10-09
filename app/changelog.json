@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.2.6",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.2: if the host leaves while you're still in the game, your DLC head/skin (like the Scav) no longer resets to the default. The game had only received \"nothing\" from the host for them and fell back to the default. Your own pick is now put back for up to two minutes after the co-op game ends, unless you choose a new one yourself.",
+   "Krieg 2.2.2: the lobby on the main menu now also shows the other player's DLC head/skin. The lobby draws each player's Krieg separately from his in-game body, so the mod now puts the head/skin on that lobby Krieg too and writes what it did to the Krieg log."
+  ]
+ },
+ {
   "version": "3.2.5",
   "date": "2026-10-08",
   "changes": [
