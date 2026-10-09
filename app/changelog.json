@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.5.0",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.5.0: Borderlands 2's Infinity pistol is in the game, made in the Grinder. Put in three purple Vladof pistols to get an Infinity. It's rebuilt from Borderlands 2's own data: it never uses ammo, fires in a figure-8, spins up two barrels, has its infinity-pattern skin and its red text. Every one rolls its own parts: element (none, fire, shock or corrosive), accessory (including the Dva extra-shot one), grip, sight and so on, so the best one takes luck.",
+   "krieg_infinity in the console writes whether the Infinity and its recipe are set up to the Krieg log."
+  ]
+ },
+ {
   "version": "3.4.1",
   "date": "2026-10-09",
   "changes": [
