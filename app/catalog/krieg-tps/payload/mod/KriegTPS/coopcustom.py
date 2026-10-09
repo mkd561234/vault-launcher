@@ -286,8 +286,8 @@ def _track_own(pc, players: int) -> None:
     if _menu_open():
         _state["menu_at"] = now
     picked = _state.get("capture_at") and now >= _state["capture_at"]
-    first = _state.get("own") is None and players <= 1 and not _state.get("was_coop") and \
-        getattr(pc, "Pawn", None) is not None
+    # the first look seen once the character is loaded (main menu or a level), before any co-op
+    first = _state.get("own") is None and players <= 1 and not _state.get("ever_coop")
     if not (picked or first or _menu_recent(now)):
         return
     if picked:
@@ -370,8 +370,11 @@ def upkeep() -> None:
     if pc is None:
         return
     players = len(_pris())
+    if players >= 2 and not _state.get("ever_coop"):
+        _track_own(pc, 1)      # last chance to see my own look before the co-op game touches it
     if players >= 2:
         _state["was_coop"] = True
+        _state["ever_coop"] = True
         _state["alone_since"] = None
     else:
         if _state.get("alone_since") is None:

@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.2",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.7: your DLC head/skin is remembered as soon as your character loads at the main menu, not only after you open the head/skin menu. Without that, a joining player who went straight into co-op lost his head when the host ended the game, the host stopped showing it after a level load, and his own lobby Krieg wasn't dressed."
+  ]
+ },
+ {
   "version": "3.3.1",
   "date": "2026-10-08",
   "changes": [
