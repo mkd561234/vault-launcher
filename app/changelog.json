@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.4.0",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.4.0: only the latest launcher and Krieg mod can play. The game checks GitHub for the newest versions when it starts and every 10 minutes. If your launcher or Krieg mod is older, your character is saved and you're sent back to the main menu with \"You must update your launcher and mods to the latest versions to continue playing.\" Starting or joining a game sends you straight back until you've updated. This applies solo and in co-op.",
+   "Krieg 2.4.0: hosts check everyone who joins. A player who is out of date, or whose game doesn't report its versions within 30 seconds, is told to save and leave, and is removed by the host if he's still there 5 seconds later. If GitHub can't be reached, nobody is blocked for being out of date, but joining players still need at least the host's versions.",
+   "krieg_versions in the console writes this game's versions and the newest ones to the Krieg log."
+  ]
+ },
+ {
   "version": "3.3.9",
   "date": "2026-10-09",
   "changes": [

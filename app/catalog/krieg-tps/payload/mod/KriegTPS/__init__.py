@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.3.4"
+__version__ = "2.4.0"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -638,7 +638,7 @@ def on_enable() -> None:
 
 
 # Skins and heads: move Krieg's materials onto shaders that exist in the Pre-Sequel.
-from . import buzzaxe, charvoice, classmods, coopcustom, coopdiag, fulldiag, gearfix, hud_fix, loadout, materials, ozevents, slam, vehicles, weaponholds  # noqa: E402
+from . import buzzaxe, charvoice, classmods, coopcustom, coopdiag, fulldiag, gearfix, hud_fix, loadout, materials, ozevents, slam, vehicles, versioncheck, weaponholds  # noqa: E402
 for _i, _h in enumerate(ozevents.boost_hooks):
     globals()[f"_boost_hook_{_i}"] = _h
 for _i, _h in enumerate(slam.slam_hooks):
@@ -661,6 +661,8 @@ for _i, _h in enumerate(coopdiag.coop_hooks):
     globals()[f"_coop_hook_{_i}"] = _h
 for _i, _h in enumerate(weaponholds.hold_hooks):
     globals()[f"_hold_hook_{_i}"] = _h
+for _i, _h in enumerate(versioncheck.version_hooks):
+    globals()[f"_version_hook_{_i}"] = _h
 for _i, _h in enumerate(gearfix.gear_hooks):
     globals()[f"_gear_hook_{_i}"] = _h
 
@@ -1326,7 +1328,7 @@ _frame_errors: set = set()
 def _frame() -> None:
     """Per-frame work. A failing step is written to the log once, never every frame (an error
     every frame floods the SDK log and makes the game hitch)."""
-    for step in (fast_material_pass, upkeep, vehicles.tick, buzzaxe.tick, charvoice.tick, coopdiag.tick):
+    for step in (fast_material_pass, upkeep, vehicles.tick, buzzaxe.tick, charvoice.tick, coopdiag.tick, versioncheck.tick):
         try:
             step()
         except Exception as ex:  # noqa: BLE001
