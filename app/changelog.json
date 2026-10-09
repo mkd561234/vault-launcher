@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.2.8",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.3: being in a co-op lobby, joining or leaving no longer changes your or your friend's head and skin. In 2.2.2 the lobby put the other player's DLC head/skin on both lobby Kriegs, which changed your own saved look too. Now only the other player's lobby Krieg is drawn with his DLC head/skin, and nobody's choice is changed.",
+   "Krieg 2.2.3: if a co-op game resets your DLC head/skin to the default, the mod puts back the one you picked yourself, never one picked up during co-op.",
+   "If your head or skin was changed by 2.2.2, pick it again once at character select."
+  ]
+ },
+ {
   "version": "3.2.7",
   "date": "2026-10-08",
   "changes": [

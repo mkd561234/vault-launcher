@@ -138,6 +138,12 @@ def _wears(pawn, cd, kind: str) -> bool:
 
 
 def _apply(name: str, slots: dict, why: str) -> None:
+    """Put another player's DLC head/skin on his Krieg in MY game only.
+
+    Never on the host's copy of a joining player's player info: the host can't send these
+    heads/skins, so a change there reaches the joining player as "nothing" and resets his own
+    head/skin. Never on a lobby stand-in through the customization manager either: that changes
+    the stand-in's player for real (it is how the 2.2.2 lobby code changed both players' looks)."""
     pc = get_pc()
     me = getattr(getattr(pc, "PlayerReplicationInfo", None), "PlayerName", None) if pc else None
     if name == str(me):
@@ -147,6 +153,7 @@ def _apply(name: str, slots: dict, why: str) -> None:
         return
     pawn = _pawn_of(pri)
     mgr = _manager()
+    server = _is_server()
     done = []
     changed_list = False
     for idx, def_name in slots.items():
@@ -154,15 +161,14 @@ def _apply(name: str, slots: dict, why: str) -> None:
         if cd is None:
             continue
         kind = SLOTS.get(idx, "Head")
-        try:
-            if pri.RemoteCustomizations[idx] is None or pri.RemoteCustomizations[idx].Name != def_name:
-                pri.RemoteCustomizations[idx] = cd
-                changed_list = True
-        except Exception:  # noqa: BLE001
-            pass
-        if pawn is not None and _wears(pawn, cd, kind):
-            continue
-        if mgr is None or pawn is None:
+        if not server:
+            try:
+                if pri.RemoteCustomizations[idx] is None or pri.RemoteCustomizations[idx].Name != def_name:
+                    pri.RemoteCustomizations[idx] = cd
+                    changed_list = True
+            except Exception:  # noqa: BLE001
+                pass
+        if pawn is None or mgr is None or _wears(pawn, cd, kind):
             continue
         try:
             # keywords: the game's parameter order is not (target, customization)
@@ -171,7 +177,6 @@ def _apply(name: str, slots: dict, why: str) -> None:
         except Exception as ex:  # noqa: BLE001
             log(f"could not put {def_name} on {name}: {type(ex).__name__}: {ex}")
     if changed_list and mgr is not None:
-        # tells the menus (the lobby's Krieg for that player) that his head/skin list changed
         try:
             mgr.PlayerCustomizationsUpdated(PRI=pri)
         except Exception as ex:  # noqa: BLE001
@@ -219,22 +224,48 @@ def note_disconnect() -> None:
 
 
 def note_own_change(*_) -> None:
-    """The player picked a head/skin himself: never 'restore' over that."""
-    _state["last_mine"] = None
+    """The player picked a head/skin himself: remember what he picked (read a moment later)."""
+    _state["capture_at"] = time.monotonic() + 1.5
 
 
-def _restore_own(pc) -> None:
-    """When the host leaves first, the game falls back to the default head/skin for the joining
-    player's own DLC head/skin (it only had "nothing" from the host for them) and keeps that.
-    Put the player's own choice back."""
-    last = _state.get("last_mine")
-    if not last or time.monotonic() > _state.get("restore_until", 0.0):
+def _net_mode() -> str:
+    try:
+        mode = get_pc().WorldInfo.NetMode
+        return getattr(mode, "name", str(mode))
+    except Exception:  # noqa: BLE001
+        return "?"
+
+
+def _track_own(pc, players: int) -> None:
+    """Remember the player's own DLC head/skin, but only from moments it can't have been touched
+    by a co-op game: playing alone (no network game) or right after he picks one himself."""
+    now = time.monotonic()
+    picked = _state.get("capture_at") and now >= _state["capture_at"]
+    alone = players <= 1 and "Standalone" in _net_mode() and now > _state.get("restore_until", 0.0)
+    if not (picked or alone):
+        return
+    if picked:
+        _state["capture_at"] = 0.0
+        _state["restore_until"] = 0.0
+    own = _my_extras()
+    if own != _state.get("own"):
+        if _state.get("own") is not None or own:
+            log(f"my own DLC head/skin: {own or 'none'}")
+        _state["own"] = own
+
+
+def _restore_own(pc, players: int) -> None:
+    """After a co-op game the game can fall back to the default head/skin for the player's own DLC
+    head/skin (the host only ever had "nothing" for it). Put his own choice back - only what he
+    picked himself, and only once the co-op game is over."""
+    own = _state.get("own")
+    if not own or players > 1 or time.monotonic() > _state.get("restore_until", 0.0):
         return
     pri = getattr(pc, "PlayerReplicationInfo", None)
     if pri is None:
         return
     put = []
-    for idx, name in last.items():
+    for idx, name in own.items():
         cd = _def(name)
         if cd is None:
             continue
@@ -250,7 +281,7 @@ def _restore_own(pc) -> None:
         except Exception as ex:  # noqa: BLE001
             log(f"could not put my {name} back: {type(ex).__name__}: {ex}")
     if put:
-        log(f"the co-op game ended and reset my head/skin; put back {', '.join(put)}")
+        log(f"the co-op game reset my head/skin; put back {', '.join(put)}")
 
 
 def upkeep() -> None:
@@ -261,15 +292,23 @@ def upkeep() -> None:
     pc = get_pc()
     if pc is None:
         return
-    own = _my_extras()
-    if own:
-        _state["last_mine"] = dict(own)
-    else:
-        _restore_own(pc)
-    if _is_menu() and len(_pris()) >= 2:
-        _apply_lobby()
-    if len(_pris()) < 2:
+    players = len(_pris())
+    if players >= 2:
+        _state["was_coop"] = True
+    elif _state.get("was_coop"):
+        # the co-op game is over: forget everyone else and watch for a reset of my own look
+        _state["was_coop"] = False
+        _table.clear()
+        _state["sent_to"].clear()
+        _state["mine"] = None
+        _state["restore_until"] = now + 120.0
+        _lobby_logged.clear()
+    _track_own(pc, players)
+    _restore_own(pc, players)
+    if players < 2:
         return
+    if _is_menu():
+        _refresh_lobby()
     me = str(getattr(pc.PlayerReplicationInfo, "PlayerName", "")) if pc.PlayerReplicationInfo else ""
     mine = _my_extras()
     role = "host" if _is_server() else "joining player"
@@ -304,64 +343,74 @@ def _is_menu() -> bool:
 _lobby_logged = set()
 
 
-def _apply_lobby() -> None:
-    """The main-menu lobby draws every player's Krieg as a stand-in, not as his in-game pawn. Put
-    the other players' DLC heads/skins on those stand-ins too."""
+def _same(a, b) -> bool:
+    try:
+        return a is not None and b is not None and a._get_address() == b._get_address()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _standin_wants(standin) -> dict:
+    """The DLC heads/skins another player's lobby Krieg should wear ({} for my own, or unknown)."""
+    pri = getattr(standin, "OwningPRI", None)
+    pc = get_pc()
+    if pri is None or pc is None or _same(pri, getattr(pc, "PlayerReplicationInfo", None)):
+        return {}
+    return _table.get(str(pri.PlayerName), {})
+
+
+def _refresh_lobby() -> None:
+    """The lobby draws each player as a stand-in that asks for his head/skin (answered by the hook
+    below). Ask the other players' stand-ins to redraw once their DLC heads/skins are known."""
     if not _table:
         return
-    pc = get_pc()
-    me = str(getattr(getattr(pc, "PlayerReplicationInfo", None), "PlayerName", ""))
-    mine = {}
-    try:
-        mine = {i: pc.PlayerReplicationInfo.RemoteCustomizations[i] for i in SLOTS}
-    except Exception:  # noqa: BLE001
-        pass
-    wanted = [(n, sl) for n, sl in _table.items() if n != me]
-    if not wanted:
-        return
-    mgr = _manager()
-    if mgr is None:
-        return
-    my_pawn = getattr(pc, "Pawn", None)
-    for body in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+    for standin in unrealsdk.find_all("PlayerStandIn", exact=False):
         try:
-            sm = body.SkeletalMesh
-            if sm is None or str(sm.Name) != "Skel_PsychoBody" or "Default__" in body._path_name():
+            if "Default__" in standin._path_name():
                 continue
-            owner = body.Owner
-            if owner is None or (my_pawn is not None and owner._get_address() == my_pawn._get_address()):
+            wants = _standin_wants(standin)
+            if not wants:
                 continue
-            head = getattr(owner, "HeadCustomizationData", None)
-            skin = getattr(owner, "SkinCustomizationData", None)
-            key = owner._get_address()
-            if key not in _lobby_logged and len(_lobby_logged) < 6:
-                _lobby_logged.add(key)
-                log(f"lobby Krieg {owner.Class.Name} {_short(owner)} wears head {_short(head)} skin {_short(skin)}")
-            # skip my own lobby Krieg (it wears my head/skin)
-            if mine and _short(head) == str(getattr(mine.get(0), "CustomizationDataName", "?")) and \
-                    _short(skin) == str(getattr(mine.get(4), "CustomizationDataName", "?")):
+            key = ("standin", standin._get_address(), repr(sorted(wants.items())))
+            if key in _lobby_logged:
                 continue
-        except Exception:  # noqa: BLE001
-            continue
-        # with one other player the remaining lobby Krieg is his
-        if len(wanted) != 1:
-            continue
-        name, slots = wanted[0]
-        for idx, def_name in slots.items():
-            cd = _def(def_name)
-            if cd is None:
-                continue
-            kind = SLOTS.get(idx, "Head")
-            if _wears(owner, cd, kind) or ("lobbydone", key, def_name) in _lobby_logged:
-                continue
-            _lobby_logged.add(("lobbydone", key, def_name))
-            try:
-                mgr.InitiateCustomizationRequest(Target=owner, NewCustomization=cd)
-                log(f"lobby: put {def_name} on {name}'s Krieg")
-            except Exception as ex:  # noqa: BLE001
-                if ("lobbyerr", key) not in _lobby_logged:
-                    _lobby_logged.add(("lobbyerr", key))
-                    log(f"lobby: could not put {def_name} on {name}'s Krieg: {type(ex).__name__}: {ex}")
+            _lobby_logged.add(key)
+            standin.RefreshCustomizationsOnInstanceData()
+            log(f"lobby: showing {standin.OwningPRI.PlayerName}'s {', '.join(wants.values())}")
+        except Exception as ex:  # noqa: BLE001
+            if ("lobbyerr",) not in _lobby_logged:
+                _lobby_logged.add(("lobbyerr",))
+                log(f"lobby: could not redraw a stand-in: {type(ex).__name__}: {ex}")
+
+
+@hook("WillowGame.PlayerStandIn:GetDesiredCustomizationOfType", Type.PRE,
+      hook_identifier="KriegTPSLobbyCustom")
+def on_standin_customization(obj, args, *_):
+    """Answer "which head/skin?" for another player's lobby Krieg with his DLC head/skin. Only
+    the answer changes; nobody's choice is touched."""
+    try:
+        wants = _standin_wants(obj)
+        if not wants:
+            return None
+        asked = None
+        for prop in args._type._fields():
+            if prop.Name != "ReturnValue":
+                asked = getattr(args, prop.Name)
+                break
+        kind = str(getattr(asked, "Name", asked))
+        if ("argname",) not in _lobby_logged:
+            _lobby_logged.add(("argname",))
+            log(f"lobby stand-in asks for {kind}")
+        for idx, def_name in wants.items():
+            if kind.endswith(SLOTS.get(idx, "?")):
+                cd = _def(def_name)
+                if cd is not None:
+                    return Block, cd
+    except Exception as ex:  # noqa: BLE001
+        if ("hookerr",) not in _lobby_logged:
+            _lobby_logged.add(("hookerr",))
+            log(f"lobby stand-in: {type(ex).__name__}: {ex}")
+    return None
 
 
 def _short(obj) -> str:
@@ -439,4 +488,4 @@ def on_client_message_willow(obj, args, *_):
     return _client_message(obj, args)
 
 
-custom_hooks = [on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]
+custom_hooks = [on_standin_customization, on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]
