@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.5.3",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.2: the Grinder recipe now takes any purple pistol instead of only a purple Vladof pistol. A legendary pistol, any legendary weapon and any purple pistol make an Infinity."
+  ]
+ },
+ {
   "version": "3.5.2",
   "date": "2026-10-09",
   "changes": [
@@ -132,7 +139,7 @@
   "version": "3.2.7",
   "date": "2026-10-08",
   "changes": [
-   "Check for updates no longer gets stuck on \"Checking for updates…\". If the launcher was already checking in the background when you clicked, the button waited for an answer that never came. It now shows that check's result.",
+   "Check for updates no longer gets stuck on \"Checking for updates\u2026\". If the launcher was already checking in the background when you clicked, the button waited for an answer that never came. It now shows that check's result.",
    "New versions show up straight away. GitHub can hand out a copy of the version file up to about five minutes old, which is why 3.2.6 wasn't found right after it came out. The launcher now asks for the current copy, and also checks GitHub's release list."
   ]
  },
@@ -325,9 +332,9 @@
   "version": "3.0.1",
   "date": "2026-10-08",
   "changes": [
-   "No more closing and reopening the launcher: it used to shut its background part down when its window went quiet for 25 seconds, which happens whenever a game is in front of it (Windows slows hidden windows down). Then \"Check for updates\" sat on \"Checking for updates…\" and the page said the launcher stopped. It now stays running for as long as its window is open.",
+   "No more closing and reopening the launcher: it used to shut its background part down when its window went quiet for 25 seconds, which happens whenever a game is in front of it (Windows slows hidden windows down). Then \"Check for updates\" sat on \"Checking for updates\u2026\" and the page said the launcher stopped. It now stays running for as long as its window is open.",
    "If the background part ever stops anyway, the window starts it again by itself within about 15 seconds and reconnects, instead of asking you to reopen it.",
-   "Check for updates says what's happening when an update is already being installed, and says so if it couldn't reach the launcher instead of staying on \"Checking…\"."
+   "Check for updates says what's happening when an update is already being installed, and says so if it couldn't reach the launcher instead of staying on \"Checking\u2026\"."
   ]
  },
  {

@@ -11,7 +11,7 @@ Startup.upk) under the same names it has in Borderlands 2:
 * the Dva accessory (25% chance of an extra shot) and its legendary skin,
 * its parts list: Borderlands 2's elements (none, fire, shock, corrosive) and accessories; grips,
   sights and the rest come from the purple Vladof pistol, so every one rolls differently.
-Grinder: a legendary pistol, any legendary weapon and a purple Vladof pistol make an Infinity.
+Grinder: a legendary pistol, any legendary weapon and any purple pistol make an Infinity.
 """
 
 import unrealsdk
@@ -22,11 +22,9 @@ from .infinity_data import MATERIAL, OBJECTS
 BALANCE = "GD_Weap_Pistol.A_Weapons_Legendary.Pistol_Vladof_5_Infinity"
 MIC_PATH = "Common_GunMaterials.Materials.Pistol.Mati_VladofLegendaryPistol_Infinity"
 MIC_PARENT = "Common_GunMaterials.MasterMaterials.Vladof.MasterMati_VladofLegendary"
-RECIPE_INPUT = "GD_Weap_Pistol.A_Weapons.Pistol_Vladof_4_VeryRare"     # purple Vladof pistol
 LEGENDARY_PISTOLS = "GD_Itempools.WeaponPools.Pool_Weapons_Pistols_06_Legendary"
 LEGENDARY_WEAPONS = "GD_Itempools.GrinderPools.Pool_Weapons_All_06_Legendary_Grinder"
-PURPLE_PISTOLS = "GD_Itempools.WeaponPools.Pool_Weapons_Pistols_05_VeryRare"
-VLADOF_POOL_NAME = "Pool_Infinity_Input_Vladof_Pistol_Purple"
+PURPLE_PISTOLS = "GD_Itempools.WeaponPools.Pool_Weapons_Pistols_05_VeryRare"   # any purple pistol
 RECIPES = "GD_GrinderRecipes.GrinderRecipes"
 POOL_TEMPLATE = "GD_Itempools.GrinderPools.Pool_Recipe_Upgrade_SMG_04_GoodTouch"
 POOL_NAME = "Pool_Recipe_Infinity"
@@ -177,7 +175,7 @@ def _material(mic) -> None:
 
 
 # ---------------------------------------------------------------------------------------------
-# Grinder recipe: three purple Vladof pistols -> an Infinity
+# Grinder recipe: legendary pistol + any legendary weapon + any purple pistol -> an Infinity
 # ---------------------------------------------------------------------------------------------
 def _pool_of_one(template, name: str, balance):
     """An item pool holding just one gun (a copy of template with its list cut to that gun)."""
@@ -201,20 +199,18 @@ def _pool_of_one(template, name: str, balance):
 
 
 def _add_recipe(balance) -> None:
-    """Grinder: legendary pistol + any legendary weapon + purple Vladof pistol -> Infinity.
+    """Grinder: legendary pistol + any legendary weapon + any purple pistol -> Infinity.
     Put first in the Grinder's list, ahead of the game's own "two legendaries and a purple
     pistol make a legendary pistol" recipe, which the same three guns also fit."""
     holder = _find(RECIPES)
     out_template = _find(POOL_TEMPLATE)
-    purple = _find(RECIPE_INPUT)
     leg_pistols = _find(LEGENDARY_PISTOLS)
     leg_any = _find(LEGENDARY_WEAPONS)
     purple_pistols = _find(PURPLE_PISTOLS)
-    if None in (holder, out_template, purple, leg_pistols, leg_any, purple_pistols):
+    if None in (holder, out_template, leg_pistols, leg_any, purple_pistols):
         log("the Grinder's recipes aren't loaded yet")
         return
     output = _pool_of_one(out_template, POOL_NAME, balance)
-    vladof = _pool_of_one(purple_pistols, VLADOF_POOL_NAME, purple)
     recipes = holder.GrinderRecipes
     for r in recipes:
         if r.OutputItemPoolDefinition is not None and r.OutputItemPoolDefinition._get_address() == output._get_address():
@@ -226,7 +222,7 @@ def _add_recipe(balance) -> None:
         return
     recipes.insert(0, model)
     new = recipes[0]
-    new.InputItemPoolDefinitions = [leg_pistols, leg_any, vladof]
+    new.InputItemPoolDefinitions = [leg_pistols, leg_any, purple_pistols]
     new.InputInvBalanceDefinitions = []
     new.OutputItemPoolDefinition = output
     new.OutputInvBalanceDefinition = None
@@ -235,7 +231,7 @@ def _add_recipe(balance) -> None:
     new.OutputLockedItemPoolDefinition = locked
     recipes[0] = new
     _state["recipe"] = True
-    log("Grinder recipe added: legendary pistol + legendary weapon + purple Vladof pistol -> Infinity")
+    log("Grinder recipe added: legendary pistol + legendary weapon + any purple pistol -> Infinity")
 
 
 # ---------------------------------------------------------------------------------------------
