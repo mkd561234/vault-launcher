@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.6.4",
+  "date": "2026-10-09",
+  "changes": [
+   "Krieg 2.5.6: no more kicking for being out of date. Nobody gets saved and sent to the menu, blocked from playing or joining, or removed from a co-op game for an older launcher or mod. When something is out of date, the launcher just downloads the update in the background and installs it after you close the game.",
+   "If your friend hosts on an older Krieg mod and his game tells you to leave, your game now ignores it. (His own game still follows the old rule until he updates once.)"
+  ]
+ },
+ {
   "version": "3.6.3",
   "date": "2026-10-09",
   "changes": [

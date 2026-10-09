@@ -1,15 +1,10 @@
-"""Only the latest Vault Launcher and mods may play.
+"""Update check (no kicking).
 
-* The newest versions are read from the launcher's GitHub repository (latest.json for the
-  launcher, the Krieg mod's mod.json for the mod) when the game starts and every minute.
-* If this game's launcher or Krieg mod is older: in a level, the character is saved and the game
-  goes back to the main menu with the update message; at the main menu the message is shown, and
-  starting or joining a game sends the player straight back. Solo and co-op alike.
-* In co-op the host also checks everyone who joins: the joining game reports its versions; anyone
-  who is out of date, or doesn't report within 10 seconds (a mod too old to have this check), is
-  told to save and leave, and removed by the host if he is still there a few seconds later.
-If the newest versions can't be read (no internet), nobody is blocked for being out of date;
-the host still requires joining players to be at least on the host's own versions.
+The newest versions are read from the launcher's GitHub repository when the game starts and every
+minute. If this game's launcher or a mod is older, Vault Launcher is told to download the update in
+the background (it installs when the game is closed) and it is written to the Krieg log. Nobody is
+saved-and-sent-to-the-menu, blocked, or removed from a co-op game any more (players found that too
+harsh). A "must update" message from a host still on an older version is ignored.
 """
 
 import json
@@ -312,48 +307,13 @@ def tick() -> None:
     pc = get_pc()
     if pc is None:
         return
-    # leaving in progress
-    if _state["leaving"]:
-        if now >= _state["leaving"]:
-            _state["leaving"] = None
-            _state["show_at"] = now + 1.0
-            try:
-                pc.ConsoleCommand("disconnect", False)
-            except Exception as ex:  # noqa: BLE001
-                log(f"could not leave the game: {type(ex).__name__}: {ex}")
-        return
-    if _state["show_at"] and now >= _state["show_at"] and _in_menu() and len(_pris()) <= 1:
-        _state["show_at"] = 0.0
-        _state["shown_for"] = (repr(i_am_outdated()), _latest["at"])
-        _show_message()
-        return
-    # my own versions
     behind = i_am_outdated()
-    players = len(_pris())
     if behind:
-        if not _in_menu() or players >= 2:
-            _leave(", ".join(behind))
-            return
         key = (repr(behind), _latest["at"])
         if _state["shown_for"] != key:
             _state["shown_for"] = key
-            log(f"out of date: {', '.join(behind)}")
+            log(f"out of date: {', '.join(behind)} - the launcher will download the update")
             _fetch_update()
-            _show_message()
-        return
-    if players < 2:
-        _state["players"].clear()
-        return
-    if _is_server():
-        _check_players(pc, now)
-    elif now - _state["told"] > 5.0:
-        _state["told"] = now
-        mine = my_versions()
-        extra = ",".join(f"{k[4:]}={v}" for k, v in mine.items() if k.startswith("mod:"))
-        try:
-            pc.ServerMutate(f"{PREFIX_VER}{mine['launcher'] or '?'}|{mine['krieg']}|{extra}")
-        except Exception as ex:  # noqa: BLE001
-            log(f"could not tell the host my versions: {type(ex).__name__}: {ex}")
 
 
 def _controllers(pc) -> list:
@@ -457,7 +417,7 @@ def _client_message(obj, args):
         return None
     if not _is_local_pc(obj):
         return None          # the host sending it: let it through
-    _leave("the host says this game is out of date")
+    log("an older host asked this game to leave for being out of date; ignored")
     return Block
 
 
