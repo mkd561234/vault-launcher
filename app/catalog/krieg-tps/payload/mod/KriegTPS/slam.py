@@ -127,7 +127,42 @@ def _formula(template, value: float):
                                  InitializationDefinition=None, BaseValueScaleConstant=1.0)
 
 
+SLAM_FORCE = 2000.0   # Aurelia's; Krieg's Borderlands 2 pawn has 0 (he'd hang in the air)
+_forced: set = set()
+
+
+def fix_all_slam_force() -> None:
+    """Every Krieg in the game needs a slam force, not only mine: the host moves a joining Krieg
+    itself, and with 0 his slam stalled in mid-air on the host while his own game dropped him."""
+    pc = get_pc()
+    try:
+        pawn = pc.WorldInfo.PawnList if pc is not None else None
+    except Exception:  # noqa: BLE001
+        return
+    for _ in range(256):
+        if pawn is None:
+            break
+        try:
+            if _is_krieg_pawn(pawn) and (not pawn.SlamForce or not pawn.SlamForceBaseValue):
+                if not pawn.SlamForceBaseValue:
+                    pawn.SlamForceBaseValue = SLAM_FORCE
+                if not pawn.SlamForce:
+                    pawn.SlamForce = SLAM_FORCE
+                if not _is_local_krieg_pawn(pawn) and len(_forced) < 10:
+                    _forced.add(pawn._get_address())
+                    who = getattr(getattr(pawn, "PlayerReplicationInfo", None), "PlayerName", "?")
+                    log(f"slam: gave co-op partner {who}'s Krieg a slam force of {pawn.SlamForce:g}")
+        except Exception:  # noqa: BLE001
+            pass
+        pawn = pawn.NextPawn
+
+
 def upkeep() -> None:
+    fix_all_slam_force()
+    _upkeep_fx()
+
+
+def _upkeep_fx() -> None:
     """Load the effects early (while Krieg is in the game) so the first slam doesn't hitch."""
     if _state["fx"] is not None:
         return
@@ -363,6 +398,16 @@ def report_slam(pawn, why: str) -> None:
 def on_slam_message(obj, args, *_):
     msg = str(args.MutateString)
     if not msg.startswith(SLAM_MSG):
+        return None
+    # Runs on the joining player's game too, when it sends the message: let it go out there.
+    pc = get_pc()
+    try:
+        if pc is not None and obj._get_address() == pc._get_address():
+            return None
+        mode = pc.WorldInfo.NetMode if pc is not None else None
+        if getattr(mode, "name", str(mode)).endswith("NM_Client") or mode == 3:
+            return None
+    except Exception:  # noqa: BLE001
         return None
     try:
         dist = max(0.0, min(5000.0, float(msg[len(SLAM_MSG):] or 0)))

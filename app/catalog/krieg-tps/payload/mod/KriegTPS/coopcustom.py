@@ -241,6 +241,10 @@ def on_server_mutate(obj, args, *_):
     msg = str(args.MutateString)
     if not msg.startswith(PREFIX):
         return None
+    # This hook also runs on the joining player's game when it *sends* the message; letting it
+    # through there is what sends it to the host. Only the host reads (and swallows) it.
+    if not _is_server() or _is_local_pc(obj):
+        return None
     name, slots = _decode(msg)
     if name:
         if slots or name in _table:
@@ -254,9 +258,21 @@ def on_server_mutate(obj, args, *_):
     return Block
 
 
-def _client_message(args):
+def _is_local_pc(pc) -> bool:
+    me = get_pc()
+    try:
+        return me is not None and pc is not None and pc._get_address() == me._get_address()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _client_message(obj, args):
     msg = str(args.S)
     if not msg.startswith(PREFIX):
+        return None
+    # On the host this hook also runs when it *sends* the message to a joining player's
+    # controller; it must go through there. Only the receiving game (its own controller) reads it.
+    if not _is_local_pc(obj):
         return None
     name, slots = _decode(msg)
     if name:
@@ -268,12 +284,12 @@ def _client_message(args):
 
 @hook("Engine.PlayerController:ClientMessage", Type.PRE, hook_identifier="KriegTPSCoopCustomOut")
 def on_client_message(obj, args, *_):
-    return _client_message(args)
+    return _client_message(obj, args)
 
 
 @hook("WillowGame.WillowPlayerController:ClientMessage", Type.PRE, hook_identifier="KriegTPSCoopCustomOutW")
 def on_client_message_willow(obj, args, *_):
-    return _client_message(args)
+    return _client_message(obj, args)
 
 
 custom_hooks = [on_server_mutate, on_client_message, on_client_message_willow]

@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.2.2",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.9: co-op messages actually get through now. The mod blocked its own messages on the game that sent them, so a joining Krieg's slams never reached the host, and the host's Scav/DLC head and skin never reached the joining player. Both logs from the last session showed it.",
+   "Krieg 2.1.9: the host now gives a joining Krieg a slam force. It was 0 on the host's game, so his slam stalled in mid-air there.",
+   "Krieg 2.1.9: with these fixes, a joining Krieg's slam uses his real Oz kit on the host (for example cryo, grade 6)."
+  ]
+ },
+ {
   "version": "3.2.1",
   "date": "2026-10-08",
   "changes": [
