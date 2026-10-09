@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.3.0",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.5: in co-op your DLC head/skin no longer turns back into the default. The host's game was rewriting the joining player's head/skin list each time it dressed his Krieg, and the joining player's game then fell back to the default. The host now leaves that list alone, and your own game puts your pick back if the default appears anyway.",
+   "Krieg 2.2.5: only a head/skin you pick yourself (character select or the Quick Change station) counts as yours. The default the game swaps in during co-op or a level load no longer does.",
+   "Krieg 2.2.5: if a Krieg's shield, grenade mod or Oz kit does nothing after a co-op level loads (shield 0, no ground slam), his gear is put back on so the game applies it again. Every Krieg's equipped gear is written to the Krieg log, and krieg_gear in the console does the check by hand."
+  ]
+ },
+ {
   "version": "3.2.9",
   "date": "2026-10-08",
   "changes": [

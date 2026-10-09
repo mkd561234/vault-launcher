@@ -171,8 +171,25 @@ def _apply(name: str, slots: dict, why: str) -> None:
         if pawn is None or mgr is None or _wears(pawn, cd, kind):
             continue
         try:
+            before = None
+            if server:
+                try:
+                    before = list(pri.RemoteCustomizations)
+                except Exception:  # noqa: BLE001
+                    before = None
             # keywords: the game's parameter order is not (target, customization)
             mgr.InitiateCustomizationRequest(Target=pawn, NewCustomization=cd)
+            if before is not None:
+                # On the host this also rewrites the player's own head/skin list, which is sent to
+                # his game - as "nothing" for these heads/skins, so his game reset him to the
+                # default. Put the list back the same moment, so nothing is sent.
+                for i, v in enumerate(before):
+                    try:
+                        cur = pri.RemoteCustomizations[i]
+                        if (cur is None) != (v is None) or (cur is not None and cur._get_address() != v._get_address()):
+                            pri.RemoteCustomizations[i] = v
+                    except Exception:  # noqa: BLE001
+                        pass
             done.append(def_name)
         except Exception as ex:  # noqa: BLE001
             log(f"could not put {def_name} on {name}: {type(ex).__name__}: {ex}")
@@ -237,19 +254,52 @@ def _net_mode() -> str:
         return "?"
 
 
+MENU_CLASSES = ("CustomizationGFxMovie", "CharacterSelectionReduxGFxMovie")
+
+
+def _menu_open() -> bool:
+    for cls in MENU_CLASSES:
+        try:
+            for movie in unrealsdk.find_all(cls, exact=False):
+                if "Default__" in movie._path_name():
+                    continue
+                try:
+                    if movie.bMovieIsOpen:
+                        return True
+                except Exception:  # noqa: BLE001
+                    return True
+        except Exception:  # noqa: BLE001
+            continue
+    return False
+
+
+def _menu_recent(now: float) -> bool:
+    return now - _state.get("menu_at", -100.0) < 6.0
+
+
 def _track_own(pc, players: int) -> None:
-    """Remember the player's own DLC head/skin while he plays alone (character select, the
-    Quick Change station...), never in the moments after a co-op game, when the game may have
-    put the default back."""
+    """Remember the player's own DLC head/skin. Only a pick the player makes himself counts (while
+    the head/skin menu is open, at character select or the Quick Change station); the game swaps
+    in the default head/skin by itself in co-op and while levels load, and that must never count.
+    The very first look seen after the game starts counts too."""
     now = time.monotonic()
+    if _menu_open():
+        _state["menu_at"] = now
     picked = _state.get("capture_at") and now >= _state["capture_at"]
-    alone = players <= 1 and not _state.get("was_coop") and now > _state.get("restore_until", 0.0)
-    if not (picked or alone):
+    first = _state.get("own") is None and players <= 1 and not _state.get("was_coop") and \
+        getattr(pc, "Pawn", None) is not None
+    if not (picked or first or _menu_recent(now)):
         return
     if picked:
         _state["capture_at"] = 0.0
-        _state["restore_until"] = 0.0
-    _set_own(_my_extras())
+    own = _my_extras()
+    pri = getattr(pc, "PlayerReplicationInfo", None)
+    try:
+        if pri is None or any(pri.RemoteCustomizations[i] is None for i in SLOTS):
+            return            # list not filled in yet (loading)
+    except Exception:  # noqa: BLE001
+        return
+    _set_own(own)
 
 
 def _set_own(own: dict) -> None:
@@ -257,64 +307,55 @@ def _set_own(own: dict) -> None:
         if _state.get("own") is not None or own:
             log(f"my own DLC head/skin: {own or 'none'}")
         _state["own"] = dict(own)
+        _state["restores"] = 0
 
 
 def _coop_mine() -> dict:
-    """My DLC heads/skins during a co-op game. A joining player's own list loses them now and
-    then (the host only has "nothing" for them and sends that back), so an empty slot keeps what
-    he had; a real change (he picks another head/skin) is taken over."""
+    """My DLC heads/skins to tell the others: what I picked, not what the game swapped in."""
     own = _state.get("own")
-    if own is None:
-        return _my_extras()
-    pc = get_pc()
-    pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
-    if pri is None:
-        return dict(own)
-    extras = _extra_names()
-    new = dict(own)
-    for idx in SLOTS:
-        try:
-            cd = pri.RemoteCustomizations[idx]
-        except Exception:  # noqa: BLE001
-            cd = None
-        if cd is None:
-            continue
-        if cd.Name in extras:
-            new[idx] = str(cd.Name)
-        else:
-            new.pop(idx, None)
-    _set_own(new)
-    return new
+    return dict(own) if own is not None else _my_extras()
 
 
 def _restore_own(pc, players: int) -> None:
-    """After a co-op game the game can fall back to the default head/skin for the player's own DLC
-    head/skin (the host only ever had "nothing" for it). Put his own choice back - only once the
-    co-op game is really over."""
+    """The game swaps a DLC head/skin for the default by itself (in co-op the host only has
+    "nothing" for it, and when a co-op game ends). Put the player's own pick back whenever his
+    Krieg isn't wearing it and he isn't in the head/skin menu."""
     own = _state.get("own")
-    if not own or players > 1 or _state.get("was_coop") or time.monotonic() > _state.get("restore_until", 0.0):
+    now = time.monotonic()
+    if not own or _menu_recent(now):
         return
     pri = getattr(pc, "PlayerReplicationInfo", None)
     if pri is None:
         return
+    pawn = getattr(pc, "Pawn", None)
     put = []
     for idx, name in own.items():
         cd = _def(name)
         if cd is None:
             continue
-        try:
-            current = pri.RemoteCustomizations[idx]
-        except Exception:  # noqa: BLE001
-            current = None
-        if current is not None and current.Name == name:
+        kind = SLOTS.get(idx, "Head")
+        if pawn is not None:
+            wrong = not _wears(pawn, cd, kind)
+        else:
+            try:
+                current = pri.RemoteCustomizations[idx]
+            except Exception:  # noqa: BLE001
+                current = None
+            wrong = current is not None and current.Name != name
+        if not wrong:
             continue
+        key = ("restore_at", idx)
+        if now - _state.get(key, -100.0) < 15.0 or _state.get("restores", 0) >= 12:
+            continue
+        _state[key] = now
+        _state["restores"] = _state.get("restores", 0) + 1
         try:
             pri.InitiateCustomizationRequest(NewCustomization=cd)
             put.append(name)
         except Exception as ex:  # noqa: BLE001
             log(f"could not put my {name} back: {type(ex).__name__}: {ex}")
     if put:
-        log(f"the co-op game reset my head/skin; put back {', '.join(put)}")
+        log(f"the game swapped my head/skin for the default; put back {', '.join(put)}")
 
 
 SESSION_END_AFTER = 10.0   # alone this long = the co-op game is over (not just a level loading)
