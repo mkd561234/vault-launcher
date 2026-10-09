@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.2.7"
+__version__ = "2.2.8"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -1324,7 +1324,7 @@ _frame_errors: set = set()
 def _frame() -> None:
     """Per-frame work. A failing step is written to the log once, never every frame (an error
     every frame floods the SDK log and makes the game hitch)."""
-    for step in (fast_material_pass, upkeep, vehicles.tick, buzzaxe.tick, charvoice.tick, coopdiag.tick):
+    for step in (fast_material_pass, upkeep, vehicles.tick, buzzaxe.tick, charvoice.tick, coopdiag.tick, coopcustom.tick):
         try:
             step()
         except Exception as ex:  # noqa: BLE001

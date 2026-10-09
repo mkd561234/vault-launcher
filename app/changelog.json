@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.3",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.8: the co-op lobby no longer flashes the default head/skin before showing the DLC one. A lobby Krieg is now dressed the moment the lobby builds or redraws him, instead of on the next check a few seconds later."
+  ]
+ },
+ {
   "version": "3.3.2",
   "date": "2026-10-08",
   "changes": [

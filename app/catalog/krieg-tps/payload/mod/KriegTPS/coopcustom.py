@@ -470,45 +470,111 @@ def _put_back(pri, before) -> None:
             pass
 
 
+_dressing = [False]
+
+
+def _dress(standin, force: bool) -> None:
+    """Dress one lobby Krieg in its player's DLC head/skin (see _refresh_lobby)."""
+    if _dressing[0] or "Default__" in standin._path_name():
+        return
+    wants = _standin_wants(standin)
+    if not wants:
+        return
+    mgr = _manager()
+    if mgr is None:
+        return
+    now = time.monotonic()
+    addr = standin._get_address()
+    seen = _state.setdefault("dressed", {})        # stand-in -> (time, count in the last 10 s)
+    last, count = seen.get(addr, (-100.0, 0))
+    if not force and now - last < 30.0:
+        return
+    if force and now - last < 10.0 and count >= 3:
+        return                                     # never fight the game in a loop
+    seen[addr] = (now, count + 1 if now - last < 10.0 else 1)
+    pc = get_pc()
+    pri = standin.OwningPRI
+    mine = _same(pri, getattr(pc, "PlayerReplicationInfo", None) if pc else None)
+    _dressing[0] = True
+    try:
+        for def_name in wants.values():
+            cd = _def(def_name)
+            if cd is None:
+                continue
+            before = None if mine else _snapshot(pri)
+            mgr.InitiateCustomizationRequest(Target=standin, NewCustomization=cd)
+            _put_back(pri, before)
+            key = ("dresslog", addr, def_name)
+            if key not in _lobby_logged:
+                _lobby_logged.add(key)
+                log(f"lobby: dressed {'my' if mine else str(pri.PlayerName) + chr(39) + 's'} Krieg in {def_name}")
+    finally:
+        _dressing[0] = False
+
+
 def _refresh_lobby() -> None:
     """The lobby draws each player as a stand-in Krieg, which falls back to the default look for
     these heads/skins. Dress each stand-in in its player's own pick: mine from what I picked, the
     others' from the host's table. For another player's stand-in, his head/skin list is put back
     straight after (dressing a stand-in also rewrites its player's list; the 2.2.2 lobby code
-    changed both players' looks that way)."""
-    mgr = _manager()
-    if mgr is None:
-        return
-    pc = get_pc()
-    my_pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
+    changed both players' looks that way). New stand-ins are dressed the moment the lobby builds
+    or redraws them (hooks below), so the default look doesn't flash up."""
     for standin in unrealsdk.find_all("PlayerStandIn", exact=False):
         try:
-            if "Default__" in standin._path_name():
-                continue
-            wants = _standin_wants(standin)
-            if not wants:
-                continue
-            pri = standin.OwningPRI
-            mine = _same(pri, my_pri)
-            for idx, def_name in wants.items():
-                # again every 30 s: the lobby rebuilds its Kriegs now and then
-                key = ("standin", standin._get_address(), def_name, int(time.monotonic() // 30))
-                if key in _lobby_logged:
-                    continue
-                cd = _def(def_name)
-                if cd is None:
-                    continue
-                first = not any(k[:3] == key[:3] for k in _lobby_logged if isinstance(k, tuple) and len(k) == 4)
-                _lobby_logged.add(key)
-                before = None if mine else _snapshot(pri)
-                mgr.InitiateCustomizationRequest(Target=standin, NewCustomization=cd)
-                _put_back(pri, before)
-                if first:
-                    log(f"lobby: dressed {'my' if mine else str(pri.PlayerName) + chr(39) + 's'} Krieg in {def_name}")
+            _dress(standin, force=False)
         except Exception as ex:  # noqa: BLE001
             if ("lobbyerr",) not in _lobby_logged:
                 _lobby_logged.add(("lobbyerr",))
                 log(f"lobby: could not dress a stand-in: {type(ex).__name__}: {ex}")
+
+
+def _coop_lobby() -> bool:
+    return len(_pris()) >= 2 and _is_menu()
+
+
+@hook("WillowGame.PlayerStandIn:RefreshCustomizationsOnInstanceData", Type.POST,
+      hook_identifier="KriegTPSLobbyRedraw")
+def on_standin_redraw(obj, *_):
+    """The lobby just (re)drew a Krieg in his saved look: put the DLC head/skin straight back."""
+    if _dressing[0]:
+        return
+    try:
+        if _coop_lobby():
+            _dress(obj, force=True)
+    except Exception as ex:  # noqa: BLE001
+        if ("redrawerr",) not in _lobby_logged:
+            _lobby_logged.add(("redrawerr",))
+            log(f"lobby redraw: {type(ex).__name__}: {ex}")
+
+
+@hook("WillowGame.WillowCustomizationManager:PlayerCustomizationsUpdated", Type.POST,
+      hook_identifier="KriegTPSLobbyUpdated")
+def on_customizations_updated(_obj, args, *_):
+    """A player's head/skin list changed (it does when he joins): redress his lobby Krieg now."""
+    if _dressing[0]:
+        return
+    try:
+        if not _coop_lobby():
+            return
+        pri = getattr(args, "PRI", None)
+        for standin in unrealsdk.find_all("PlayerStandIn", exact=False):
+            if pri is None or _same(getattr(standin, "OwningPRI", None), pri):
+                _dress(standin, force=True)
+    except Exception as ex:  # noqa: BLE001
+        if ("updatederr",) not in _lobby_logged:
+            _lobby_logged.add(("updatederr",))
+            log(f"lobby update: {type(ex).__name__}: {ex}")
+
+
+def tick() -> None:
+    """Every quarter second in a co-op lobby: dress any lobby Krieg that just appeared."""
+    now = time.monotonic()
+    if now < _state.get("tick_next", 0.0):
+        return
+    _state["tick_next"] = now + 0.25
+    if _table or _state.get("own"):
+        if _coop_lobby():
+            _refresh_lobby()
 
 
 @hook("WillowGame.PlayerStandIn:GetDesiredCustomizationOfType", Type.PRE,
@@ -617,4 +683,4 @@ def on_client_message_willow(obj, args, *_):
     return _client_message(obj, args)
 
 
-custom_hooks = [on_standin_customization, on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]
+custom_hooks = [on_standin_redraw, on_customizations_updated, on_standin_customization, on_server_mutate, on_client_message, on_client_message_willow, on_own_head, on_own_skin]
