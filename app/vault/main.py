@@ -640,7 +640,9 @@ def _github_file(repo: str) -> dict | None:
     """latest.json on the main branch: {"version": "x.y.z", "zip": "dist/VaultLauncher-x.y.z.zip"}."""
     import urllib.error
     raw = f'https://raw.githubusercontent.com/{repo}/main/'
-    req = urllib.request.Request(raw + 'latest.json', headers={'User-Agent': user_agent()})
+    # the ?t= part makes GitHub's file cache hand out the current copy (it can be ~5 minutes old)
+    req = urllib.request.Request(raw + f'latest.json?t={int(time.time())}',
+                                 headers={'User-Agent': user_agent(), 'Cache-Control': 'no-cache'})
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
             d = json.load(r)
@@ -663,17 +665,19 @@ def github_latest() -> dict | None:
     # latest.json (raw.githubusercontent.com) first: it has no request limit. GitHub's API allows
     # only 60 requests an hour per connection, which friends checking a lot could use up
     # ("HTTP Error 403: rate limit exceeded"). The API is only the fallback.
-    errors = []
-    try:
-        found = _github_file(repo)
-    except (OSError, ValueError) as ex:
-        found, errors = None, [ex]
-    if found:
-        return found
-    try:
-        return _github_release(repo)
-    except (OSError, ValueError) as ex:
-        raise (errors[0] if errors else ex)
+    errors, found = [], []
+    for source in (_github_file, _github_release):
+        try:
+            x = source(repo)
+            if x:
+                found.append(x)
+        except (OSError, ValueError) as ex:   # e.g. the API's hourly limit: the file is enough
+            errors.append(ex)
+    if not found:
+        if errors:
+            raise errors[0]
+        return None
+    return max(found, key=lambda x: nexus.version_tuple(x['version']))
 
 
 def github_fetch(auto: bool, raise_errors: bool = False) -> Path | None:

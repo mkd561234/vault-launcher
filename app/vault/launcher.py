@@ -267,6 +267,12 @@ def check_for_update(quiet: bool = False) -> None:
             _check.update(state='updating', text=f"Updating to version {_restart['version']}…")
         return
     if _check['busy']:
+        # A background check is already running: show its result instead of starting another
+        # (before, the page stayed on "Checking for updates…" because the background check
+        # reports nothing when there's no update).
+        if not quiet:
+            _check['report'] = True
+            _check.update(state='checking', text='Checking for updates…')
         return
     _check['busy'] = True
     _check['at'] = time.time()
@@ -279,7 +285,7 @@ def check_for_update(quiet: bool = False) -> None:
             z = main.github_fetch(auto=False, raise_errors=not quiet)
         _refresh_nexus(force=True)
         if z is None:
-            if not quiet:
+            if not quiet or _check.get('report'):
                 _check.update(state='current', text=f'Up to date (version {RUN_VERSION}).')
             return
         rel = main._zip_release(z) or {}
@@ -291,10 +297,11 @@ def check_for_update(quiet: bool = False) -> None:
         _restart.update({'zip': z, 'version': version, 'at': time.time()})
     except Exception as ex:  # noqa: BLE001
         main.say(f'update check failed: {ex}')
-        if not quiet:
+        if not quiet or _check.get('report'):
             _check.update(state='error', text=f"Couldn't check for updates: {ex}")
     finally:
         _check['busy'] = False
+        _check['report'] = False
 
 
 _sdk_notes: dict = {}          # game id -> what the last SDK update check did, for the page

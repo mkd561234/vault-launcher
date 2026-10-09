@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.2.7",
+  "date": "2026-10-08",
+  "changes": [
+   "Check for updates no longer gets stuck on \"Checking for updates…\". If the launcher was already checking in the background when you clicked, the button waited for an answer that never came. It now shows that check's result.",
+   "New versions show up straight away. GitHub can hand out a copy of the version file up to about five minutes old, which is why 3.2.6 wasn't found right after it came out. The launcher now asks for the current copy, and also checks GitHub's release list."
+  ]
+ },
+ {
   "version": "3.2.6",
   "date": "2026-10-08",
   "changes": [
