@@ -1,5 +1,14 @@
 [
  {
+  "version": "3.7.1",
+  "date": "2026-10-09",
+  "changes": [
+   "Borderlands 4 Tuning 1.1.0 works on any PC. If a part of the PC can't be read (the graphics card, its memory, system memory or the screen), it uses a safe middle value instead of failing, and says which ones it guessed. Graphics cards whose driver doesn't report video memory, or reports the old 4 GB maximum, are recognised by model.",
+   "New lowest tier for integrated graphics, very old cards, 8 GB of memory or 2-thread processors: cheaper fog and shadows, about a third of the foliage, and slightly softer textures to save video memory.",
+   "It also writes to the Xbox app version's settings folder and to Documents kept in OneDrive. Settings files saved as UTF-16 or set to read-only are handled too."
+  ]
+ },
+ {
   "version": "3.7.0",
   "date": "2026-10-09",
   "changes": [

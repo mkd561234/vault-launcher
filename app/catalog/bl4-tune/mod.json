@@ -2,7 +2,7 @@
  "id": "bl4-tune",
  "name": "Borderlands 4 Tuning",
  "game": "bl4",
- "version": "1.0.0",
+ "version": "1.1.0",
  "kind": "bl4tune",
  "summary": "Settings picked for your PC so Borderlands 4 runs smoother.",
  "details": "Checks your graphics card, video memory, processor, memory and screen, then writes engine settings that cut stutter and wasted work: shaders compiled ahead of time, texture streaming sized to your card, motion blur, film grain, chromatic aberration and lens flares off, and on weaker PCs cheaper fog, shadows and foliage. Also tells you which in-game options to pick (upscaler, quality, frame cap, frame generation) and writes them to \"Vault Launcher - BL4 settings.txt\" next to the game's settings. Removing it takes only its own lines back out. Re-run it (reinstall) after you change your graphics card.",
