@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.1.9",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.6: the class mod badge now moves on the main menu's Krieg too. 2.1.5 moved the spot for future class mods but couldn't find the badge the main menu Krieg was already wearing. Now every few seconds the mod checks each Krieg (main menu and in game) and moves any badge still in the old spot. The Krieg log lists what is attached to his body."
+  ]
+ },
+ {
   "version": "3.1.8",
   "date": "2026-10-08",
   "changes": [

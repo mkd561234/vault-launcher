@@ -24,7 +24,7 @@ import unrealsdk
 from mods_base import Game, ModType, ObjectFlags, build_mod, command, get_pc, hook
 from unrealsdk.hooks import Block, Type
 
-__version__ = "2.1.5"
+__version__ = "2.1.6"
 __author__ = "KriegTPS"
 
 KRIEG_CLASS = "GD_Lilac_PlayerClass.Character.CharClass_LilacPlayerClass"
@@ -252,24 +252,70 @@ CLASSMOD_SCALE = 0.85
 _socket_done = [False]
 
 
-def _reattach_classmods() -> int:
-    """Class mods already hanging on him keep their old spot until re-attached: do that now."""
+def _comp_mesh_name(comp) -> str:
+    for attr in ("SkeletalMesh", "StaticMesh"):
+        m = getattr(comp, attr, None)
+        if m is not None:
+            return str(m.Name)
+    return ""
+
+
+_attach_logged = set()
+
+
+def _reattach_classmods(skip=frozenset(), done=None) -> int:
+    """Class mods already hanging on him keep their old spot until re-attached: do that now. Works
+    on every Krieg body in the world (in game and the main menu's Krieg)."""
     moved = 0
-    for comp in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+    for body in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
         try:
-            sm = comp.SkeletalMesh
-            if sm is None or "ClassMod" not in str(sm.Name) or not comp.bAttached:
+            if body._get_address() in skip:
                 continue
-            owner = comp.Owner
-            parent = getattr(owner, "Mesh", None) if owner is not None else None
-            if parent is None or parent.SkeletalMesh is None or "Psycho" not in str(parent.SkeletalMesh.Name):
+            sm = body.SkeletalMesh
+            if sm is None or str(sm.Name) != CLASSMOD_SOCKET[0].split(".")[-1] or "Default__" in body._path_name():
                 continue
-            parent.DetachComponent(comp)
-            parent.AttachComponentToSocket(comp, CLASSMOD_SOCKET[1])
-            moved += 1
+            atts = list(body.Attachments)
         except Exception:  # noqa: BLE001
             continue
+        key = body._path_name()
+        if key not in _attach_logged and len(_attach_logged) < 6:
+            _attach_logged.add(key)
+            log(f"class mod badge: {key.split('.')[-1]} has " + ", ".join(
+                f"{_comp_mesh_name(a.Component) or '?'}@{a.SocketName or a.BoneName}" for a in atts if a.Component is not None))
+        for att in atts:
+            comp = att.Component
+            if comp is None:
+                continue
+            if str(att.SocketName) != CLASSMOD_SOCKET[1] and "ClassMod" not in _comp_mesh_name(comp):
+                continue
+            try:
+                body.DetachComponent(comp)
+                body.AttachComponentToSocket(comp, CLASSMOD_SOCKET[1])
+                moved += 1
+                if done is not None:
+                    done.add(body._get_address())
+            except Exception as ex:  # noqa: BLE001
+                log(f"class mod badge: could not re-attach: {type(ex).__name__}: {ex}")
     return moved
+
+
+def classmod_upkeep() -> None:
+    """Every couple of seconds, put the class mod of any Krieg body that hasn't had it moved yet on
+    the new spot (the main menu's Krieg and a newly loaded Krieg put theirs on after the move)."""
+    if not _socket_done[0]:
+        return
+    import time as _t
+    now = _t.monotonic()
+    if now < _reattach_state["next"]:
+        return
+    _reattach_state["next"] = now + 2.0
+    done = _reattach_state["done"]
+    n = _reattach_classmods(skip=frozenset(done), done=done)
+    if n:
+        log(f"class mod badge: put {n} worn class mod(s) on the new spot")
+
+
+_reattach_state = {"next": 0.0, "done": set()}
 
 
 def fix_classmod_socket() -> None:
@@ -300,8 +346,9 @@ def fix_classmod_socket() -> None:
             sc.X = sc.Y = sc.Z = CLASSMOD_SCALE
         except AttributeError:
             pass
+        _reattach_state["done"].clear()
         log(f"class mod badge moved off the belt: {old} -> {CLASSMOD_LOCATION} on {sock.BoneName}, "
-            f"re-attached {_reattach_classmods()} worn class mod(s)")
+            f"re-attached {_reattach_classmods(done=_reattach_state['done'])} worn class mod(s)")
         return
     log(f"class mod badge: no '{CLASSMOD_SOCKET[1]}' spot on his body mesh (spots: {names})")
 
@@ -1202,7 +1249,7 @@ def upkeep() -> None:
     _next_upkeep = now + 1.0
     # unlock_customizations is not run: the game's unlock check crashed on Krieg's BL2 profile
     # indices. The head/skin menus are filled directly instead (see on_char_select_cache).
-    for step in (keep_krieg_loaded, fix_classmod_socket, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, weaponholds.upkeep, charvoice.upkeep, coopcustom.upkeep, coopdiag.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
+    for step in (keep_krieg_loaded, fix_classmod_socket, classmod_upkeep, lambda: apply_fixes(quiet=True), create_extra_customizations, classmods.upkeep, weaponholds.upkeep, charvoice.upkeep, coopcustom.upkeep, coopdiag.upkeep, ozevents.upkeep, loadout.upkeep, vehicles.upkeep_all, slam.upkeep, buzzaxe.upkeep, fix_krieg_pawn, restore_depth_of_field,
                  disable_screen_overlays,
                  materials.fix_krieg_materials, materials.fix_krieg_gear_materials, materials.disable_broken_fx, diagnose_once,
                  nudge_hud_health):
