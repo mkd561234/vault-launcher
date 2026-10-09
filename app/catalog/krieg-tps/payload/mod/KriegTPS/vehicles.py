@@ -305,8 +305,8 @@ diag_hooks = [
 #  * his body is hidden for a few frames right after he gets in or changes seats, until the seat
 #    animation has taken over.
 # ---------------------------------------------------------------------------
-HIDE_MIN = 0.15      # never show him sooner than this
-HIDE_MAX = 0.60      # ...or later than this, whatever the animation does
+HIDE_MIN = 0.05      # never show him sooner than this
+HIDE_MAX = 0.35      # ...or later than this, whatever the animation does
 SEAT_ANIMS = ("Driver_", "Gunner_")
 _hide = {"until": 0.0, "max": 0.0, "mesh": None, "nodes": [], "switching": 0.0, "since": 0.0, "parts": []}
 
@@ -405,6 +405,13 @@ def _hide_briefly(obj, *_) -> None:
     if now < _hide["switching"]:
         return
     try:
+        # A hidden body normally stops animating, so the seat animation never took over while he
+        # was hidden and he stayed invisible for the full time limit. Keep it animating.
+        try:
+            _hide["skel_update"] = mesh.bUpdateSkelWhenNotRendered
+            mesh.bUpdateSkelWhenNotRendered = True
+        except Exception:  # noqa: BLE001
+            _hide["skel_update"] = None
         mesh.SetHidden(True)
         _hide["parts"] = _other_parts(obj, mesh)
         for part in _hide["parts"]:
@@ -413,6 +420,7 @@ def _hide_briefly(obj, *_) -> None:
             except Exception:  # noqa: BLE001
                 pass
         _hide["since"] = now
+        _hide["rescanned"] = False
         _hide["until"] = now + HIDE_MIN
         _hide["max"] = now + HIDE_MAX
         _hide["mesh"] = mesh
@@ -445,6 +453,10 @@ def tick() -> None:
     if now < _hide["until"]:
         return
     seated = _seat_anim_showing()
+    if not seated and not _hide.get("rescanned") and now - _hide["since"] > 0.1:
+        _hide["rescanned"] = True          # the seat animation may play on a node made after we looked
+        _hide["nodes"] = _seat_nodes(mesh)
+        seated = _seat_anim_showing()
     if not seated and now < _hide["max"]:
         return
     if not _show(mesh):
@@ -453,6 +465,12 @@ def tick() -> None:
     for part in _hide["parts"]:
         _show(part)
     _hide["parts"] = []
+    if _hide.get("skel_update") is not None:
+        try:
+            mesh.bUpdateSkelWhenNotRendered = _hide["skel_update"]
+        except Exception:  # noqa: BLE001
+            pass
+        _hide["skel_update"] = None
     _hide["mesh"] = None
     _hide["nodes"] = []
     _dlog(f"Krieg shown again after seating ({now - _hide['since']:.2f}s, "

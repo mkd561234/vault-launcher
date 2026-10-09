@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.2.3",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.0: getting into the driver or gunner seat no longer makes him vanish for a moment. He's hidden only until his seat animation takes over. That never registered, because a hidden body stops animating, so he stayed invisible for the full 0.6 s every time. His body now keeps animating while hidden, so he reappears as soon as he's seated (about a tenth of a second), and the time limit is shorter."
+  ]
+ },
+ {
   "version": "3.2.2",
   "date": "2026-10-08",
   "changes": [
