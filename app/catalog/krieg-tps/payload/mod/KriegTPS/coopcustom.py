@@ -437,19 +437,47 @@ def _same(a, b) -> bool:
 
 
 def _standin_wants(standin) -> dict:
-    """The DLC heads/skins another player's lobby Krieg should wear ({} for my own, or unknown)."""
+    """The DLC heads/skins a lobby Krieg should wear: the other player's from the host's table,
+    or for my own lobby Krieg my own pick ({} when unknown)."""
     pri = getattr(standin, "OwningPRI", None)
     pc = get_pc()
-    if pri is None or pc is None or _same(pri, getattr(pc, "PlayerReplicationInfo", None)):
+    if pri is None or pc is None:
         return {}
+    if _same(pri, getattr(pc, "PlayerReplicationInfo", None)):
+        return dict(_state.get("own") or {})
     return _table.get(str(pri.PlayerName), {})
 
 
-def _refresh_lobby() -> None:
-    """The lobby draws each player as a stand-in that asks for his head/skin (answered by the hook
-    below). Ask the other players' stand-ins to redraw once their DLC heads/skins are known."""
-    if not _table:
+def _snapshot(pri):
+    try:
+        return list(pri.RemoteCustomizations)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _put_back(pri, before) -> None:
+    if before is None:
         return
+    for i, v in enumerate(before):
+        try:
+            cur = pri.RemoteCustomizations[i]
+            if (cur is None) != (v is None) or (cur is not None and cur._get_address() != v._get_address()):
+                pri.RemoteCustomizations[i] = v
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _refresh_lobby() -> None:
+    """The lobby draws each player as a stand-in Krieg, which falls back to the default look for
+    these heads/skins. Dress each stand-in in its player's own pick: mine from what I picked, the
+    others' from the host's table. For another player's stand-in, his head/skin list is put back
+    straight after (dressing a stand-in also rewrites its player's list; the 2.2.2 lobby code
+    changed both players' looks that way)."""
+    mgr = _manager()
+    if mgr is None:
+        return
+    pc = get_pc()
+    my_pri = getattr(pc, "PlayerReplicationInfo", None) if pc else None
     for standin in unrealsdk.find_all("PlayerStandIn", exact=False):
         try:
             if "Default__" in standin._path_name():
@@ -457,16 +485,27 @@ def _refresh_lobby() -> None:
             wants = _standin_wants(standin)
             if not wants:
                 continue
-            key = ("standin", standin._get_address(), repr(sorted(wants.items())))
-            if key in _lobby_logged:
-                continue
-            _lobby_logged.add(key)
-            standin.RefreshCustomizationsOnInstanceData()
-            log(f"lobby: showing {standin.OwningPRI.PlayerName}'s {', '.join(wants.values())}")
+            pri = standin.OwningPRI
+            mine = _same(pri, my_pri)
+            for idx, def_name in wants.items():
+                # again every 30 s: the lobby rebuilds its Kriegs now and then
+                key = ("standin", standin._get_address(), def_name, int(time.monotonic() // 30))
+                if key in _lobby_logged:
+                    continue
+                cd = _def(def_name)
+                if cd is None:
+                    continue
+                first = not any(k[:3] == key[:3] for k in _lobby_logged if isinstance(k, tuple) and len(k) == 4)
+                _lobby_logged.add(key)
+                before = None if mine else _snapshot(pri)
+                mgr.InitiateCustomizationRequest(Target=standin, NewCustomization=cd)
+                _put_back(pri, before)
+                if first:
+                    log(f"lobby: dressed {'my' if mine else str(pri.PlayerName) + chr(39) + 's'} Krieg in {def_name}")
         except Exception as ex:  # noqa: BLE001
             if ("lobbyerr",) not in _lobby_logged:
                 _lobby_logged.add(("lobbyerr",))
-                log(f"lobby: could not redraw a stand-in: {type(ex).__name__}: {ex}")
+                log(f"lobby: could not dress a stand-in: {type(ex).__name__}: {ex}")
 
 
 @hook("WillowGame.PlayerStandIn:GetDesiredCustomizationOfType", Type.PRE,

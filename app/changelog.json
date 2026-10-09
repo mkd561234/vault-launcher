@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.3.1",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.2.6: the co-op lobby now shows both Kriegs in their DLC heads/skins. Your own lobby Krieg wears your own pick, and your friend's wears his. Before, the lobby fell back to the default look for these heads/skins on both sides."
+  ]
+ },
+ {
   "version": "3.3.0",
   "date": "2026-10-08",
   "changes": [
