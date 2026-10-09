@@ -308,7 +308,24 @@ diag_hooks = [
 HIDE_MIN = 0.15      # never show him sooner than this
 HIDE_MAX = 0.60      # ...or later than this, whatever the animation does
 SEAT_ANIMS = ("Driver_", "Gunner_")
-_hide = {"until": 0.0, "max": 0.0, "mesh": None, "nodes": [], "switching": 0.0, "since": 0.0}
+_hide = {"until": 0.0, "max": 0.0, "mesh": None, "nodes": [], "switching": 0.0, "since": 0.0, "parts": []}
+
+
+def _other_parts(pawn, mesh) -> list:
+    """His head (and anything else drawn on him) is a separate piece from the body; hiding only
+    the body left the head floating in the seat for a moment."""
+    parts = []
+    addr = pawn._get_address()
+    for comp in unrealsdk.find_all("SkeletalMeshComponent", exact=False):
+        try:
+            if comp is mesh or comp.Owner is None or comp.Owner._get_address() != addr:
+                continue
+            if comp.bOnlyOwnerSee or comp.HiddenGame or not comp.bAttached:
+                continue        # first-person arms, or already hidden
+            parts.append(comp)
+        except Exception:  # noqa: BLE001
+            continue
+    return parts
 
 
 def _krieg_body():
@@ -389,6 +406,12 @@ def _hide_briefly(obj, *_) -> None:
         return
     try:
         mesh.SetHidden(True)
+        _hide["parts"] = _other_parts(obj, mesh)
+        for part in _hide["parts"]:
+            try:
+                part.SetHidden(True)
+            except Exception:  # noqa: BLE001
+                pass
         _hide["since"] = now
         _hide["until"] = now + HIDE_MIN
         _hide["max"] = now + HIDE_MAX
@@ -427,6 +450,9 @@ def tick() -> None:
     if not _show(mesh):
         _dlog("Krieg's body is still hidden after seating; trying again")
         return
+    for part in _hide["parts"]:
+        _show(part)
+    _hide["parts"] = []
     _hide["mesh"] = None
     _hide["nodes"] = []
     _dlog(f"Krieg shown again after seating ({now - _hide['since']:.2f}s, "

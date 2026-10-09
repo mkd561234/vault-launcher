@@ -1,5 +1,12 @@
 [
  {
+  "version": "3.1.7",
+  "date": "2026-10-08",
+  "changes": [
+   "Krieg 2.1.4: no more floating head when getting into a vehicle (driver or gunner seat). The mod hides Krieg for a moment while he sits down, but his head is a separate piece and it stayed visible. It now hides and comes back together with his body."
+  ]
+ },
+ {
   "version": "3.1.6",
   "date": "2026-10-08",
   "changes": [
