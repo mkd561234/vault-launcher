@@ -1,5 +1,13 @@
 [
  {
+  "version": "3.5.9",
+  "date": "2026-10-09",
+  "changes": [
+   "Infinity 1.0.7: the Infinity now rolls its own parts. The game rolls parts from a list it only builds for guns loaded from the game files, so the mod now builds that list for the Infinity.",
+   "Infinity 1.0.7: checks whether the Infinity can be written to a save, and which recipe the Grinder picked, and writes it to infinity_log.txt (the Grinder still reports it couldn't make the item)."
+  ]
+ },
+ {
   "version": "3.5.8",
   "date": "2026-10-09",
   "changes": [

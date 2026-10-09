@@ -100,12 +100,72 @@ def self_test() -> None:
     if not items:
         log("test: the game made NOTHING from the Infinity's pool - the Grinder can't give one either")
         return
+    _library_test()
     for inv in items:
         log("test: the game can make an Infinity: " + _describe(inv))
+        _serial_test(inv)
         try:
             inv.Destroy()
         except Exception:  # noqa: BLE001
             pass
+
+
+def _library_manager():
+    for mgr in unrealsdk.find_all("AssetLibraryManager", exact=False):
+        if "Default__" not in mgr._path_name():
+            return mgr
+    return None
+
+
+def _library_test() -> None:
+    """Can the game write each Infinity part into a save (and read it back)? The Maggie is the
+    control: a gun the game itself saves."""
+    mgr = _library_manager()
+    if mgr is None:
+        log("test: no asset library manager found")
+        return
+    paths = ["GD_Cork_Weap_Pistol.A_Weapons_Legendary.Pistol_Jakobs_5_Maggie"] + list(infinity.LIBRARY_SLOTS)
+    for path in paths:
+        obj = infinity._find(path)
+        if obj is None:
+            log(f"test: save code for {path}: object missing")
+            continue
+        try:
+            code = mgr.Encode(obj, 0)
+        except Exception as ex:  # noqa: BLE001
+            log(f"test: save code for {path.rsplit('.', 1)[-1]}: {type(ex).__name__}: {ex}")
+            continue
+        back = None
+        try:
+            res = mgr.Decode(code, 0, 0, None)
+            back = next((x for x in (res if isinstance(res, tuple) else (res,)) if hasattr(x, "_path_name")), None)
+        except Exception as ex:  # noqa: BLE001
+            back = f"{type(ex).__name__}: {ex}"
+        log(f"test: save code for {path.rsplit('.', 1)[-1]}: {code} -> reads back as {_name(back) if not isinstance(back, str) else back}")
+
+
+def _serial_test(inv) -> None:
+    try:
+        serial = inv.CreateSerialNumber()
+    except Exception as ex:  # noqa: BLE001
+        log(f"test: making its serial number failed: {type(ex).__name__}: {ex}")
+        return
+    try:
+        text = inv.GetSerialNumberString(serial) if serial is not None else None
+    except Exception:  # noqa: BLE001
+        try:
+            text = inv.GetSerialNumberString()
+        except Exception as ex:  # noqa: BLE001
+            text = f"({type(ex).__name__}: {ex})"
+    log(f"test: its serial number: {text}")
+    try:
+        cdo = unrealsdk.find_class("WillowWeapon").ClassDefaultObject
+        copy = cdo.CreateWeaponFromSerialNumber(serial, get_pc())
+        log("test: rebuilt from the serial number: " + (_describe(copy) if copy is not None else "NOTHING (it can't be saved)"))
+        if copy is not None:
+            copy.Destroy()
+    except Exception as ex:  # noqa: BLE001
+        log(f"test: rebuilding from the serial number failed: {type(ex).__name__}: {ex}")
 
 
 @command("infinity_give", description="Put an Infinity pistol in your backpack (for testing the Infinity mod).")
@@ -155,7 +215,8 @@ def on_has_recipe(obj, args, ret, *_) -> None:
     key = (tuple(inputs), repr(ret))
     if _state.get("recipe_check") != key:
         _state["recipe_check"] = key
-        log(f"Grinder: recipe check for {', '.join(inputs)} -> {ret}")
+        pool = getattr(args, "OutputLockedItemPoolDefinition", None)
+        log(f"Grinder: recipe check for {', '.join(inputs)} -> {ret}, output {_name(pool)}")
 
 
 @hook("WillowGame.GrinderRecipe:SpawnBalancedInventoryFromRecipe", Type.POST, hook_identifier="InfinityTPSGrindSpawn")

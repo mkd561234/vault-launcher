@@ -335,6 +335,70 @@ def _add_recipe(balance) -> None:
 
 
 # ---------------------------------------------------------------------------------------------
+# the part list the game actually rolls from
+# ---------------------------------------------------------------------------------------------
+PART_SLOTS = ("BodyPartData", "GripPartData", "BarrelPartData", "SightPartData", "StockPartData",
+              "ElementalPartData", "Accessory1PartData", "Accessory2PartData", "MaterialPartData")
+
+
+def _offset_indexes(value, offset: int):
+    """A copy of a part slot's data with its ...Index fields moved past the base list's entries."""
+    if isinstance(value, dict):
+        out = {}
+        for k, v in value.items():
+            if k.endswith("Index") and isinstance(v, int):
+                out[k] = v + offset
+            else:
+                out[k] = _offset_indexes(v, offset)
+        return out
+    if isinstance(value, list):
+        return [_offset_indexes(v, offset) for v in value]
+    return value
+
+
+def _runtime_part_list(bal) -> None:
+    """The game rolls a gun's parts from the balance's RuntimePartListCollection: its base gun's
+    full list with the balance's own slots swapped in, which the game builds when it loads a
+    balance from disk. A balance made by a mod never gets one, so the Infinity rolled the purple
+    Vladof pistol's parts. Build it here the same way."""
+    if getattr(bal, "RuntimePartListCollection", None) is not None:
+        return
+    base = bal.BaseDefinition
+    base_list = None
+    for _ in range(8):
+        if base is None:
+            break
+        base_list = getattr(base, "RuntimePartListCollection", None) or getattr(base, "WeaponPartListCollection", None)
+        if base_list is not None:
+            break
+        base = base.BaseDefinition
+    if base_list is None:
+        log("no base part list to build the Infinity's from")
+        return
+    rt = _find(f"{bal._path_name()}.RuntimePartList")
+    if rt is None:
+        rt = unrealsdk.construct_object("WeaponPartListCollectionDefinition", bal, "RuntimePartList", template_obj=base_list)
+    _keep(rt)
+    own = OBJECTS[BALANCE + ".PartList"]
+    consolidated = rt.ConsolidatedAttributeInitData
+    offset = len(consolidated)
+    for entry in own.get("ConsolidatedAttributeInitData", []):
+        _new_struct(consolidated)
+        el = consolidated[len(consolidated) - 1]
+        _apply(el, entry["struct"])
+        consolidated[len(consolidated) - 1] = el
+    swapped = []
+    for slot in PART_SLOTS:
+        data = own.get(slot)
+        if isinstance(data, dict) and data.get("struct", {}).get("bEnabled"):
+            _apply(rt, {slot: _offset_indexes(data, offset)})
+            swapped.append(slot.replace("PartData", ""))
+    bal.RuntimePartListCollection = rt
+    log(f"built the Infinity's part list from {base_list._path_name()} with its own "
+        f"{', '.join(swapped)} ({offset} + {len(consolidated) - offset} weights)")
+
+
+# ---------------------------------------------------------------------------------------------
 # asset libraries: what lets an Infinity be saved, loaded and sent to the other player in co-op
 # ---------------------------------------------------------------------------------------------
 def _list_in_libraries(made: dict) -> None:
@@ -367,6 +431,7 @@ def build() -> None:
             _apply(made[path], props)
         _material(made[MIC_PATH])
         bal = made[BALANCE]
+        _runtime_part_list(bal)
         _list_in_libraries(made)
         _add_recipe(bal)
         _state["done"] = True
